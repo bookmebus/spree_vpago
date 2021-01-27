@@ -1,0 +1,15 @@
+<%= hidden_field_tag "payment_source[#{payment_method.id}][payment_option]", Vpago::Payway::CARD_TYPE_ABAPAY %>
+
+<div class='vpago-container' data-hook='vpago-cards'>
+  <div class='d-xl-none'>
+    <%= link_to 'javascript:void(0)', class: 'btn btn-vshop vpago-payment-method' do %>
+      <%= image_tag 'vpago/payway/abapay.png'%>
+    <% end %>
+  </div>
+
+  <div class='d-xl-block d-none'>
+    <%= link_to 'javascript:void(0)', class: 'btn btn-vshop vpago-payment-method' do %>
+      <%= image_tag 'vpago/payway/abapay.png'%>
+    <% end %>
+  </div>
+</div>

@@ -11,6 +11,10 @@ module SpreeVpago
       g.test_framework :rspec
     end
 
+    config.assets.precompile += [
+      'vpago/payway/*',
+    ]
+
     def self.activate
       ::Rails.application.config.spree.payment_methods << Spree::Gateway::Payway
 
