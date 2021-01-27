@@ -42,6 +42,14 @@ Simply add this require statement to your spec_helper:
 require 'spree_vpago/factories'
 ```
 
+Run test
+```
+rspec spec/
+```
+
+### Note
+> Most payment gateways are written in php, you might compare ruby with its php counterpart by running code in the .php file.
+
 ## Contributing
 
 If you'd like to contribute, please take a look at the
