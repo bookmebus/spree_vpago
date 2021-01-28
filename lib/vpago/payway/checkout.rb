@@ -44,7 +44,7 @@ module Vpago
 
       def payment_option
         card_option = @payment.payment_method.preferences[:payment_option]
-        ['abapay', 'cards'].index(card_option) == nil ? 'abapay' : card_option
+        Vpago::Payway::CARD_TYPES.index(card_option) == nil ?  Vpago::Payway::CARD_TYPE_ABAPAY : card_option
       end
 
       def phone_country_code

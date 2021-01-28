@@ -10,8 +10,17 @@ module Spree
     preference :transaction_fee_percentage, :string
 
     # Only enable one-click payments if spree_auth_devise is installed
-    def self.allow_one_click_payments?
-      Gem.loaded_specs.key?('spree_auth_devise')
+    # def self.allow_one_click_payments?
+    #   Gem.loaded_specs.key?('spree_auth_devise')
+    # end
+
+    def card_type
+      Vpago::Payway::CARD_TYPES.index(preferences[:payment_option]) == nil ? Vpago::Payway::CARD_TYPE_ABAPAY : preferences[:payment_option]
+    end
+
+    # partial to render the gateway.
+    def method_type
+      "payment_#{card_type}"
     end
 
     def actions
