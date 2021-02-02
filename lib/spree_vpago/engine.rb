@@ -21,6 +21,15 @@ module SpreeVpago
       Dir.glob(File.join(File.dirname(__FILE__), '../../app/**/*_decorator*.rb')) do |c|
         Rails.configuration.cache_classes ? require(c) : load(c)
       end
+
+
+      Spree::PermittedAttributes.source_attributes << :payment_option
+      Spree::PermittedAttributes.source_attributes << :payment_id
+      Spree::PermittedAttributes.source_attributes << :payment_method_id
+
+      Spree::Api::ApiHelpers.payment_source_attributes << :payment_option
+      Spree::Api::ApiHelpers.payment_source_attributes << :payment_id
+      Spree::Api::ApiHelpers.payment_source_attributes << :payment_method_id
     end
 
     config.to_prepare(&method(:activate).to_proc)
