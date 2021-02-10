@@ -1,0 +1,73 @@
+<% content_for :head do %>
+
+  <!-- Payway script load -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <link rel="stylesheet" href="<%=payway_gateway.preferences[:host]%>/checkout-popup.html?file=css"/>
+  <script src="<%=payway_gateway.preferences[:host]%>/checkout-popup.html?file=js"></script>
+
+  <script>
+
+    function fetchABAForm(data){
+      var url = "<%=spree.update_checkout_path(order.state)%>"
+      var csrfToken = $('meta[name=csrf-token]').attr('content');
+
+      $.ajax({
+        url: url,
+        type: 'PATCH',
+        headers: {
+          'X-CSRF-Token': csrfToken
+        },
+        data: data,
+        success: function(responseText){
+           handleResponseForm(responseText)
+        },
+        error: function(response, status) {
+           alert('<%=t('common.payment_request_failed_with')%>' +  response.responseText)
+        }
+      });
+    }
+
+    function handleResponseForm(form){
+
+      var $paywayContainer = $("#payway-form-wrapper")
+      $paywayContainer.html(form)
+
+      setTimeout(function(){
+        AbaPayway.checkout()
+      }, 300);
+
+    }
+
+    document.addEventListener("turbolinks:load", function() {
+
+      $("#checkout_form_payment").on('submit', function(e) {
+
+        var paywayIds = $("#aba_main_modal").data("paywayPaymentMethod")
+        var $paymentChecked = $("input[name='order[payments_attributes][][payment_method_id]']:checked")
+
+        // no payment is checked
+        if($paymentChecked.length == 0)
+          return;
+
+        var paymentMethodId = parseInt($paymentChecked.val())
+
+        // if not payway is selected
+        if(paywayIds.indexOf(paymentMethodId) == -1)
+          return;
+
+
+        // create payway payment and render back the form
+        var $form = $(this)
+        var data = $form.serialize()
+        fetchABAForm(data)
+
+        // prevent form sumission / redirect by others.
+        e.preventDefault();
+        return false
+
+      })
+
+    })
+  </script>
+    <!-- End payway script load -->
+<% end %>

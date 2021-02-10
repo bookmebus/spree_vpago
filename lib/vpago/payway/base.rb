@@ -5,6 +5,10 @@ module Vpago
         @payment = payment
       end
 
+      def host
+        @payment.payment_method.preferences[:host]
+      end
+
       def amount
         "%.2f" % ( @payment.amount + transaction_fee )
       end
@@ -87,6 +91,10 @@ module Vpago
 
       def endpoint
         @payment.payment_method.preferences[:endpoint]
+      end
+
+      def action_url
+        "#{host}#{endpoint}"
       end
     end
   end

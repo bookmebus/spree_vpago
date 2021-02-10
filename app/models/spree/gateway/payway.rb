@@ -2,6 +2,7 @@ module Spree
   class Gateway::Payway < PaymentMethod
     # 'abapay', 'cards'
     preference :endpoint, :string
+    preference :host, :string
     preference :api_key, :string
     preference :merchant_id, :string
     preference :return_url, :string
@@ -17,6 +18,10 @@ module Spree
 
     def payment_source_class
       Spree::VpagoPaymentSource
+    end
+
+    def payment_profiles_supported?
+      false
     end
 
     def card_type
