@@ -24,7 +24,7 @@ module Vpago
         hash.delete("\n")
       end
 
-      def process
+      def check_remote_status
         conn = Faraday::Connection.new do |faraday|
           faraday.request  :url_encoded
         end
@@ -34,7 +34,11 @@ module Vpago
           hash: checker_hmac
         }
 
-        @response = conn.post(url, data)
+       conn.post(check_transaction_url, data)
+      end
+
+      def process
+        @response = check_remote_status
     
         if @response.status == 200
           if json_response['status'] != 0 
@@ -59,8 +63,12 @@ module Vpago
         @error_message == nil
       end
 
-      def url
-        endpoint + "check/transaction/"
+      def check_transaction_url
+        if(endpoint[-1] == "/")
+          "#{host}#{endpoint}check/transaction/"
+        else
+          "#{host}#{endpoint}/check/transaction/"
+        end
       end
 
     end
