@@ -41,10 +41,6 @@ module Spree
       "payment_payway"
     end
 
-    def actions
-      %w[credit]
-    end
-
     def available_for_order?(_order)
       true
     end
@@ -55,6 +51,7 @@ module Spree
       true
     end
 
+    # force to purchase instead of authorize
     def auto_capture?
       true
     end
@@ -64,7 +61,14 @@ module Spree
       # First of all, invalidate all previous tranx orders to prevent multiple paid orders
       # source.save!
       ActiveMerchant::Billing::Response.new(true, 'Order created')
+    end
 
+    def cancel(response_code)
+      # we can use this to send request to payment gateway api to cancel the payment ( void )
+      # currently Payway does not support to cancel the gateway
+      
+      # in our case don't do anything
+      ActiveMerchant::Billing::Response.new(true, 'Mollie order has been cancelled.')
     end
 
   end
