@@ -50,6 +50,9 @@ rspec spec/
 ### Note
 > Most payment gateways are written in php, you might compare ruby with its php counterpart by running code in the .php file.
 
+## Handle missing info
+> Some payment gateway require email for payment info. So we use enviroment variable "DEFAULT_EMAIL_FOR_PAYMENT" as default email when there is no email provided.
+
 ## Contributing
 
 If you'd like to contribute, please take a look at the

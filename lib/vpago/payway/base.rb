@@ -34,7 +34,7 @@ module Vpago
       end
 
       def email
-        @payment.order.email.presence || ENV['SUPPORT_EMAIL']
+        @payment.order.email.presence || ENV['DEFAULT_EMAIL_FOR_PAYMENT']
       end
 
       def first_name
