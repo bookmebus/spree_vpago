@@ -1,0 +1,17 @@
+spree:
+  vpago:
+    payments:
+      check_and_heal: "កែស្វ័យប្រវត្តិ"
+      manually_mark: "ធ្វើបច្ចុប្បន្នភាពដោយដៃ"
+      not_allow_for_order_completed: "ការបញ្ជាទិញបានបញ្ចប់។ សកម្មភាពនេះមិនត្រូវបានអនុញ្ញាតទេ"
+      checker_updated_by_description: "ពិនិត្យមើលប្រតិបត្តិការ"
+      force_updated_by_description: "ធ្វើបច្ចុប្បន្នភាពពេលបញ្ចប់"
+      updated_by_user: "ធ្វើបច្ចុប្បន្នភាពដោយអ្នកប្រើន"
+      updated_by_user_at: "ធ្វើបច្ចុប្បន្នភាពដោយអ្នកប្រើនៅ"
+      updated_reason: "ហេតុផល"
+      mark_with_reason: "ការទូទាត់ត្រូវបានសម្គាល់ដោយជោគជ័យដោយមានហេតុផល"
+      failed_require_updated_reason: "អ្នកត្រូវតែផ្តល់ហេតុផល"
+      payment_found_with_result: "រកឃើញការទូទាត់ជាមួយលទ្ធផល %{result}"
+      payment_not_found_with_error: "ការទូទាត់មិនត្រូវបានរកឃើញដោយកំហុស: %{error}"
+      query_status: "សួរស្ថានភាពបង់ប្រាក់"
+      confirm_manual_update: "តើអ្នកប្រាកដជាធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញនេះដើម្បីបញ្ចប់"

@@ -1,4 +1,4 @@
-class CreateSpreeVpagoPaymentSources < SpreeExtension::Migration
+class CreateSpreeVpagoPaymentSources < ActiveRecord::Migration[4.2]
   def change
     create_table :spree_vpago_payment_sources do |t|
       t.integer :user_id

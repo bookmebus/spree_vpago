@@ -14,10 +14,10 @@ module Spree
 
         # the callback invoke by PAYWAY in case of success
         payload = JSON.parse(params[:response])
-        payment       = Spree::Payment.find_by number: payload["tran_id"]
+        payment = Spree::Payment.find_by(number: payload["tran_id"])
 
-        spree_updater = Vpago::Payway::PaymentStatusUpdater.new(payment)
-        spree_updater.call
+        request_updater = ::Vpago::Payway::PaymentRequestUpdater.new(payment)
+        request_updater.call
 
         order = payment.order
         order = order.reload

@@ -2,6 +2,7 @@ require 'spec_helper'
 
 RSpec.describe Spree::Webhook::PaywaysController, type: :controller do
   render_views
+  stub_authorization!
 
   describe "GET return" do
     it "return ok" do
@@ -35,7 +36,7 @@ RSpec.describe Spree::Webhook::PaywaysController, type: :controller do
     it "redirects to order path if payment status updater is success" do
       payload = { tran_id: payment.number, status: 0}.to_json
       payment_success = double(:payment_status_updater, 'success?': true)
-      allow_any_instance_of(Vpago::Payway::PaymentStatusUpdater).to receive(:check_payway_status).and_return(payment_success)
+      allow_any_instance_of(Vpago::Payway::PaymentRequestUpdater).to receive(:check_payway_status).and_return(payment_success)
 
       post :return, params: {response: payload}
       # expect(subject).to redirect_to order_path(order.reload)
@@ -45,7 +46,7 @@ RSpec.describe Spree::Webhook::PaywaysController, type: :controller do
     it "redirects to checkout with state :payment path if payment status updater is failed" do
       payload = { tran_id: payment.number, status: 0}.to_json
       payment_failed = double(:payment_status_updater, 'success?': false, error_message: "Invalid transaction from Payway")
-      allow_any_instance_of(Vpago::Payway::PaymentStatusUpdater).to receive(:check_payway_status).and_return(payment_failed)
+      allow_any_instance_of(Vpago::Payway::PaymentRequestUpdater).to receive(:check_payway_status).and_return(payment_failed)
 
       post :return, params: {response: payload}
       expect(response.status).to eq 400

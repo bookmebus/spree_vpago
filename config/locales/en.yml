@@ -2,4 +2,20 @@
 # See https://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
 
 en:
-  hello: "Hello world"
+  spree:
+    vpago:
+      payments:
+        check_and_heal: "Auto correct"
+        manually_mark: "Update manually"
+        not_allow_for_order_completed: "Order completed. This action is not allowed"
+        checker_updated_by_description: "Transaction recheck"
+        force_updated_by_description: "Force paid"
+        updated_by_user: "Update by user"
+        updated_by_user_at: "Update by user at"
+        updated_reason: "Update with reason"
+        mark_with_reason: "Payment was marked to success with reason."
+        failed_require_updated_reason: "You must provide update reason"
+        payment_found_with_result: "Found payment with result: %{result}"
+        payment_not_found_with_error: "Payment not found with error: %{error}"
+        query_status: "Query payment status"
+        confirm_manual_update: "Are you sure to update this order to complete"

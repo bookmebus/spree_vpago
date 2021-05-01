@@ -6,4 +6,10 @@ Spree::Core::Engine.add_routes do
       get 'continue', to: 'payways#continue'
     end
   end
+
+  namespace :admin do
+    resources :payment_payway_queriers, only: [:show]
+    resources :payment_payway_checkers
+    resources :payment_payway_markers
+  end
 end
