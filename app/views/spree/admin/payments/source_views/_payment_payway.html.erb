@@ -1,0 +1,103 @@
+<% if payment.source.present? %>
+  <fieldset data-hook="mollie_payment_source">
+    
+    <legend>
+      <%= payment.source.payment_method.name %>
+    </legend>
+
+    <table class="table table-condensed table-bordered"> 
+
+       <tr>
+        <th width="210"><%= Spree.t('order_state', scope: :order_states) %></th>
+        <td><%= Spree.t(payment.order.state) %></td>
+      </tr>
+
+      <tr>
+        <th><%= Spree.t('payment_state') %></th>
+        <td>
+          <%= Spree.t(payment.state, scope: :payment_states, default: payment.state.capitalize) %>
+        </td>
+      </tr>
+
+      <% if !payment.order.completed? %>
+        <tr>
+          <th><%= Spree.t('vpago.payments.query_status') %></th>
+          <td><%= link_to Spree.t('vpago.payments.query_status'), admin_payment_payway_querier_path(payment) %></td>
+        </tr>
+      <% end %>
+
+      <% if !payment.order.completed? %>
+        <tr>
+          <th><%= Spree.t('vpago.payments.check_and_heal') %></th>
+          <td><%= link_to Spree.t('vpago.payments.check_and_heal'), admin_payment_payway_checker_path(payment), method: :put %></td>
+        </tr>
+      <% end %>
+
+      <tr>
+        <th><%= Spree.t('vpago.payments.updated_by_user') %></th>
+        <td><%= payment.source.updated_by_user&.full_name %></td>
+      </tr>
+      <tr>
+        <th><%= Spree.t('vpago.payments.updated_by_user_at') %></th>
+        <td><%= payment.source.updated_by_user_at %></td>
+      </tr>
+      <tr>
+        <th><%= Spree.t('vpago.payments.updated_reason') %></th>
+        <td><%= payment.source.updated_reason %></td>
+      </tr>
+
+
+      <tr>
+        <th><%= Spree.t('user') %></th>
+        <td><%= "#{payment.source.user&.id} - #{payment.source.user&.full_name}" %></td>
+      </tr>
+
+      <tr>
+        <th><%= Spree.t('transaction_id') %></th>
+        <td><%= payment.source.transaction_id %></td>
+      </tr>
+
+      <tr>
+        <th><%= Spree.t('payment_status') %></th>
+        <td><%= payment.source.payment_status %></td>
+      </tr>
+
+      <tr>
+        <th><%= Spree.t('payment_description') %></th>
+        <td><%= payment.source.payment_description %></td>
+      </tr>
+
+      <tr>
+        <th><%= Spree.t('created_at') %></th>
+        <td><%= payment.source.created_at %></td>
+      </tr>
+
+      <tr>
+        <th><%= Spree.t('updated_at') %></th>
+        <td><%= payment.source.updated_at %></td>
+      </tr>
+
+      <% if !payment.order.completed? %>
+        <tr>
+          <th><%= Spree.t('vpago.payments.manually_mark') %></th>
+          <td>
+              <%= form_with url: admin_payment_payway_marker_path(payment.number), method: :put do |f| %>
+                <div style='margin-top:10px;' >
+                  <%= f.text_area :updated_reason, class: 'form-control' %>
+                </div>
+
+                <div style='margin-top:10px;' >
+                  <%= f.button 'Save', class: 'btn btn-primary', data: { confirm: Spree.t('vpago.payments.confirm_manual_update')} %>
+                </div>
+              <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+
+  </fieldset>
+<% else %>
+  <div class="alert alert-danger">
+    <%= Spree.t(:empty) %>
+  </div>
+<% end %>
