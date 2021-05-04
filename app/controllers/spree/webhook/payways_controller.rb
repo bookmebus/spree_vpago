@@ -35,6 +35,10 @@ module Spree
         payment = Spree::Payment.find_by number: params[:tran_id]
         order = payment.order
 
+        if order.paid?
+          flash[:order_completed] = "1" # required by order_just_completed for purchase tracking
+        end
+
         redirect_to order.paid? || payment.pending? ? order_path(order) : checkout_state_path(:payment)
       end
     end
