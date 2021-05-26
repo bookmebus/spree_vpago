@@ -25,7 +25,7 @@ module Vpago
 
       ## TO DO: generate redirect url
       data = {
-        href: ''
+        href: "#{ENV['DEFAULT_URL_HOST']}/api/v2/storefront/payments/#{@payment.number}/payway_cards.html"
       }
 
       @redirect_options = data
