@@ -11,34 +11,39 @@ module Vpago
                   :payment_method_id, :payment_method_name,
               to: :payment
 
-    def initialize(payment)
+    def initialize(payment:)
       @payment = payment
-      @payment_method = @payment.payment_method
-      @payment.process!
-
-      should_process_abapay_deeplink
-      should_process_payway_card
     end
 
-    def should_process_payway_card
-      return if @payment_method.preferences[:payment_option] != 'cards'
+    def process
+      validate_payment
+      check_and_process_payment
 
+      self
+    end
+
+    def check_and_process_payment
+      payment_option = @payment.payment_method.preferences[:payment_option]
+
+      @payment.process!
+      payment_option == 'abapay' ? process_abapay_deeplink : process_payway_card
+    end
+
+    def process_payway_card
       ## TO DO: generate redirect url
       data = {
-        href: "#{ENV['DEFAULT_URL_HOST']}/api/v2/storefront/payments/#{@payment.number}/payway_cards.html"
+        href: "#{ENV['DEFAULT_URL_HOST']}/payway_card_popups?payment_number=#{@payment.number}"
       }
 
       @redirect_options = data
     end
 
-    def should_process_abapay_deeplink
-      return if @payment_method.preferences[:payment_option] != 'abapay'
-
-      @response = send_process_payment
+    def process_abapay_deeplink
+      send_process_payment
 
       if @response.status == 200
         json_response = JSON.parse(@response.body)
-        
+
         if json_response["status"] == "0"
           @redirect_options = json_response
         else
@@ -56,7 +61,23 @@ module Vpago
         faraday.request  :url_encoded
       end
 
-     conn.post(abapay_payment.action_url, gateway_params)
+      @response = conn.post(abapay_payment.action_url, gateway_params) do |request|
+        request.headers["Referer"] = ENV['DEFAULT_URL_HOST']
+      end
+    end
+
+    def validate_payment
+      raise ActiveRecord::RecordNotFound if !payment_valid || !vpago_payment_method
+
+      true
+    end
+
+    def vpago_payment_method
+      @payment.payment_method.type == 'Spree::Gateway::Payway'
+    end
+
+    def payment_valid
+      !::Spree::Payment::INVALID_STATES.include?(@payment.state)
     end
   end
 end
