@@ -3,8 +3,8 @@ module Spree
     module Storefront
       module PaymentMethodSerializerDecorator
         def self.prepended(base)
-          base.attribute :payment_option do |payment|
-            payment.preferences.blank? ? nil : payment.preferences[:payment_option]
+          base.attribute :payment_option do |payment_method|
+            payment_method.preferences.blank? ? nil : payment_method.preferences[:payment_option]
           end
         end
       end

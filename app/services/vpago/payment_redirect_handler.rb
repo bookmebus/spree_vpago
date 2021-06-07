@@ -53,8 +53,11 @@ module Vpago
     end
 
     def send_process_payment
-      app_checkout = true
-      abapay_payment = ::Vpago::Payway::Checkout.new(@payment, app_checkout)
+      options = {
+        app_checkout: true
+      }
+
+      abapay_payment = ::Vpago::Payway::Checkout.new(@payment, options)
       gateway_params = abapay_payment.gateway_params
       gateway_params[:payment_option] = 'abapay_deeplink'
 

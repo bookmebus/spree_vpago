@@ -5,8 +5,11 @@ module Spree
 
     def show
       if @payment.present?
-        app_checkout = true
-        @client_redirect = ::Vpago::Payway::Checkout.new(@payment, app_checkout)
+        options = {
+          app_checkout: true
+        }
+
+        @client_redirect = ::Vpago::Payway::Checkout.new(@payment, options)
       end
     end
 
