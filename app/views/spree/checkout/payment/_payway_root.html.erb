@@ -1,7 +1,7 @@
 <% if payway_gateways.length > 0 %>
 <!-- Root is should be only once in the payment action -->
   <div id="aba_main_modal" class="aba-modal" data-payway-payment-method="<%=payway_gateways.map(&:id).to_json%>">
-    <!— Modal content —>
+    <!- Modal content —>
     <div class="aba-modal-content" id="payway-form-wrapper" data-hook="payway-form" >
       <%# get the form after the button is click %>
     </div>

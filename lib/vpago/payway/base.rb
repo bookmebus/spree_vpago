@@ -1,7 +1,8 @@
 module Vpago
   module Payway
     class Base
-      def initialize(payment)
+      def initialize(payment, options={})
+        @options = options
         @payment = payment
       end
 
@@ -52,11 +53,17 @@ module Vpago
         Base64.encode64(preferred_return_url)
       end
 
+      def is_app_checkout?
+        return false if @options[:app_checkout].blank?
+
+        @options[:app_checkout]
+      end
+
       def continue_success_url
         preferred_continue_url = @payment.payment_method.preferences[:continue_success_url]
         return nil if preferred_continue_url.blank?
 
-        query_string = "tran_id=#{transaction_id}"
+        query_string = "tran_id=#{transaction_id}&app_checkout=#{is_app_checkout?}"
         preferred_continue_url.index("?") == nil ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
       end
 
