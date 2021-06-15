@@ -39,7 +39,7 @@ module Spree
           flash[:order_completed] = "1" # required by order_just_completed for purchase tracking
         end
 
-        if params[:app_checkout]
+        if params[:app_checkout] == 'yes'
           redirect_to order.paid? || payment.pending? ? success_payway_results_path : failed_payway_results_path
         else
           redirect_to order.paid? || payment.pending? ? order_path(order) : checkout_state_path(:payment)

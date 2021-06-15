@@ -53,6 +53,10 @@ module Vpago
         Base64.encode64(preferred_return_url)
       end
 
+      def app_checkout
+        is_app_checkout? ? 'yes' : 'no'
+      end
+
       def is_app_checkout?
         return false if @options[:app_checkout].blank?
 
@@ -63,7 +67,7 @@ module Vpago
         preferred_continue_url = @payment.payment_method.preferences[:continue_success_url]
         return nil if preferred_continue_url.blank?
 
-        query_string = "tran_id=#{transaction_id}&app_checkout=#{is_app_checkout?}"
+        query_string = "tran_id=#{transaction_id}&app_checkout=#{app_checkout}"
         preferred_continue_url.index("?") == nil ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
       end
 
