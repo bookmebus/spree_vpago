@@ -61,6 +61,9 @@ RSpec.describe Vpago::Payway::PaymentStatusMarker, type: :model do
 
   describe '#complete_payment!' do
     it 'marks payment state to completed' do
+      payment.state = 'failed'
+      payment.save
+
       status_updater = Vpago::Payway::PaymentStatusMarker.new(payment, status: true)
       status_updater.send(:complete_payment!)
       payment.reload

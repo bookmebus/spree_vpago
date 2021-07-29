@@ -32,4 +32,8 @@ module Vpago
   end
 end
 
+Spree::Payment.state_machine.event :complete do
+  transition from: [:processing, :pending, :checkout, :failed], to: :completed
+end
+
 Spree::Payment.prepend(Vpago::PaymentDecorator)
