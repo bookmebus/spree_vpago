@@ -1,0 +1,18 @@
+<h3>
+  You are now being transferred to Wing Payment with secure SSL connection
+</h3>
+
+<form method="POST" style='display:none;' id="wingsdk_checkout_form" action="<%=@client_redirect.action_url%>">
+  <% @client_redirect.gateway_params.each do |key, value| %>
+    <div style='padding: 5px;' class="clearfix;">
+      <%=label_tag key, key, style: 'float: left; width: 100px;' %>
+      <%= text_field_tag key, value, size: 120, style: 'margin-left: 110px;' %>
+    </div>
+  <% end %>
+  <button type="submit" id='wingsdk_btn'> Submit </button>
+</form>
+
+<script>
+  if(document.getElementById("wingsdk_checkout_form"))
+    document.getElementById("wingsdk_checkout_form").submit()
+</script>
