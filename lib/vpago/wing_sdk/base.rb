@@ -29,7 +29,7 @@ module Vpago
       end
 
       def return_url
-        @payment.payment_method.preferences[:return_url]
+        "#{ENV['DEFAULT_URL_HOST']}/webhook/wings/#{payment_number}/return"
       end
 
       def host

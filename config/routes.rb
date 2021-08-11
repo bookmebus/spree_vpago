@@ -15,6 +15,10 @@ Spree::Core::Engine.add_routes do
       match 'return', to: 'payways#return', via: [:get, :post]
       get 'continue', to: 'payways#continue'
     end
+
+    resources :wings, only: [:create] do
+      match 'return', to: 'wings#return', via: [:get, :post]
+    end
   end
 
   namespace :admin do
