@@ -11,7 +11,7 @@ module Vpago
       def call
         response = JSON.parse(prepare_decrypt)
 
-        @payment = ::Spree::Payment.find_by(number: response[:remark])
+        @payment = ::Spree::Payment.find_by(number: response['remark'])
       end
 
       def prepare_decrypt
