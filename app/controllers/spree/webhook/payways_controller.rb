@@ -40,7 +40,7 @@ module Spree
         end
 
         if params[:app_checkout] == 'yes'
-          redirect_to order.paid? || payment.pending? ? success_payway_results_path : failed_payway_results_path
+          redirect_to order.paid? || payment.pending? ? success_payment_results_path : failed_payment_results_path
         else
           redirect_to order.paid? || payment.pending? ? order_path(order) : checkout_state_path(:payment)
         end

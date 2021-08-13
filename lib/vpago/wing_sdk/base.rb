@@ -29,7 +29,17 @@ module Vpago
       end
 
       def return_url
-        "#{ENV['DEFAULT_URL_HOST']}/webhook/wings/#{payment_number}/return"
+        "#{ENV['DEFAULT_URL_HOST']}/webhook/wings/#{payment_number}/return?app_checkout=#{app_checkout}"
+      end
+
+      def app_checkout
+        is_app_checkout? ? 'yes' : 'no'
+      end
+
+      def is_app_checkout?
+        return false if @options[:app_checkout].blank?
+
+        @options[:app_checkout]
       end
 
       def host
