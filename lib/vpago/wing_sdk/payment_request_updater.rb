@@ -9,6 +9,8 @@ module Vpago
       end
 
       def call
+        return if @payment.order.paid?
+
         checker = check_wing_status
 
         if(checker.success?)

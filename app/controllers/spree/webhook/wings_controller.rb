@@ -40,7 +40,7 @@ module Spree
         order = order.reload
 
         if render_plain
-          order.paid? || payment.pending? ? render(plain: :success) : render(plain: :failed, status: 400)
+          order.paid? || @payment.pending? ? render(plain: :success) : render(plain: :failed, status: 400)
         else
           redirect_order(order)
         end
@@ -48,9 +48,10 @@ module Spree
 
       def redirect_order(order)
         if params[:app_checkout] == 'yes'
-          redirect_to order.paid? || payment.pending? ? success_payment_results_path : failed_payment_results_path
+          redirect_to order.paid? || @payment.pending? ? success_payment_results_path : failed_payment_results_path
         else
-          redirect_to order.paid? || payment.pending? ? order_path(order) : checkout_state_path(:payment)
+          flash[:order_completed] = "1" if order.paid? # required by order_just_completed for purchase tracking
+          redirect_to order.paid? || @payment.pending? ? order_path(order) : checkout_state_path(:payment)
         end
       end
     end
