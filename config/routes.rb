@@ -23,6 +23,10 @@ Spree::Core::Engine.add_routes do
   end
 
   namespace :admin do
+    resources :payment_wing_sdk_queriers, only: [:show]
+    resources :payment_wing_sdk_checkers, only: [:update]
+    resources :payment_wing_sdk_markers, only: [:update]
+
     resources :payment_payway_queriers, only: [:show]
     resources :payment_payway_checkers
     resources :payment_payway_markers
