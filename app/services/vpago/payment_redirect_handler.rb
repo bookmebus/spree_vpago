@@ -23,6 +23,14 @@ module Vpago
     end
 
     def check_and_process_payment
+      if payment_method.type_payway?
+        process_aba_gateway
+      elsif payment_method.type_wingsdk?
+        process_wing_gateway
+      end
+    end
+
+    def process_aba_gateway
       payment_option = @payment.payment_method.preferences[:payment_option]
 
       @payment.process!
@@ -37,6 +45,15 @@ module Vpago
 
       @redirect_options = data
     end
+
+    def process_wing_gateway
+      data = {
+        href: "#{ENV['DEFAULT_URL_HOST']}/wing_redirects?payment_number=#{@payment.number}"
+      }
+
+      @redirect_options = data
+    end
+    
 
     def process_abapay_deeplink
       send_process_payment
@@ -71,13 +88,13 @@ module Vpago
     end
 
     def validate_payment
-      raise ActiveRecord::RecordNotFound if !payment_valid || !vpago_payment_method
+      raise ActiveRecord::RecordNotFound if !payment_valid || !payment_method.vpago_payment?
 
       true
     end
 
-    def vpago_payment_method
-      @payment.payment_method.type == 'Spree::Gateway::Payway'
+    def payment_method
+      @payment.payment_method
     end
 
     def payment_valid

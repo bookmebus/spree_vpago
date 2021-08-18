@@ -1,7 +1,7 @@
 module Spree
   module VpagoGatewayCheckout
     def update
-      if payment_params_valid? && vpago_payment_method?
+      if payment_params_valid? && payment_method.vpago_payment?
         process_with_vpago_gateway
       else
         super
@@ -15,9 +15,9 @@ module Spree
       if updated
         payment = @order.payments.last
         payment.process!
-        @client_redirect = ::Vpago::Payway::Checkout.new(payment)
+        @client_redirect = payment_method.vapgo_checkout_service.new(payment)
        
-        render 'spree/checkout/payment/payway_form', layout: false
+        render payment_form_layout, layout: false
       else
         render :edit
       end
@@ -26,10 +26,24 @@ module Spree
 
   module CheckoutControllerDecorator
 
-    def vpago_payment_method?
+    # def vpago_payment_method?
+    #   payment_method_id_param = params[:order][:payments_attributes].first[:payment_method_id]
+    #   payment_method = PaymentMethod.find(payment_method_id_param)
+    #   payment_method.type == 'Spree::Gateway::Payway'
+    # end
+
+    def payment_form_layout
+      if payment_method.type_payway?
+        'spree/checkout/payment/payway_form'
+      elsif payment_method.type_wingsdk?
+        'spree/checkout/payment/wingsdk_form'
+      end
+    end
+    
+
+    def payment_method
       payment_method_id_param = params[:order][:payments_attributes].first[:payment_method_id]
-      payment_method = PaymentMethod.find(payment_method_id_param)
-      payment_method.type == 'Spree::Gateway::Payway'
+      @payment_method ||= PaymentMethod.find(payment_method_id_param)
     end
 
     def payment_params_valid?

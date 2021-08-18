@@ -1,17 +1,17 @@
 module Vpago
   module Payment
-    module PaywayProcessingDecorator
+    module VpagoPaymentProcessingDecorator
       def process!
-        if payment_method.is_a? Spree::Gateway::Payway
-          process_with_payway_gateway
+        if payment_method.is_a?(Spree::Gateway::Payway) || payment_method.is_a?(Spree::Gateway::WingSdk)
+          process_with_vpago_gateway
         else
           super
         end
       end
 
       def cancel!
-        if payment_method.is_a? Spree::Gateway::Payway
-          cancel_with_payway_gateway
+        if payment_method.is_a?(Spree::Gateway::Payway) || payment_method.is_a?(Spree::Gateway::WingSdk)
+          cancel_with_vpago_gateway
         else
           super
         end
@@ -19,12 +19,12 @@ module Vpago
 
       # private
 
-      def cancel_with_payway_gateway
+      def cancel_with_vpago_gateway
         response = payment_method.cancel(transaction_id)
         handle_response(response, :void, :failure)
       end
 
-      def process_with_payway_gateway
+      def process_with_vpago_gateway
         amount ||= money.money
         started_processing!
 
@@ -39,4 +39,4 @@ module Vpago
   end
 end
 
-Spree::Payment.include(Vpago::Payment::PaywayProcessingDecorator)
+Spree::Payment.include(Vpago::Payment::VpagoPaymentProcessingDecorator)

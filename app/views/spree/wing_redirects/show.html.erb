@@ -1,0 +1,3 @@
+<% if @client_redirect.present? %>
+  <%= render 'spree/checkout/payment/wing_checkout_form', gateway_params: @client_redirect.gateway_params, action_url: @client_redirect.action_url %>
+<% end %>
