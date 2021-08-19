@@ -59,7 +59,7 @@ module Vpago
       end
 
       def check_transaction_url
-        "#{host}/wingonlinesdk/inquiry"
+        "#{host}inquiry"
       end
     end
   end

@@ -47,7 +47,7 @@ module Vpago
       end
 
       def action_url
-        "#{host}/wingonlinesdk/"
+        host
       end
     end
   end
