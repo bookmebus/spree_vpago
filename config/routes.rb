@@ -4,7 +4,7 @@ Spree::Core::Engine.add_routes do
   resource :payway_card_popups, only: [:show]
   resource :wing_redirects, only: [:show]
 
-  resources :payment_results, only: [] do
+  resources :payway_results, only: [] do
     collection do
       get :success
       get :failed
