@@ -1,5 +1,5 @@
 module Spree
-  class PaymentResultsController < ApplicationController
+  class PaywayResultsController < ApplicationController
     layout 'payway'
 
     ## GET
