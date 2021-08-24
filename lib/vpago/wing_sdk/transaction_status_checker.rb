@@ -20,7 +20,7 @@ module Vpago
         @response = check_remote_status
 
         if @response.status == 200
-          if json_response['errorCode'] != 200
+          if json_response['errorCode'] != "200"
             fail!(json_response['errorText'])
           else
             @result = json_response

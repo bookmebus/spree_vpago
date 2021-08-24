@@ -1,4 +1,6 @@
 class Spree::VpagoPaymentSource <  Spree::Base
+  preference :wing_response, :hash
+
   belongs_to :payment_method
   belongs_to :user, class_name: 'Spree::User'
   belongs_to :updated_by_user, class_name: 'Spree::User'
