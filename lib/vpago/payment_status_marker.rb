@@ -25,6 +25,8 @@ module Vpago
       payment_status = @options[:status] ? 'success' : 'failed'
       source.payment_status = payment_status
       source.payment_description =  @options[:description]
+      source.transaction_id = @options[:transaction_id]
+      source.preferred_wing_response = @options[:wing_response]
 
       if @options[:status]
         source.updated_by_user_id = @options[:updated_by_user_id]

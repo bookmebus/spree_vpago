@@ -15,8 +15,14 @@ module Vpago
 
         if(checker.success?)
           @error_message = nil
+          checker_result = {
+            status: true,
+            description: nil,
+            transaction_id: checker.result["transaction_id"],
+            wing_response: checker.result
+          }
+          marker_options = @options.merge(checker_result)
 
-          marker_options = @options.merge( status: true, description: nil)
           marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
           marker.call
         else
