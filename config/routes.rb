@@ -11,6 +11,10 @@ Spree::Core::Engine.add_routes do
     end
   end
 
+  namespace :wing do
+    resources :transactions, only: [:show]
+  end
+
   namespace :webhook do
     resource :payways, only: [] do
       match 'return', to: 'payways#return', via: [:get, :post]
