@@ -9,6 +9,10 @@ module Spree
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
 
+    ## for basic authentication on checking transaction on vtenh
+    preference :basic_auth_username, :string
+    preference :basic_auth_password, :string
+
     def payment_source_class
       Spree::VpagoPaymentSource
     end
