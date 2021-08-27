@@ -11,7 +11,7 @@ module Spree
         authenticate_or_request_with_http_basic do |username, password|
           false if !wing_payment_method.present?
           false if wing_payment_method.preferred_basic_auth_username.blank? || wing_payment_method.preferred_basic_auth_password.blank?
-          username == wing_payment_method.preferred_basic_auth_username && wing_payment_method.preferred_basic_auth_password
+          username == wing_payment_method.preferred_basic_auth_username && password == wing_payment_method.preferred_basic_auth_password
         end
       end
 
