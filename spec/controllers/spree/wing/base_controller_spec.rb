@@ -24,14 +24,30 @@ RSpec.describe Spree::Wing::BaseController, type: :controller do
       end
     end
     
-    context "username and password not match" do
+    context "password not match" do
       it 'return access denied' do
         wing_gateway = create(:wing_sdk_gateway)
         wing_gateway.preferred_basic_auth_username = 'wing'
         wing_gateway.preferred_basic_auth_password = '123'
         wing_gateway.save
 
-        user = 'test'
+        user = 'wing'
+        pwd = '12323'
+        request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(user, pwd)
+
+        get :index
+        expect(response.status).to eq 401
+      end
+    end
+
+    context "username not match" do
+      it 'return access denied' do
+        wing_gateway = create(:wing_sdk_gateway)
+        wing_gateway.preferred_basic_auth_username = 'wing'
+        wing_gateway.preferred_basic_auth_password = '123'
+        wing_gateway.save
+
+        user = 'wingtest'
         pwd = '123'
         request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(user, pwd)
 
