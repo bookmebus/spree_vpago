@@ -45,6 +45,10 @@
         var paywayIds = $("#aba_main_modal").data("paywayPaymentMethod")
         var $paymentChecked = $("input[name='order[payments_attributes][][payment_method_id]']:checked")
 
+        // ignore aba when apply_store_credit is clicked, spree wrap container with checkout form.
+        if (e.originalEvent.submitter.name == 'apply_store_credit')
+          return;
+
         // no payment is checked
         if($paymentChecked.length == 0)
           return;
