@@ -1,0 +1,14 @@
+<form method="POST" style='display:none;' id="acleda_checkout_form" action="<%=action_url%>">
+  <% gateway_params.each do |key, value| %>
+    <div style='padding: 5px;' class="clearfix;">
+      <%=label_tag key, key, style: 'float: left; width: 100px;' %>
+      <%= text_field_tag key, value, size: 120, style: 'margin-left: 110px;' %>
+    </div>
+  <% end %>
+  <button type="submit" id='acleda_btn'> Submit </button>
+</form>
+
+<script>
+  if(document.getElementById("acleda_checkout_form"))
+    document.getElementById("acleda_checkout_form").submit()
+</script>

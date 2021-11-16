@@ -21,6 +21,11 @@ Spree::Core::Engine.add_routes do
       get 'continue', to: 'payways#continue'
     end
 
+    resource :acledas, only: [] do
+      get 'success', to: 'acledas#success'
+      get 'error', to: 'acledas#error'
+    end
+
     resources :wings, only: [:create] do
       match 'return', to: 'wings#return', via: [:get, :post]
     end

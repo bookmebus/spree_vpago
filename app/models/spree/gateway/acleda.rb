@@ -1,9 +1,13 @@
 module Spree
   class Gateway::Acleda < PaymentMethod
+    preference :payment_expiry_time_in_mn, :integer
+    preference :host, :string
     preference :login_id, :string
     preference :password, :string
     preference :merchant_id, :string
     preference :signature, :string
+    preference :success_url, :string
+    preference :error_url, :string
 
     def payment_source_class
       Spree::VpagoPaymentSource
