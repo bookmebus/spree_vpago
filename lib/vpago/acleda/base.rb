@@ -36,6 +36,10 @@ module Vpago
         @payment.payment_method.preferences[:merchant_id]
       end
 
+      def merchant_name
+        @payment.payment_method.preferences[:merchant_name]
+      end
+
       def signature
         @payment.payment_method.preferences[:signature]
       end

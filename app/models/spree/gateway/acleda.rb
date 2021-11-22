@@ -5,6 +5,7 @@ module Spree
     preference :login_id, :string
     preference :password, :string
     preference :merchant_id, :string
+    preference :merchant_name, :string
     preference :signature, :string
     preference :success_url, :string
     preference :error_url, :string

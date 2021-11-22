@@ -3,7 +3,7 @@ module Spree
     class WingsController < BaseController
       skip_before_action :verify_authenticity_token, only: [:return, :continue, :create]
       before_action :retrive_payment, only: [:create]
-      before_action :find_payment, only: [:return, :continue,]
+      before_action :find_payment, only: [:return, :continue]
 
       def create
         render_plain = true
