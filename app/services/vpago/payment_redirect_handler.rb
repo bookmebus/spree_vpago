@@ -27,7 +27,16 @@ module Vpago
         process_aba_gateway
       elsif payment_method.type_wingsdk?
         process_wing_gateway
+      elsif payment_method.type_acleda_mobile?
+        process_acleda_mobile
       end
+    end
+
+    def process_acleda_mobile
+      service = Vpago::AcledaMobile::Checkout.new(@payment)
+      service.call
+
+      @redirect_options = service.results
     end
 
     def process_aba_gateway

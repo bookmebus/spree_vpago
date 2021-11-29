@@ -1,16 +1,12 @@
 module Spree
-  class Gateway::Acleda < PaymentMethod
-    preference :payment_expiry_time_in_mn, :integer
-    preference :host, :string
-    preference :login_id, :string
-    preference :password, :string
-    preference :merchant_id, :string
-    preference :merchant_name, :string
-    preference :signature, :string
-    preference :deeplink_partner_id, :string
-    preference :deeplink_data_encryption_key, :string
-    preference :success_url, :string
-    preference :error_url, :string
+  class Gateway::AcledaMobile < PaymentMethod
+    preference :partner_id, :string
+    preference :data_encryption_key, :string
+
+    # partial to render the gateway.
+    def method_type
+      "acleda_mobile"
+    end
 
     def payment_source_class
       Spree::VpagoPaymentSource

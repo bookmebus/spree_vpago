@@ -67,7 +67,7 @@ module Vpago
       end
 
       def create_session_path
-        "/VETDIGITAL/XPAYConnectorServiceInterfaceImplV2/XPAYConnectorServiceInterfaceImplV2RS/openSessionV2"
+        ENV['ACLEDA_CREATE_SESSION_PATH']
       end
 
       def gateway_params

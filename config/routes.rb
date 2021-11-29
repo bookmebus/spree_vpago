@@ -24,6 +24,7 @@ Spree::Core::Engine.add_routes do
     resource :acledas, only: [] do
       get 'success', to: 'acledas#success'
       get 'error', to: 'acledas#error'
+      match 'deeplink_return', to: 'acledas#deeplink_return', via: :post
     end
 
     resources :wings, only: [:create] do

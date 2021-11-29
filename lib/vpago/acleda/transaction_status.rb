@@ -53,7 +53,7 @@ module Vpago
       end
 
       def check_status_path
-        '/VETDIGITAL/XPAYConnectorServiceInterfaceImplV2/XPAYConnectorServiceInterfaceImplV2RS/getTxnStatus'
+        ENV['ACLEDA_CHECK_STATUS_PATH']
       end
 
       def json_response

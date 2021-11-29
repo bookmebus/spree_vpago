@@ -24,7 +24,7 @@ module Vpago
           @error_message = checker.error_message
           marker_options = @options.merge(status: false, description: @error_message)
 
-          marker = ::Vpago::Payway::PaymentStatusMarker.new(@payment, marker_options)
+          marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
           marker.call
         end
       end
