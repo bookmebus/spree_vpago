@@ -7,6 +7,8 @@ module Vpago
       end
 
       def call
+        return if @payment.order.paid?
+
         checker = payment_status_checker
 
         if(checker.success?)
