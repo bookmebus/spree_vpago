@@ -3,6 +3,7 @@ Spree::Core::Engine.add_routes do
 
   resource :payway_card_popups, only: [:show]
   resource :wing_redirects, only: [:show]
+  resource :acleda_redirects, only: [:show]
 
   resources :payway_results, only: [] do
     collection do

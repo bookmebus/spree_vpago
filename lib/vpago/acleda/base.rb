@@ -12,16 +12,26 @@ module Vpago
         @payment.number
       end
 
+      def app_checkout
+        is_app_checkout? ? '1' : '0'
+      end
+
+      def is_app_checkout?
+        return false if @options[:app_checkout].blank?
+
+        @options[:app_checkout]
+      end
+
       def host
         @payment.payment_method.preferences[:host]
       end
 
       def success_url
-        @payment.payment_method.preferences[:success_url]
+        "#{@payment.payment_method.preferences[:success_url]}?app_checkout=#{app_checkout}"
       end
 
       def error_url
-        @payment.payment_method.preferences[:error_url]
+        "#{@payment.payment_method.preferences[:error_url]}?app_checkout=#{app_checkout}"
       end
 
       def login_id

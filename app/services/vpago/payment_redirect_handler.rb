@@ -27,9 +27,19 @@ module Vpago
         process_aba_gateway
       elsif payment_method.type_wingsdk?
         process_wing_gateway
+      elsif payment_method.type_acleda?
+        process_acleda_gateway
       elsif payment_method.type_acleda_mobile?
         process_acleda_mobile
       end
+    end
+
+    def process_acleda_gateway
+      data = {
+        href: "#{ENV['DEFAULT_URL_HOST']}/acleda_redirects?payment_number=#{@payment.number}"
+      }
+
+      @redirect_options = data
     end
 
     def process_acleda_mobile

@@ -27,7 +27,7 @@ module Spree
           flash[:order_completed] = "1" # required by order_just_completed for purchase tracking
         end
 
-        if params[:app_checkout] == 'yes'
+        if params[:app_checkout].to_s == '1'
           redirect_to order.paid? || @payment.pending? ? success_payway_results_path : failed_payway_results_path
         else
           redirect_to order.paid? || @payment.pending? ? order_path(order) : checkout_state_path(:payment)
@@ -50,11 +50,11 @@ module Spree
       end
 
       def redirect_order(order)
-        if order.paid? || @payment.pending?
-          flash[:order_completed] = "1" if order.paid? # required by order_just_completed for purchase tracking
-          redirect_to order_path(order)
+        if params[:app_checkout].to_s == '1'
+          redirect_to order.paid? || @payment.pending? ? success_payway_results_path : failed_payway_results_path
         else
-          redirect_to checkout_state_path(:payment)
+          flash[:order_completed] = "1" if order.paid? # required by order_just_completed for purchase tracking
+          redirect_to order.paid? || @payment.pending? ? order_path(order) : checkout_state_path(:payment)
         end
       end
 

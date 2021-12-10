@@ -43,7 +43,7 @@ module Spree
       # currently Payway does not support to cancel the gateway
       
       # in our case don't do anything
-      ActiveMerchant::Billing::Response.new(true, 'Mollie order has been cancelled.')
+      ActiveMerchant::Billing::Response.new(true, 'Acleda order has been cancelled.')
     end
   end
 end
