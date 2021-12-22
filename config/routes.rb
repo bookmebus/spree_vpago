@@ -28,6 +28,10 @@ Spree::Core::Engine.add_routes do
       match 'return', to: 'acledas#return', via: :post
     end
 
+    resource :acleda_mobiles, only: [] do
+      match 'return', to: 'acleda_mobiles#return', via: :post
+    end
+
     resources :wings, only: [:create] do
       match 'return', to: 'wings#return', via: [:get, :post]
     end
