@@ -1,0 +1,25 @@
+<%
+  is_payway = method.class == Spree::Gateway::Payway
+
+  if is_payway
+    is_card_payment = method.preferences[:payment_option] == 'cards'
+
+    pm_icon = is_card_payment ? 'card' : 'payway_abapay'
+    pm_name = is_card_payment ? t('payment.payway') : t('payment.abapay')
+    pm_description = is_card_payment ? t('payment.payway_description') : t('payment.abapay_description')
+  else
+    pm_icon = method.preferences[:icon_name].presence || 'card'
+    pm_name = Spree.t(method.name, scope: :payment_methods, default: method.name)
+    pm_description= method.description
+  end
+%>
+
+<div class="d-flex align-items-center">
+  <%= image_tag "payment_method_icons/#{pm_icon}.png", alt: method.name, class: 'payment-icon' %>
+  <div class="ml-3">
+    <p class="payment-label"><%= pm_name %></p>
+    <% if pm_description.present? %>
+      <p class="payment-description"><%= pm_description %></p>
+    <% end %>
+  </div>
+</div>

@@ -37,6 +37,8 @@ module Spree
         'spree/checkout/payment/payway_form'
       elsif payment_method.type_wingsdk?
         'spree/checkout/payment/wingsdk_form'
+      elsif payment_method.type_acleda?
+        'spree/checkout/payment/acleda_form'
       end
     end
     

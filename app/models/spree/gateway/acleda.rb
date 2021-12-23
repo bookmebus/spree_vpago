@@ -1,17 +1,16 @@
 module Spree
-  class Gateway::WingSdk < PaymentMethod
-    preference :username, :string
-    preference :biller_code, :string
-    preference :rest_api_key, :string
-    preference :sandbox, :boolean
+  class Gateway::Acleda < PaymentMethod
+    preference :payment_expiry_time_in_mn, :integer
     preference :host, :string
-    preference :return_url, :string
-    preference :transaction_fee_fix, :string
-    preference :transaction_fee_percentage, :string
-
-    ## for basic authentication on checking transaction on vtenh
-    preference :basic_auth_username, :string
-    preference :basic_auth_password, :string
+    preference :login_id, :string
+    preference :password, :string
+    preference :merchant_id, :string
+    preference :merchant_name, :string
+    preference :signature, :string
+    preference :deeplink_partner_id, :string
+    preference :deeplink_data_encryption_key, :string
+    preference :success_url, :string
+    preference :error_url, :string
 
     def payment_source_class
       Spree::VpagoPaymentSource
@@ -44,7 +43,7 @@ module Spree
       # currently Payway does not support to cancel the gateway
       
       # in our case don't do anything
-      ActiveMerchant::Billing::Response.new(true, 'Wing Sdk order has been cancelled.')
+      ActiveMerchant::Billing::Response.new(true, 'Acleda order has been cancelled.')
     end
   end
 end
