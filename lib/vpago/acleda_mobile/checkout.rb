@@ -37,7 +37,12 @@ module Vpago
         encrypted_result
       end
 
+      def hmac_hash(message, key)
+        OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), key, message)
+      end
+
       def aes_encrypted_payment_data
+
         data = payment_data.to_json + "~" + hmac_encrypted_payment_data
         key = encryption_key
         iv = [key].pack("H*") ##hex2bin
