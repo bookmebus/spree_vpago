@@ -28,23 +28,20 @@ module Vpago
         "market://com.domain.acledabankqr/app?partner_id=#{partner_id}&payment_data=#{aes_encrypted_payment_data}"
       end
 
-      def hmac_encrypted_payment_data
-        json_data = payment_data.to_json
-        key = encryption_key
+      def hmac_payment_data
+        message = payment_data.to_json
+        key = self.encryption_key
 
-        encrypted_result = Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), key, json_data))
-        encrypted_result.delete!("\n")
-        encrypted_result
+        hmac_hash(key, message)
       end
 
-      def hmac_hash(message, key)
-        OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), key, message)
+      def hmac_hash(key, message)
+        OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha256'), key, message)
       end
 
       def aes_encrypted_payment_data
-
-        data = payment_data.to_json + "~" + hmac_encrypted_payment_data
-        key = encryption_key
+        data = payment_data.to_json + "~" + hmac_payment_data
+        key = self.encryption_key
         iv = [key].pack("H*") ##hex2bin
         cipher = OpenSSL::Cipher.new('AES-256-CBC')
         cipher.encrypt
