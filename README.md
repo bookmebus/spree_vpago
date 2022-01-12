@@ -46,7 +46,17 @@ Run test
 ```
 rspec spec/
 ```
+### Required Enviroment Variables
 
+- **Acleda Mobile**
+    ```ruby
+    ENV['ACLEDA_MOBILE_SECRET_HASH_KEY']
+    ```
+- **Acleda**
+    ```ruby
+    ENV['ACLEDA_CHECK_STATUS_PATH']
+    ENV['ACLEDA_CREATE_SESSION_PATH']
+    ```
 ### Note
 > Most payment gateways are written in php, you might compare ruby with its php counterpart by running code in the .php file.
 
