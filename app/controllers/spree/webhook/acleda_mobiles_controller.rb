@@ -4,6 +4,13 @@ module Spree
       skip_before_action :verify_authenticity_token
       before_action :find_payment, only: [:return]
 
+      # {
+      #   "TransactionId": "REF0361472663",
+      #   "PaymentTokenId": "16de81d4-b5ef-ef59-16de-81d4b5efef59",
+      #   "TxnAmount": "30",
+      #   "SenderName": "Test User",
+      #   "SignedHash": "c5b9be690bde7dc8a0abebb1a45c0850359540a4977aecd4cdf13e15a2edfe79"
+      #   }
       def return
         request_updater = ::Vpago::AcledaMobile::PaymentRequestUpdater.new(@payment)
         request_updater.call
@@ -21,7 +28,13 @@ module Spree
       private
 
       def find_payment
-        @payment = Spree::Payment.find_by(number: params[:TransactionId])
+        options = params.slice(:TransactionId, :PaymentTokenId, :TxnAmount, :SenderName, :SignedHash)
+        service = Vpago::AcledaMobile::PaymentRetriever.new(options)
+        service.call
+
+        return render_failed if !service.data_valid?
+
+        @payment = service.payment
         return render_payment_not_found if @payment.blank?
       end
 
