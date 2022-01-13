@@ -1,5 +1,5 @@
 module Vpago
-  module Acleda
+  module AcledaMobile
     class PaymentRequestUpdater
       attr_accessor :payment, :error_message
 
@@ -9,8 +9,6 @@ module Vpago
       end
 
       def call
-        return if @payment.order.paid?
-
         checker = payment_status_checker
 
         if(checker.success?)
@@ -33,10 +31,9 @@ module Vpago
         end
       end
 
-      private
       def payment_status_checker
-        trans_status = Vpago::Acleda::TransactionStatus.new(@payment)
-        trans_status.call
+        trans_status = Vpago::AcledaMobile::TransactionStatus.new(@payment)
+        trans_status.call(options[:payment_token_id]) ##TO DO: remove payment_token_id after testing
         trans_status
       end
     end
