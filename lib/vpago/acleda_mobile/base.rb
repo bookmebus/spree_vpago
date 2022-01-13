@@ -16,6 +16,10 @@ module Vpago
         @payment.payment_method.preferences[:data_encryption_key]
       end
 
+      def return_to_app_url
+        @payment.payment_method.preferences[:app_url]
+      end
+
       def partner_id
         @payment.payment_method.preferences[:partner_id]
       end

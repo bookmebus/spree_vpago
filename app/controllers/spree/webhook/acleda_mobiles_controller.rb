@@ -5,8 +5,8 @@ module Spree
       before_action :find_payment, only: [:return]
 
       # {
-      #   "TransactionId": "REF0361472663",
-      #   "PaymentTokenId": "16de81d4-b5ef-ef59-16de-81d4b5efef59",
+      #   "TransactionId": "16de81d4-b5ef-ef59-16de-81d4b5efef59",
+      #   "PaymentTokenId": "REF0361472663", VTENH payment number
       #   "TxnAmount": "30",
       #   "SenderName": "Test User",
       #   "SignedHash": "c5b9be690bde7dc8a0abebb1a45c0850359540a4977aecd4cdf13e15a2edfe79"
@@ -29,10 +29,11 @@ module Spree
 
       def find_payment
         options = params.slice(:TransactionId, :PaymentTokenId, :TxnAmount, :SenderName, :SignedHash)
+
         service = Vpago::AcledaMobile::PaymentRetriever.new(options)
         service.call
 
-        return render_failed if !service.data_valid?
+        return render_hashing_error if !service.data_valid?
 
         @payment = service.payment
         return render_payment_not_found if @payment.blank?
@@ -58,6 +59,14 @@ module Spree
 
         acleda_mobile_response(response_data, status_code)
       end
+
+      def render_hashing_error
+        status_code = 403
+        response_data = acleda_mobile_response_data('Invalid SignedHash', status_code)
+
+        acleda_mobile_response(response_data, status_code)
+      end
+      
 
       def acleda_mobile_response(response_data, status_code)
         render json: response_data, status: status_code

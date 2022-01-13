@@ -60,7 +60,8 @@ module Vpago
           payment_amount: amount_with_fee,
           payment_amount_ccy: 'USD',
           payment_purpose: 'VTENH Transaction',
-          txn_ref: payment_number
+          txn_ref: payment_number,
+          app_url: return_to_app_url
         }
       end
 

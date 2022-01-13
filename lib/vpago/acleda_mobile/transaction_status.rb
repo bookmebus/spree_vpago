@@ -6,7 +6,7 @@ module Vpago
       attr_accessor :error_message
       attr_accessor :result
 
-      ##TO DO: remove payment_token_id after testing
+      ##TO DO: remove payment_token_id when check transaction status api ready
       def call(payment_token_id=nil)
         prepare
         process(payment_token_id)

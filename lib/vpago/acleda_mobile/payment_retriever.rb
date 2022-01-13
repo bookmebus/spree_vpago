@@ -17,7 +17,7 @@ module Vpago
       end
 
       def find_payment
-        @payment = Spree::Payment.find_by(number: @options[:TransactionId])
+        @payment = Spree::Payment.find_by(number: @options[:PaymentTokenId])
       end
     end
   end

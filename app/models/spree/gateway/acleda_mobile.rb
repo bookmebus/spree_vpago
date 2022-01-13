@@ -2,6 +2,7 @@ module Spree
   class Gateway::AcledaMobile < PaymentMethod
     preference :partner_id, :string
     preference :data_encryption_key, :string
+    preference :app_url, :string
 
     # partial to render the gateway.
     def method_type

@@ -33,7 +33,7 @@ module Vpago
 
       def payment_status_checker
         trans_status = Vpago::AcledaMobile::TransactionStatus.new(@payment)
-        trans_status.call(@options[:payment_token_id]) ##TO DO: remove payment_token_id after testing
+        trans_status.call(@options[:payment_token_id]) ##TO DO: remove payment_token_id when check transaction status api ready
         trans_status
       end
     end
