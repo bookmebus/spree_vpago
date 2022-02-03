@@ -80,7 +80,7 @@ module Vpago
       if @response.status == 200
         json_response = JSON.parse(@response.body)
 
-        if json_response["status"] == "0"
+        if json_response["status"]["code"] == "00"
           @redirect_options = json_response
         else
           @error_message = json_response["description"]
@@ -95,7 +95,6 @@ module Vpago
 
       abapay_payment = ::Vpago::PaywayV2::Checkout.new(@payment, options)
       gateway_params = abapay_payment.gateway_params
-      gateway_params[:payment_option] = 'abapay_deeplink'
 
       conn = Faraday::Connection.new do |faraday|
         faraday.request  :url_encoded

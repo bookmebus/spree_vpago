@@ -16,7 +16,7 @@ module Spree
         payload = JSON.parse(params[:response])
         payment = Spree::Payment.find_by(number: payload["tran_id"])
 
-        request_updater = ::Vpago::Payway::PaymentRequestUpdater.new(payment)
+        request_updater = ::Vpago::PaywayV2::PaymentRequestUpdater.new(payment)
         request_updater.call
 
         order = payment.order

@@ -9,7 +9,7 @@ module Spree
           app_checkout: true
         }
 
-        @client_redirect = ::Vpago::Payway::Checkout.new(@payment, options)
+        @client_redirect = ::Vpago::PaywayV2::Checkout.new(@payment, options)
       end
     end
 

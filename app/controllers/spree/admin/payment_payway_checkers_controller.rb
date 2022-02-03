@@ -7,7 +7,7 @@ module Spree
           updated_by_user_id: try_spree_current_user.id,
           updated_reason: Spree.t('vpago.payments.checker_updated_by_description') 
         }
-        spree_updater = Vpago::Payway::PaymentRequestUpdater.new(@payment, options)
+        spree_updater = Vpago::PaywayV2::PaymentRequestUpdater.new(@payment, options)
         spree_updater.call
 
         @payment.reload

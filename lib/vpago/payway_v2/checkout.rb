@@ -22,6 +22,9 @@ module Vpago
         result
       end
       
+      def checkout_url
+        "#{host}#{ENV['PAYWAY_CHECKOUT_PATH']}"
+      end
     end
   end
 end

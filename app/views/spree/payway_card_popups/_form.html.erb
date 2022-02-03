@@ -1,5 +1,5 @@
 <!-- return back when user choose payway getway and click on the continue button  -->
-<form method="POST" target="aba_webservice" action="<%= @client_redirect.checkout_url %>" id="aba_merchant_request">
+<form method="POST" style='display:none;' action="<%= @client_redirect.checkout_url %>" id="aba_merchant_request">
   <% @client_redirect.gateway_params.each do |key, value| %>
     <div style='padding: 5px;' class="clearfix;">
       <%=label_tag key, key, style: 'float: left; width: 100px;' %>
@@ -8,3 +8,8 @@
   <% end %>
   <button type="submit" id='aba_btn'> Submit </button>
 </form>
+
+<script>
+  if(document.getElementById("aba_merchant_request"))
+    document.getElementById("aba_merchant_request").submit()
+</script>

@@ -1,5 +1,5 @@
 <% if @payment.present? %>
-  <%= render 'spree/checkout/payment/payway_loader', payway_gateways: [@payment.payment_method], order: @payment.order %>
+  <%#= render 'spree/checkout/payment/payway_loader', payway_gateways: [@payment.payment_method], order: @payment.order %>
 
   <%= render 'form' if @client_redirect.present? %>
 <% end %>

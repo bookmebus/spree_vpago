@@ -31,8 +31,8 @@ RSpec.describe Spree::Admin::PaymentPaywayCheckersController, type: :controller 
     end
 
     it "redirects to order path if payment status updater is success" do
-      checker = double(:payway_status_checker, 'success?': true)
-      allow_any_instance_of(Vpago::Payway::PaymentRequestUpdater).to receive(:check_payway_status).and_return(checker)
+      checker = double(:payway_status_checker, 'success?': true, result: {status: 0})
+      allow_any_instance_of(Vpago::PaywayV2::PaymentRequestUpdater).to receive(:check_payway_status).and_return(checker)
 
       put :update, params: {id: payment.number}
 
@@ -50,7 +50,7 @@ RSpec.describe Spree::Admin::PaymentPaywayCheckersController, type: :controller 
 
     it "redirects to order path if payment status updater is false" do
       checker = double(:payway_status_checker, 'success?': false, error_message: 'error-message')
-      allow_any_instance_of(Vpago::Payway::PaymentRequestUpdater).to receive(:check_payway_status).and_return(checker)
+      allow_any_instance_of(Vpago::PaywayV2::PaymentRequestUpdater).to receive(:check_payway_status).and_return(checker)
 
       put :update, params: {id: payment.number}
 

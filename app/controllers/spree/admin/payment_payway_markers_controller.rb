@@ -17,7 +17,7 @@ module Spree
           status: true,
           description: "vpago.payments.mark_with_reason"
         }
-        spree_updater = Vpago::Payway::PaymentStatusMarker.new(@payment, options)
+        spree_updater = Vpago::PaymentStatusMarker.new(@payment, options)
         spree_updater.call
 
         @payment.reload

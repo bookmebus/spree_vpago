@@ -77,6 +77,9 @@ module Vpago
 
       def payment_option
         card_option = @payment.payment_method.preferences[:payment_option]
+
+        return 'abapay_deeplink' if is_app_checkout? && card_option == 'abapay'
+
         Vpago::Payway::CARD_TYPES.index(card_option) == nil ?  Vpago::Payway::CARD_TYPE_ABAPAY : card_option
       end
 
@@ -97,7 +100,6 @@ module Vpago
       end
 
       def hash_hmac
-        # data = "#{merchant_id}#{transaction_id}#{amount}"
         hash = Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha512'), api_key, hash_data))
 
         # somehow php counter part are not able to decode if the \n present.
@@ -106,10 +108,6 @@ module Vpago
 
       def hash_data
         "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}#{email}#{phone}#{payment_option}#{return_url}#{continue_success_url}#{return_params}"
-      end
-
-      def checkout_url
-        "#{host}#{ENV['PAYWAY_CHECKOUT_PATH']}"
       end
     end
   end

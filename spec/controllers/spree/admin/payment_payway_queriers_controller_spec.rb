@@ -33,7 +33,7 @@ RSpec.describe Spree::Admin::PaymentPaywayQueriersController, type: :controller 
     it "redirects to order path if payment status updater is success" do
 
       tran_status_result = double(:tran_status_result, success?: true, result: {"status"=>0} )
-      expect(Vpago::Payway::TransactionStatus).to receive(:new).with(payment).and_return(tran_status_result)
+      expect(Vpago::PaywayV2::TransactionStatus).to receive(:new).with(payment).and_return(tran_status_result)
       expect(tran_status_result).to receive(:call)
 
       get :show, params: {id: payment.number}
@@ -45,7 +45,7 @@ RSpec.describe Spree::Admin::PaymentPaywayQueriersController, type: :controller 
 
     it "redirects to order path if payment status updater is false" do
       tran_status_result = double(:tran_status_result, success?: false, error_message:  {"status"=>1} )
-      expect(Vpago::Payway::TransactionStatus).to receive(:new).with(payment).and_return(tran_status_result)
+      expect(Vpago::PaywayV2::TransactionStatus).to receive(:new).with(payment).and_return(tran_status_result)
       expect(tran_status_result).to receive(:call)
 
       get :show, params: {id: payment.number}
