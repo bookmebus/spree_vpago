@@ -1,9 +1,11 @@
 <% content_for :head do %>
 
-  <!-- Payway script load -->
+  <!--Legacy Payway script load 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
   <link rel="stylesheet" href="<%=payway_gateway.preferences[:host]%>/checkout-popup.html?file=css"/>
-  <script src="<%=payway_gateway.preferences[:host]%>/checkout-popup.html?file=js"></script>
+  <script src="<%=payway_gateway.preferences[:host]%>/checkout-popup.html?file=js"></script> -->
+
+  <script src="https://checkout.payway.com.kh/plugins/checkout2-0.js"></script>
 
   <script>
 

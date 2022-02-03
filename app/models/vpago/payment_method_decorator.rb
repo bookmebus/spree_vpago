@@ -17,7 +17,7 @@ module Vpago
 
     def vapgo_checkout_service
       if type_payway?
-        ::Vpago::Payway::Checkout
+        ::Vpago::PaywayV2::Checkout
       elsif type_wingsdk?
         ::Vpago::WingSdk::Checkout
       elsif type_acleda?

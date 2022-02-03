@@ -93,7 +93,7 @@ module Vpago
         app_checkout: true
       }
 
-      abapay_payment = ::Vpago::Payway::Checkout.new(@payment, options)
+      abapay_payment = ::Vpago::PaywayV2::Checkout.new(@payment, options)
       gateway_params = abapay_payment.gateway_params
       gateway_params[:payment_option] = 'abapay_deeplink'
 
@@ -101,7 +101,7 @@ module Vpago
         faraday.request  :url_encoded
       end
 
-      @response = conn.post(abapay_payment.action_url, gateway_params) do |request|
+      @response = conn.post(abapay_payment.checkout_url, gateway_params) do |request|
         request.headers["Referer"] = ENV['DEFAULT_URL_HOST']
       end
     end
