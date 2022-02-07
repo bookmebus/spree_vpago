@@ -1,5 +1,5 @@
 <%
-  is_payway = method.class == Spree::Gateway::Payway
+  is_payway = method.class == Spree::Gateway::Payway || method.class == Spree::Gateway::PaywayV2
 
   if is_payway
     is_card_payment = method.preferences[:payment_option] == 'cards'
