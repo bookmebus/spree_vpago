@@ -1,13 +1,12 @@
 module Spree
   class Gateway::PaywayV2 < PaymentMethod
-    # 'abapay', 'cards'
-    preference :endpoint, :string
+    # preference :endpoint, :string
+    # preference :return_url, :string
+    # preference :continue_success_url, :string
     preference :host, :string
     preference :api_key, :string
     preference :merchant_id, :string
-    preference :return_url, :string
-    preference :continue_success_url, :string
-    preference :payment_option, :string
+    preference :payment_option, :string # 'abapay', 'cards', 'abapay_deeplink'
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
 

@@ -1,0 +1,5 @@
+<%= render 'spree/admin/payments/source_views/vpago_payment_tmpl',
+    payment: payment, 
+    check_status_url: admin_payment_payway_querier_path(payment),
+    heal_payment_url: admin_payment_payway_checker_path(payment),
+    manual_update_payment_url: admin_payment_payway_marker_path(payment.number) %>

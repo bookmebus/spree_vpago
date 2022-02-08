@@ -1,12 +1,41 @@
 module Spree
   module Webhook
     class PaywaysController < BaseController
-      skip_before_action :verify_authenticity_token, only: [:return, :continue]
-  
+      skip_before_action :verify_authenticity_token, only: [:return, :v2_return, :continue, :v2_continue]
+
       # match via: [:get, :post]
       # {"response"=>"{\"tran_id\":\"PE13LXT1\",\"status\":0"}"}
-      def return
+      def v2_return
+        handler_service = v2_request_updater_service
 
+        return_callback_handler(handler_service)
+      end
+
+      def return
+        handler_service = request_updater_service
+
+        return_callback_handler(handler_service)
+      end
+
+      # https://vtenh.herokuapp.com/payways/continue?tran_id=P2W2S1LB
+      def v2_continue
+        continue_callback_handler
+      end
+
+      def continue
+        continue_callback_handler
+      end
+
+      private
+      def v2_request_updater_service
+        ::Vpago::PaywayV2::PaymentRequestUpdater
+      end
+
+      def request_updater_service
+        ::Vpago::Payway::PaymentRequestUpdater
+      end
+
+      def return_callback_handler(handler_service)
         # pawway send get request with nothing
         if(request.method == "GET")
           return render plain: :ok
@@ -16,7 +45,7 @@ module Spree
         payload = JSON.parse(params[:response])
         payment = Spree::Payment.find_by(number: payload["tran_id"])
 
-        request_updater = ::Vpago::Payway::PaymentRequestUpdater.new(payment)
+        request_updater = handler_service.new(payment)
         request_updater.call
 
         order = payment.order
@@ -27,11 +56,9 @@ module Spree
         else
           render plain: :failed, status: 400
         end
-
       end
 
-      # https://vtenh.herokuapp.com/payways/continue?tran_id=P2W2S1LB
-      def continue
+      def continue_callback_handler
         payment = Spree::Payment.find_by number: params[:tran_id]
         order = payment.order
 
@@ -46,6 +73,5 @@ module Spree
         end
       end
     end
-  
   end
 end

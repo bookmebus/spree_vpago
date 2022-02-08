@@ -3,7 +3,7 @@ module Spree
     class PaymentPaywayQueriersController < PaymentPaywayBaseController
       include Spree::Backend::Callbacks
       def show
-        tran_status = Vpago::Payway::TransactionStatus.new(@payment)
+        tran_status = transaction_status_service.new(@payment)
         tran_status.call
 
         if tran_status.success?
@@ -13,6 +13,14 @@ module Spree
         end
 
         redirect_to admin_order_payment_path(order_id: @payment.order.number, id: @payment.number)
+      end
+
+      def transaction_status_service
+        if @payment.payment_method.type_payway_v2?
+          Vpago::PaywayV2::TransactionStatus
+        elsif @payment.payment_method.type_payway?
+          Vpago::Payway::TransactionStatus
+        end
       end
     end
   end
