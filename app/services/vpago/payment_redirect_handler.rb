@@ -23,7 +23,9 @@ module Vpago
     end
 
     def check_and_process_payment
-      if payment_method.type_payway?
+      if payment_method.type_payway_v2?
+        process_aba_v2_gateway
+      elsif payment_method.type_payway?
         process_aba_gateway
       elsif payment_method.type_wingsdk?
         process_wing_gateway
@@ -47,6 +49,54 @@ module Vpago
       service.call
 
       @redirect_options = service.results
+    end
+
+    def process_aba_v2_gateway
+      payment_option = @payment.payment_method.preferences[:payment_option]
+
+      @payment.process!
+
+      payment_option == 'abapay' ? process_abapay_v2_deeplink : process_payway_v2_card
+    end
+
+    def process_payway_v2_card
+      ## TO DO: generate redirect url
+      data = {
+        href: "#{ENV['DEFAULT_URL_HOST']}/payway_v2_card_popups?payment_number=#{@payment.number}"
+      }
+
+      @redirect_options = data
+    end
+
+    def process_abapay_v2_deeplink
+      response = send_process_payway_v2_payment
+
+      if response.status == 200
+        json_response = JSON.parse(response.body)
+
+        if json_response["status"]["code"] == "00"
+          @redirect_options = json_response
+        else
+          @error_message = json_response["description"]
+        end
+      end
+    end
+
+    def send_process_payway_v2_payment
+      options = {
+        app_checkout: true
+      }
+
+      abapay_payment = ::Vpago::PaywayV2::Checkout.new(@payment, options)
+      gateway_params = abapay_payment.gateway_params
+
+      conn = Faraday::Connection.new do |faraday|
+        faraday.request  :url_encoded
+      end
+
+      conn.post(abapay_payment.checkout_url, gateway_params) do |request|
+        request.headers["Referer"] = ENV['DEFAULT_URL_HOST']
+      end
     end
 
     def process_aba_gateway

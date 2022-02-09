@@ -20,7 +20,7 @@ module Vpago
       # private
       def is_vpago_type?
         payment_method.is_a?(Spree::Gateway::Payway) || payment_method.is_a?(Spree::Gateway::WingSdk) || 
-        payment_method.is_a?(Spree::Gateway::Acleda)
+        payment_method.is_a?(Spree::Gateway::Acleda) || payment_method.is_a?(Spree::Gateway::PaywayV2)
       end
 
       def cancel_with_vpago_gateway

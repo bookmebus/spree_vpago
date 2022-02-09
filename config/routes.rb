@@ -2,6 +2,7 @@ Spree::Core::Engine.add_routes do
   # Add your extension routes here
 
   resource :payway_card_popups, only: [:show]
+  resource :payway_v2_card_popups, only: [:show]
   resource :wing_redirects, only: [:show]
   resource :acleda_redirects, only: [:show]
 

@@ -1,13 +1,14 @@
 module Vpago
   module PaymentMethodDecorator
     TYPE_PAYWAY = 'Spree::Gateway::Payway'
+    TYPE_PAYWAY_V2 = 'Spree::Gateway::PaywayV2'
     TYPE_WINGSDK = 'Spree::Gateway::WingSdk'
     TYPE_ACLEDA = 'Spree::Gateway::Acleda'
     TYPE_ACLEDA_MOBILE = 'Spree::Gateway::AcledaMobile'
 
     def self.prepended(base)
       def base.vpago_payments
-        [Spree::PaymentMethod::TYPE_PAYWAY, Spree::PaymentMethod::TYPE_WINGSDK, Spree::PaymentMethod::TYPE_ACLEDA, Spree::PaymentMethod::TYPE_ACLEDA_MOBILE]
+        [Spree::PaymentMethod::TYPE_PAYWAY_V2, Spree::PaymentMethod::TYPE_PAYWAY, Spree::PaymentMethod::TYPE_WINGSDK, Spree::PaymentMethod::TYPE_ACLEDA, Spree::PaymentMethod::TYPE_ACLEDA_MOBILE]
       end
     end
 
@@ -18,6 +19,8 @@ module Vpago
     def vapgo_checkout_service
       if type_payway?
         ::Vpago::Payway::Checkout
+      elsif type_payway_v2?
+        ::Vpago::PaywayV2::Checkout
       elsif type_wingsdk?
         ::Vpago::WingSdk::Checkout
       elsif type_acleda?
@@ -35,6 +38,10 @@ module Vpago
 
     def type_payway?
       type == Spree::PaymentMethod::TYPE_PAYWAY
+    end
+
+    def type_payway_v2?
+      type == Spree::PaymentMethod::TYPE_PAYWAY_V2
     end
 
     def type_wingsdk?
