@@ -57,6 +57,13 @@ rspec spec/
     ENV['ACLEDA_CHECK_STATUS_PATH']
     ENV['ACLEDA_CREATE_SESSION_PATH']
     ```
+- **Payway**
+    ```ruby
+    ENV['PAYWAY_CHECKOUT_PATH']
+    ENV['PAYWAY_CHECK_TRANSACTION_PATH']
+    ENV['PAYWAY_RETURN_CALLBACK_URL']
+    ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL']
+    ```
 ### Note
 > Most payment gateways are written in php, you might compare ruby with its php counterpart by running code in the .php file.
 

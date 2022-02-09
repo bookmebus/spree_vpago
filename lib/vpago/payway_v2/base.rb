@@ -51,7 +51,7 @@ module Vpago
       end
 
       def return_url
-        preferred_return_url = @payment.payment_method.preferences[:return_url]
+        preferred_return_url = ENV['PAYWAY_RETURN_CALLBACK_URL']
         return nil if preferred_return_url.blank?
         
         Base64.encode64(preferred_return_url).delete("\n")
@@ -68,7 +68,7 @@ module Vpago
       end
 
       def continue_success_url
-        preferred_continue_url = @payment.payment_method.preferences[:continue_success_url]
+        preferred_continue_url = ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL']
         return nil if preferred_continue_url.blank?
 
         query_string = "tran_id=#{transaction_id}&app_checkout=#{app_checkout}"

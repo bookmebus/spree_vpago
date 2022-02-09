@@ -17,7 +17,7 @@ module Spree
           status: true,
           description: "vpago.payments.mark_with_reason"
         }
-        spree_updater = Vpago::Payway::PaymentStatusMarker.new(@payment, options)
+        spree_updater = status_marker_service.new(@payment, options)
         spree_updater.call
 
         @payment.reload
@@ -29,6 +29,14 @@ module Spree
         end
 
         redirect_to admin_order_payment_path(order_id: @payment.order.number, id: @payment.number)
+      end
+
+      def status_marker_service
+        if @payment.payment_method.type_payway_v2?
+          Vpago::PaymentStatusMarker
+        elsif @payment.payment_method.type_payway?
+          Vpago::Payway::PaymentStatusMarker
+        end
       end
     end
   end
