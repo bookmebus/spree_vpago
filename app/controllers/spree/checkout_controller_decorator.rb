@@ -35,6 +35,8 @@ module Spree
     def payment_form_layout
       if payment_method.type_payway?
         'spree/checkout/payment/payway_form'
+      elsif payment_method.type_payway_v2?
+        'spree/checkout/payment/payway_v2_form'
       elsif payment_method.type_wingsdk?
         'spree/checkout/payment/wingsdk_form'
       elsif payment_method.type_acleda?

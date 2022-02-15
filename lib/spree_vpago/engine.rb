@@ -17,6 +17,7 @@ module SpreeVpago
 
     def self.activate
       ::Rails.application.config.spree.payment_methods << Spree::Gateway::Payway
+      ::Rails.application.config.spree.payment_methods << Spree::Gateway::PaywayV2
       ::Rails.application.config.spree.payment_methods << Spree::Gateway::WingSdk
       ::Rails.application.config.spree.payment_methods << Spree::Gateway::Acleda
       ::Rails.application.config.spree.payment_methods << Spree::Gateway::AcledaMobile
