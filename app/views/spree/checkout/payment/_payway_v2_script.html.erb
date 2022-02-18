@@ -25,6 +25,11 @@
     }
 
     function handleResponseForm(form){
+      // in mobile responsive payway doesn't provide any callback when user close the payment pop up
+      // in spree checkout controller they check order state lock verions to verify if the order is able to update or not
+      // we have to update order state lock version manually to in order to be able to update the order
+      var prevLockVersion = parseInt($("#order_state_lock_version").val())
+      $("#order_state_lock_version").val(prevLockVersion + 1)
 
       var $paywayContainer = $("#payway-v2-form-wrapper")
       $paywayContainer.html(form)
