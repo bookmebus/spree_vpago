@@ -28,6 +28,10 @@ module Vpago
         @payment.payment_method.preferences[:rest_api_key]
       end
 
+      def merchant_name
+        @payment.payment_method.preferences[:merchant_name] || 'VTenh'
+      end
+
       def return_url
         "#{ENV['DEFAULT_URL_HOST']}/webhook/wings/#{payment_number}/return?app_checkout=#{app_checkout}"
       end
