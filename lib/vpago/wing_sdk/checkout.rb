@@ -11,7 +11,8 @@ module Vpago
           bill_till_number: biller_code,
           username: username,
           rest_api_key: rest_api_key,
-          return_url: return_url
+          return_url: return_url,
+          merchant_name: merchant_name
         }
       end
     end

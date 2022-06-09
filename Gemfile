@@ -5,7 +5,10 @@ git_source(:github) do |repo_name|
   "https://github.com/#{repo_name}.git"
 end
 
-gem 'spree', github: 'spree/spree', branch: 'v4.2.3.1'
-gem 'rails-controller-testing'
+gem 'spree', github: 'spree/spree', branch: '4-2-stable'
+
+group :development, :test do
+  gem 'rails-controller-testing'
+end
 
 gemspec

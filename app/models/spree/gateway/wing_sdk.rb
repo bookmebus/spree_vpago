@@ -8,6 +8,7 @@ module Spree
     preference :return_url, :string
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
+    preference :merchant_name, :string
 
     ## for basic authentication on checking transaction on vtenh
     preference :basic_auth_username, :string

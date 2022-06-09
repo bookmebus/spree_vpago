@@ -31,7 +31,7 @@ RSpec.describe Spree::Admin::PaymentWingSdkCheckersController, type: :controller
     end
 
     it "redirects to order path if payment status updater is success" do
-      checker = double(:wing_sdk_status_checker, 'success?': true)
+      checker = double(:wing_sdk_status_checker, 'success?': true, result: {'transaction_id' => '345678'})
       allow_any_instance_of(Vpago::WingSdk::PaymentRequestUpdater).to receive(:check_wing_status).and_return(checker)
 
       put :update, params: {id: payment.number}

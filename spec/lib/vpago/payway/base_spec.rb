@@ -30,7 +30,8 @@ RSpec.describe Vpago::Payway::Base do
       payment = create(:payway_payment, payment_method: payway_gateway)
 
       checkout = Vpago::Payway::Base.new(payment)
-      expect(checkout.continue_success_url).to eq "https://vtenh.com/webkook/payway_continue_url?tran_id=#{checkout.transaction_id}"
+      allow(checkout).to receive(:app_checkout).and_return("no")
+      expect(checkout.continue_success_url).to eq "https://vtenh.com/webkook/payway_continue_url?tran_id=#{checkout.transaction_id}&app_checkout=no"
 
     end
 
@@ -40,7 +41,9 @@ RSpec.describe Vpago::Payway::Base do
       payment = create(:payway_payment, payment_method: payway_gateway)
 
       checkout = Vpago::Payway::Base.new(payment)
-      expect(checkout.continue_success_url).to eq "https://vtenh.com/webkook/payway_continue_url?k=v&tran_id=#{checkout.transaction_id}"
+      allow(checkout).to receive(:app_checkout).and_return("yes")
+      
+      expect(checkout.continue_success_url).to eq "https://vtenh.com/webkook/payway_continue_url?k=v&tran_id=#{checkout.transaction_id}&app_checkout=yes"
 
     end
 
