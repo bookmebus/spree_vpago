@@ -46,24 +46,42 @@ Run test
 ```
 rspec spec/
 ```
-### Required Enviroment Variables
+## Required Variables
 
-- **Acleda Mobile**
+### Acleda
+For mobile
     ```ruby
     ENV['ACLEDA_MOBILE_SECRET_HASH_KEY']
     ```
-- **Acleda**
+For desktop
     ```ruby
     ENV['ACLEDA_CHECK_STATUS_PATH']
     ENV['ACLEDA_CREATE_SESSION_PATH']
     ```
-- **Payway**
-    ```ruby
-    ENV['PAYWAY_CHECKOUT_PATH']
-    ENV['PAYWAY_CHECK_TRANSACTION_PATH']
-    ENV['PAYWAY_RETURN_CALLBACK_URL']
-    ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL']
-    ```
+Payment method configuration:
+
+```
+Icon Name: acleda
+```
+### Payway
+
+ENV configuration:
+```ruby
+ENV['PAYWAY_CHECKOUT_PATH']
+ENV['PAYWAY_CHECK_TRANSACTION_PATH']
+ENV['PAYWAY_RETURN_CALLBACK_URL']
+ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL']
+```
+
+Payment method configuration:
+```
+HOST: https://checkout-sandbox.payway.com.kh
+Payment Option: one of the [abapay, cards]
+Merchant: vtenh
+Api Key: xxxxx
+Icon Name: one of the [payway_abapay, payway_cards]
+```
+
 ### Note
 > Most payment gateways are written in php, you might compare ruby with its php counterpart by running code in the .php file.
 
