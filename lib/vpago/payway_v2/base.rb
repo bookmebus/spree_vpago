@@ -100,14 +100,21 @@ module Vpago
       end
 
       def hash_hmac
-        hash = Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha512'), api_key, hash_data))
-
-        # somehow php counter part are not able to decode if the \n present.
-        hash.delete("\n")
+        hash = Base64.strict_encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha512'), api_key, hash_data))
+      
+        log_hash_data = "Hash hmac: #{hash}"
+        Rails.logger.info(log_hash_data)
+        
+        hash
       end
 
       def hash_data
-        "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}#{email}#{phone}#{payment_option}#{return_url}#{continue_success_url}#{return_params}"
+        result = "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}#{email}#{phone}#{payment_option}#{return_url}#{continue_success_url}#{return_params}"
+        
+        log_hash_data = "Hash data: #{result}"
+        Rails.logger.info(log_hash_data)
+
+        result
       end
     end
   end
