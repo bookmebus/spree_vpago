@@ -29,3 +29,5 @@
   $hmac = "KxPclvYgReykTGWEL4fujhyBmQ59fSZV8ehV3z2biIdzflCG/ehyvifQF1Ep\nq6YyIJAEccYnfdLPP0PZ670m/Q==\n";
   echo "base64_decode: " . base64_decode($hmac) . " \n";
 
+  $abc = "MjYzMjAwNTkzNzY2MDE5ZmRkNTU1NjliNjYwZWIzM2U3OTdhMTg3YzdlOTVlZTg0ODZlNTY2MWViN2Q4MDk1YQ==";
+  echo base64_decode($abc) . "\n"; 

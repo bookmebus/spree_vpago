@@ -10,9 +10,10 @@ module SpreeVpago
   module VERSION
     MAJOR = 0
     MINOR = 1
-    TINY  = 9
-    PRE   = 'alpha'.freeze
+    TINY  = 10
+    # PRE   = 'alpha'.freeze
 
-    STRING = [MAJOR, MINOR, TINY, PRE].compact.join('.')
+    # STRING = [MAJOR, MINOR, TINY, PRE].compact.join('.')
+    STRING = [MAJOR, MINOR, TINY].compact.join('.')
   end
 end
