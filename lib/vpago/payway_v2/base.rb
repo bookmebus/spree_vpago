@@ -43,11 +43,11 @@ module Vpago
       end
 
       def first_name
-        @payment.order.billing_address.first_name
+        @payment.order.billing_address.first_name.strip
       end
 
       def last_name
-        @payment.order.billing_address.last_name
+        @payment.order.billing_address.last_name.strip
       end
 
       def return_url
