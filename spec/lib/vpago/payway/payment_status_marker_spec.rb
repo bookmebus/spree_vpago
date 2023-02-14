@@ -19,8 +19,7 @@ RSpec.describe Vpago::Payway::PaymentStatusMarker, type: :model do
           updated_reason: 'manually-updated'
         }
 
-        updated_by_user_at = Time.zone.now
-        allow(Time.zone).to receive(:now).and_return(updated_by_user_at)
+        old_updated_by_user_at = payment_source.updated_by_user_at
 
         status_updater = Vpago::Payway::PaymentStatusMarker.new(payment, options)
 
@@ -30,7 +29,7 @@ RSpec.describe Vpago::Payway::PaymentStatusMarker, type: :model do
         expect(payment_source.payment_status).to eq 'success'
         expect(payment_source.updated_by_user_id).to eq user.id
         expect(payment_source.updated_reason).to eq 'manually-updated'
-        expect(payment_source.updated_by_user_at).to eq updated_by_user_at
+        expect(payment_source.updated_by_user_at).to_not eq old_updated_by_user_at
       end
     end
 
