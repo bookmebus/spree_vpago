@@ -41,6 +41,17 @@ Spree::Core::Engine.add_routes do
     end
   end
 
+  namespace :api, defaults: { format: 'json' } do
+    namespace :v2 do
+      namespace :storefront do
+        resource :checkout, controller: :checkout do
+          get :payment_redirect
+          patch :reload_payments
+        end
+      end
+    end
+  end
+
   namespace :admin do
     resources :payment_wing_sdk_queriers, only: [:show]
     resources :payment_wing_sdk_checkers, only: [:update]
