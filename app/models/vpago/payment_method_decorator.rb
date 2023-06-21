@@ -50,4 +50,4 @@ module Vpago
   end
 end
 
-Spree::PaymentMethod.prepend(Vpago::PaymentMethodDecorator)
+Spree::PaymentMethod.prepend(Vpago::PaymentMethodDecorator) unless Spree::PaymentMethod.included_modules.include?(Vpago::PaymentMethodDecorator)
