@@ -5,9 +5,16 @@ git_source(:github) do |repo_name|
   "https://github.com/#{repo_name}.git"
 end
 
+spree_version = '>= 4.5'
+gem 'spree_frontend', spree_version
+
 group :development, :test do
+  spree_version = '>= 4.5'
+  gem 'spree_frontend', spree_version
+
   gem 'brakeman'
   gem 'rails-controller-testing'
+  gem 'pg'
 end
 
 gemspec
