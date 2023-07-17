@@ -5,35 +5,30 @@ module SpreeVpago
     engine_name 'spree_vpago'
 
     config.autoload_paths += %W[#{config.root}/lib]
-    
+
     # use rspec for tests
     config.generators do |g|
       g.test_framework :rspec
     end
 
-    config.assets.precompile += [
-      'vpago/payway/*',
-    ]
+    initializer 'spree_vpago.environment', before: :load_config_initializers do |_app|
+      Config = Configuration.new
+    end
+
+    config.after_initialize do
+      Rails.application.config.spree.payment_methods.concat [
+        Spree::Gateway::Payway,
+        Spree::Gateway::PaywayV2,
+        Spree::Gateway::WingSdk,
+        Spree::Gateway::Acleda,
+        Spree::Gateway::AcledaMobile
+      ]
+    end
 
     def self.activate
-      ::Rails.application.config.spree.payment_methods << Spree::Gateway::Payway
-      ::Rails.application.config.spree.payment_methods << Spree::Gateway::PaywayV2
-      ::Rails.application.config.spree.payment_methods << Spree::Gateway::WingSdk
-      ::Rails.application.config.spree.payment_methods << Spree::Gateway::Acleda
-      ::Rails.application.config.spree.payment_methods << Spree::Gateway::AcledaMobile
-
       Dir.glob(File.join(File.dirname(__FILE__), '../../app/**/*_decorator*.rb')) do |c|
         Rails.configuration.cache_classes ? require(c) : load(c)
       end
-
-
-      Spree::PermittedAttributes.source_attributes << :payment_option
-      Spree::PermittedAttributes.source_attributes << :payment_id
-      Spree::PermittedAttributes.source_attributes << :payment_method_id
-
-      Spree::Api::ApiHelpers.payment_source_attributes << :payment_option
-      Spree::Api::ApiHelpers.payment_source_attributes << :payment_id
-      Spree::Api::ApiHelpers.payment_source_attributes << :payment_method_id
     end
 
     config.to_prepare(&method(:activate).to_proc)
