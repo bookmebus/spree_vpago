@@ -29,6 +29,24 @@ module Vpago
       consider_risk
     end
 
+    def update_vpago_payments
+      return unless payment?
+
+      payments.each do |payment|
+        next unless payment.is_vpago_type?
+        next if payment.failed?
+
+        payment_method = payment.payment_method
+
+        updater = Vpago::AcledaMobile::PaymentRequestUpdater if payment_method.is_a?(Spree::Gateway::AcledaMobile)
+        updater = Vpago::Acleda::PaymentRequestUpdater if payment_method.is_a?(Spree::Gateway::Acleda)
+        updater = Vpago::PaywayV2::PaymentRequestUpdater if payment_method.is_a?(Spree::Gateway::PaywayV2)
+        updater = Vpago::Payway::PaymentRequestUpdater if payment_method.is_a?(Spree::Gateway::Payway)
+        updater = Vpago::WingSdk::PaymentRequestUpdater if payment_method.is_a?(Spree::Gateway::WingSdk)
+
+        updater.new(payment, skip_on_failed: true).call if updater.present?
+      end
+    end
 
     def send_confirmation_email!
       if !confirmation_delivered? && (paid? || authorized?)

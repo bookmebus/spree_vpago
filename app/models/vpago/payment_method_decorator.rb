@@ -7,6 +7,8 @@ module Vpago
     TYPE_ACLEDA_MOBILE = 'Spree::Gateway::AcledaMobile'
 
     def self.prepended(base)
+      base.preference :icon_name, :string, default: 'cheque'
+
       def base.vpago_payments
         [Spree::PaymentMethod::TYPE_PAYWAY_V2, Spree::PaymentMethod::TYPE_PAYWAY, Spree::PaymentMethod::TYPE_WINGSDK, Spree::PaymentMethod::TYPE_ACLEDA, Spree::PaymentMethod::TYPE_ACLEDA_MOBILE]
       end
