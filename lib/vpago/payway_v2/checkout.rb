@@ -24,6 +24,8 @@ module Vpago
       def checkout_url
         "#{host}#{ENV['PAYWAY_CHECKOUT_PATH']}"
       end
+
+      alias_method :action_url, :checkout_url
     end
   end
 end

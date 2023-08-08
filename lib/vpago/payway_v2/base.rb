@@ -71,7 +71,12 @@ module Vpago
         preferred_continue_url = ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL']
         return nil if preferred_continue_url.blank?
 
-        query_string = "tran_id=#{transaction_id}&app_checkout=#{app_checkout}"
+        query_string = {
+          tran_id: transaction_id,
+          app_checkout: app_checkout,
+          order_number: @payment.order.number,
+        }.to_query
+
         preferred_continue_url.index("?") == nil ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
       end
 
