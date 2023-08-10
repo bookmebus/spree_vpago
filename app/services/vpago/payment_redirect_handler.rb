@@ -5,7 +5,7 @@ module Vpago
     include ActiveModel::Serialization
 
     attr_accessor :redirect_options, :error_message
-    attr_reader :payment
+    attr_reader :payment, :payment_method_type, :gateway_params, :action_url, :vapgo_checkout_service
 
     delegate      :id, :amount, :response_code, :number, :state,
                   :payment_method_id, :payment_method_name,
@@ -13,6 +13,9 @@ module Vpago
 
     def initialize(payment:)
       @payment = payment
+      @vapgo_checkout_service = payment.payment_method.vapgo_checkout_service.new(payment)
+      @gateway_params = vapgo_checkout_service.gateway_params
+      @action_url = vapgo_checkout_service.action_url
     end
 
     def process
@@ -164,6 +167,10 @@ module Vpago
 
     def payment_method
       @payment.payment_method
+    end
+
+    def payment_method_type
+      payment_method.type
     end
 
     def payment_valid

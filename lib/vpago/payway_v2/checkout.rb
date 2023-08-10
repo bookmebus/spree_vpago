@@ -18,12 +18,15 @@ module Vpago
           hash: hash_hmac
         }
 
+        result[:view_type] = view_type unless view_type.nil?
         result
       end
 
       def checkout_url
         "#{host}#{ENV['PAYWAY_CHECKOUT_PATH']}"
       end
+
+      alias_method :action_url, :checkout_url
     end
   end
 end
