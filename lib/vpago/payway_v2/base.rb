@@ -80,6 +80,11 @@ module Vpago
         preferred_continue_url.index("?") == nil ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
       end
 
+      # null, hosted_view, checkout, qr
+      def view_type
+        is_app_checkout? ? 'hosted_view' : nil
+      end
+
       def payment_option
         card_option = @payment.payment_method.preferences[:payment_option]
 

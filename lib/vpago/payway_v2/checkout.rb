@@ -18,6 +18,7 @@ module Vpago
           hash: hash_hmac
         }
 
+        result[:view_type] = view_type unless view_type.nil?
         result
       end
 

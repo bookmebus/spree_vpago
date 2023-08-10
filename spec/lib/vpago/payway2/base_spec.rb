@@ -57,4 +57,20 @@ RSpec.describe Vpago::PaywayV2::Base do
       expect(subject.continue_success_url).to eq 'https://contigo.asia/webhook/payways/v2_continue?app_checkout=no&order_number=R226226575&tran_id=PF2IM21Q'
     end
   end
+
+  describe "#view_type" do
+    it "return view_type: hosted_view for app checkout" do
+      payment = create(:payway_payment)
+      subject = described_class.new(payment, { app_checkout: true })
+
+      expect(subject.view_type).to eq 'hosted_view'
+    end
+
+    it "return view_type: nil when not app checkout" do
+      payment = create(:payway_payment)
+      subject = described_class.new(payment)
+
+      expect(subject.view_type).to eq nil
+    end
+  end
 end
