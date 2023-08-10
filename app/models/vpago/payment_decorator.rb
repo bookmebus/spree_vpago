@@ -22,6 +22,12 @@ module Vpago
       end
     end
 
+    def request_update
+      updater = payment_method.payment_request_updater.new(self)
+      updater.call
+      updater
+    end
+
     def authorized?
       if source.is_a? Spree::VpagoPaymentSource
         pending?

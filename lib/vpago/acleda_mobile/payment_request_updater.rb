@@ -1,13 +1,6 @@
 module Vpago
   module AcledaMobile
-    class PaymentRequestUpdater
-      attr_accessor :payment, :error_message
-
-      def initialize(payment, options={})
-        @payment = payment
-        @options = options
-      end
-
+    class PaymentRequestUpdater < ::Vpago::PaymentRequestUpdater
       def call
         checker = payment_status_checker
 

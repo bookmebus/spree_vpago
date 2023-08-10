@@ -1,13 +1,6 @@
 module Vpago
   module Payway
-    class PaymentRequestUpdater
-      attr_accessor :payment, :error_message
-
-      def initialize(payment, options={})
-        @options = options
-        @payment = payment
-      end
-
+    class PaymentRequestUpdater < ::Vpago::PaymentRequestUpdater
       def call
         checker = check_payway_status
 
@@ -24,10 +17,6 @@ module Vpago
           marker = ::Vpago::Payway::PaymentStatusMarker.new(@payment, marker_options)
           marker.call
         end
-      end
-
-      def success?
-        @error_message.nil?
       end
 
       private

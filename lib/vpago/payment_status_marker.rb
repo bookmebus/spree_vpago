@@ -7,13 +7,10 @@ module Vpago
       @payment = payment
       @options = options
 
-      @options[:skip_on_failed] = @options[:skip_on_failed] || false
       @options[:status] =  @options[:status] || false
     end
 
     def call
-      return if @options[:skip_on_failed] && !@options[:status]
-
       ActiveRecord::Base.transaction do
         update_payment_source
         update_payment_and_order
@@ -60,7 +57,7 @@ module Vpago
     end
 
     def transition_to_failed!
-      @payment.update_column(:failed, true) if !@payment.failed?
+      @payment.failure! if !@payment.failed?
       @payment.order.update(state: 'payment')
       
       notify_failed_payment

@@ -1,13 +1,6 @@
 module Vpago
   module Acleda
-    class PaymentRequestUpdater
-      attr_accessor :payment, :error_message
-
-      def initialize(payment, options={})
-        @payment = payment
-        @options = options
-      end
-
+    class PaymentRequestUpdater < ::Vpago::PaymentRequestUpdater
       def call
         return if @payment.order.paid?
 
