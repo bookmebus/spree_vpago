@@ -30,6 +30,20 @@ module Vpago
       end
     end
 
+    def payment_request_updater
+      if type_payway?
+        ::Vpago::Payway::PaymentRequestUpdater
+      elsif type_payway_v2?
+        ::Vpago::PaywayV2::PaymentRequestUpdater
+      elsif type_wingsdk?
+        ::Vpago::WingSdk::PaymentRequestUpdater
+      elsif type_acleda?
+        ::Vpago::Acleda::PaymentRequestUpdater
+      elsif type_acleda_mobile?
+        ::Vpago::AcledaMobile::PaymentRequestUpdater 
+      end
+    end
+
     def type_acleda_mobile?
       type == Spree::PaymentMethod::TYPE_ACLEDA_MOBILE
     end

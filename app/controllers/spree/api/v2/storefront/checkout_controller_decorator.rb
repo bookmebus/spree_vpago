@@ -4,17 +4,27 @@ module Spree
       module Storefront
         module CheckoutControllerDecorator
           def self.prepended(base)
-            base.skip_before_action :ensure_order, only: [:reload_payments]
+            base.skip_before_action :ensure_order, only: [:request_update_payment]
           end
 
-          def reload_payments
-            # include completed orders
-            order = Spree::Order.find_by(number: params[:number])
+          # :order_token, :payment_number
+          def request_update_payment
+          # this action is mostly called after order is completed. 
+          # spree_current_order will be nil in this case, so we need to manual find.
+            order = find_order_by_token(params[:order_token])
 
-            spree_authorize! :update, order, order_token
-            order.update_vpago_payments
+            if order.paid?
+              render_serialized_payload { serialize_resource(order) }
+            else
+              payment = find_payment(order, params[:payment_number])
+              context = payment.request_update
 
-            render_serialized_payload { serialize_resource(order) }
+              if context.success?
+                render_serialized_payload { serialize_resource(order) }
+              else
+                render_error_payload(context.error_message)
+              end
+            end
           end
 
           def payment_redirect
@@ -33,6 +43,25 @@ module Spree
 
           def payment_redirect_serializer
             Spree::V2::Storefront::PaymentRedirectSerializer
+          end
+
+          private
+
+          def find_payment(order, payment_number)
+            payment = order.payments.find_by(number: payment_number)
+
+            raise ActiveRecord::RecordNotFound if payment.nil?
+
+            payment
+          end
+
+          def find_order_by_token(token)
+            order = Spree::Order.find_by(token: token)
+
+            raise ActiveRecord::RecordNotFound if order.nil?
+            raise ActiveRecord::RecordNotFound if order.payments.blank?
+
+            order
           end
         end
       end

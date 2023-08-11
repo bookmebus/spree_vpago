@@ -1,13 +1,6 @@
 module Vpago
   module WingSdk
-    class PaymentRequestUpdater
-      attr_accessor :payment, :error_message
-
-      def initialize(payment, options={})
-        @options = options
-        @payment = payment
-      end
-
+    class PaymentRequestUpdater < ::Vpago::PaymentRequestUpdater
       def call
         return if @payment.order.paid?
 
@@ -38,10 +31,6 @@ module Vpago
         return if @payment.present?
 
         @payment = find_payment
-      end
-
-      def success?
-        @error_message.nil?
       end
 
       private
