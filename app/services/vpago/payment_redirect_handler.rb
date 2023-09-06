@@ -59,7 +59,15 @@ module Vpago
 
       @payment.process!
 
-      payment_option == 'abapay' ? process_abapay_v2_deeplink : process_payway_v2_card
+      if payment_option == 'abapay'
+        process_abapay_v2_deeplink
+      elsif payment_option == 'abapay_khqr'
+        # construct web url for render web view.
+        # In web view, it will open intent://ababank.com?... for app to open ABA app.
+        process_payway_v2_card
+      else
+        process_payway_v2_card
+      end
     end
 
     def process_payway_v2_card
