@@ -61,11 +61,12 @@ module Vpago
 
       if payment_option == 'abapay'
         process_abapay_v2_deeplink
-      elsif payment_option == 'abapay_khqr'
-        # construct web url for render web view.
-        # In web view, it will open intent://ababank.com?... for app to open ABA app.
-        process_payway_v2_card
       else
+        # construct web url for render web view.
+        # same implementation for alipay, wechat, cards, abapay_khqr.
+
+        # - for abapay_khqr: in web view, it renders QR then request to open intent://ababank.com?... for app to open ABA app.
+        # - for others: it only renders QR
         process_payway_v2_card
       end
     end
