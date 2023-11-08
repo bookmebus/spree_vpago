@@ -68,7 +68,17 @@ module Vpago
     end
 
     def complete_payment!
-      @payment.complete! if !@payment.completed?
+      return if @payment.completed?
+
+      # not follow state machine rule when it manual
+      if @options[:updated_by_user_id].present?
+        ApplicationRecord.transaction do
+          @payment.state_changes.create!(previous_state: @payment.state, next_state: 'completed', name: 'payment')
+          @payment.update(state: 'completed')
+        end
+      else
+        @payment.complete!
+      end
     end
 
     def complete_order!
