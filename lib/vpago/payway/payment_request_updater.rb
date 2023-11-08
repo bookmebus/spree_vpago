@@ -10,7 +10,7 @@ module Vpago
           marker_options = @options.merge( status: true, description: nil)
           marker = ::Vpago::Payway::PaymentStatusMarker.new(@payment, marker_options)
           marker.call
-        else
+        elsif !ignore_on_failed?
           @error_message = checker.error_message[0...255]
           marker_options = @options.merge(status: false, description: @error_message)
 

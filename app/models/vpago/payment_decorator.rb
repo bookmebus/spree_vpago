@@ -23,7 +23,7 @@ module Vpago
     end
 
     def request_update
-      updater = payment_method.payment_request_updater.new(self)
+      updater = payment_method.payment_request_updater.new(self, { ignore_on_failed: true })
       updater.call
       updater
     end
