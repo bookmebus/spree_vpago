@@ -13,9 +13,9 @@ module Vpago
 
     def initialize(payment:)
       @payment = payment
-      @vapgo_checkout_service = payment.payment_method.vapgo_checkout_service.new(payment)
-      @gateway_params = vapgo_checkout_service.gateway_params
-      @action_url = vapgo_checkout_service.action_url
+      @vapgo_checkout_service = payment.payment_method.vapgo_checkout_service.presence&.new(payment)
+      @gateway_params = vapgo_checkout_service&.gateway_params
+      @action_url = vapgo_checkout_service&.action_url
     end
 
     def process

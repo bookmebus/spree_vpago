@@ -8,6 +8,10 @@ module Vpago
       @error_message = nil
     end
 
+    def ignore_on_failed?
+      @options[:ignore_on_failed] || false
+    end
+
     def success?
       @error_message.nil?
     end

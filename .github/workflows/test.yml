@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - develop
+      - spree-4-5-0
   push:
     branches:
       - 112-ci-cd

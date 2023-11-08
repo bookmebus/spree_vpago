@@ -7,6 +7,10 @@ RSpec.describe Vpago::PaymentRedirectHandler do
 
   let(:general_payment) { create(:payment) }
 
+  before do
+    payway_payment.payment_method.preferences[:api_key] = 'API_KEY'
+  end
+
   describe '.validate_payment' do
     context "when it's not payway gateway" do
       it 'raise error' do
