@@ -38,7 +38,7 @@ module Vpago
 
         con.post(create_session_path) do |request|
           request.headers["Content-Type"] = "application/json"
-          request.body = create_session_requst_body.to_json
+          request.body = create_session_request_body.to_json
         end
       end
 
@@ -46,8 +46,8 @@ module Vpago
         @error_message.present?
       end
 
-      def create_session_requst_body
-        {
+      def create_session_request_body
+        request_body = {
           loginId: login_id,
           password: password,
           merchantID: merchant_id,
@@ -61,9 +61,18 @@ module Vpago
             purchaseDesc: 'items',
             item: '1',
             quantity: '1',
-            expiryTime: expiry_time
+            expiryTime: expiry_time,
+            otherUrl: other_url
           }
         }
+
+        if @payment.payment_method.xpay_mpgs?
+          request_body[:xpayTransaction][:paymentCard] = acleda_payment_card if acleda_payment_card.present?
+        elsif @payment.payment_method.khqr?
+          request_body[:xpayTransaction][:operationType] = '3'
+        end
+
+        request_body
       end
 
       def create_session_path
@@ -86,7 +95,9 @@ module Vpago
           currencytype: 'USD',
           transactionID: payment_number,
           successUrlToReturn: success_url,
-          errorUrl: error_url
+          errorUrl: error_url,
+          companyName: acleda_company_name,
+          companyLogo: ActionController::Base.helpers.image_url('vpago/payway/acleda_merchant_logo_300x300.png'),
         }
       end
     end
