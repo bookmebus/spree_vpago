@@ -103,6 +103,9 @@ PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE="html"
 ## Handle missing info
 > Some payment gateway require email for payment info. So we use enviroment variable "DEFAULT_EMAIL_FOR_PAYMENT" as default email when there is no email provided.
 
+## Support Documents
+- [Setup ACLEDA payment methods](docs/acleda.md)
+
 ## Contributing
 
 If you'd like to contribute, please take a look at the
