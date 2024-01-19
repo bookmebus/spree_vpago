@@ -13,6 +13,8 @@ module Vpago
           payway_alipay
           payway_wechat
           acleda
+          acleda_khqr
+          acleda_cards
           cheque
           payway_cards
           wingpay
