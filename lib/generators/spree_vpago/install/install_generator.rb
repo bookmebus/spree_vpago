@@ -2,9 +2,14 @@ module SpreeVpago
   module Generators
     class InstallGenerator < Rails::Generators::Base
       class_option :auto_run_migrations, type: :boolean, default: false
+      source_root File.expand_path('templates', __dir__)
 
       def add_migrations
         run 'bundle exec rake railties:install:migrations FROM=spree_vpago'
+      end
+
+      def acleda_logo_template
+        template 'app/assets/images/vpago/payway/acleda_merchant_logo_300x300.png'
       end
 
       def run_migrations
