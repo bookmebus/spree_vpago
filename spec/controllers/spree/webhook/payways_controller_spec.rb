@@ -62,13 +62,13 @@ RSpec.describe Spree::Webhook::PaywaysController, type: :controller do
       payment.order.finalize!
       payment.order.update(state: 'complete', completed_at: Time.zone.now)
 
-      get :continue, params: {tran_id: payment.number}
-      expect(subject).to redirect_to order_path(order.reload)
+      get :continue, params: {tran_id: payment.number, app_checkout: 'yes'}
+      expect(subject).to redirect_to success_payway_results_path
     end
 
     it "redirects to checkout with state :payment path if payment status updater is failed" do
-      get :continue, params: {tran_id: payment.number}
-      expect(subject).to redirect_to checkout_state_path(:payment)
+      get :continue, params: {tran_id: payment.number, app_checkout: 'yes'}
+      expect(subject).to redirect_to failed_payway_results_path
     end
   end
 

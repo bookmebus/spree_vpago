@@ -67,6 +67,7 @@ Icon Name: acleda
 
 ENV configuration:
 ```ruby
+ENV['PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE'] # html, json
 ENV['PAYWAY_CHECKOUT_PATH']
 ENV['PAYWAY_CHECK_TRANSACTION_PATH']
 ENV['PAYWAY_RETURN_CALLBACK_URL']
@@ -82,11 +83,28 @@ Api Key: xxxxx
 Icon Name: one of the [payway_abapay, payway_cards]
 ```
 
+#### Push Back Setting
+
+PayWay will call POST request to return_url when transaction is completed in either form-data or json. By default, its will request with json. If you prefer to use html or form-data format, asks ABA integration team to set the following settings AKA Pushback:
+
+```s
+# push back settings
+Format: html
+```
+
+Make sure to set to env as well to let our system know how to handle when ABA push back.
+```s
+PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE="html"
+```
+
 ### Note
 > Most payment gateways are written in php, you might compare ruby with its php counterpart by running code in the .php file.
 
 ## Handle missing info
 > Some payment gateway require email for payment info. So we use enviroment variable "DEFAULT_EMAIL_FOR_PAYMENT" as default email when there is no email provided.
+
+## Support Documents
+- [Setup ACLEDA payment methods](docs/acleda.md)
 
 ## Contributing
 

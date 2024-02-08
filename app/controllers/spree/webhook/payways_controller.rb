@@ -34,16 +34,16 @@ module Spree
       def request_updater_service
         ::Vpago::Payway::PaymentRequestUpdater
       end
-
+      
+      # the callback invoke by PAYWAY in case of success
       def return_callback_handler(handler_service)
         # pawway send get request with nothing
         if(request.method == "GET")
           return render plain: :ok
         end
 
-        # the callback invoke by PAYWAY in case of success
-        payload = JSON.parse(params[:response])
-        payment = Spree::Payment.find_by(number: payload["tran_id"])
+        builder = Vpago::PaywayReturnOptionsBuilder.new(params: params)
+        payment = builder.payment
 
         request_updater = handler_service.new(payment)
         request_updater.call

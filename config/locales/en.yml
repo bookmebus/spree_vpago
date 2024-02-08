@@ -3,6 +3,9 @@
 
 en:
   spree:
+    acleda_type: "Payment Type"
+    acleda_company_name: "Product Name in ACLEDA view"
+    acleda_payment_card: "Payment Card (only required for XPAY-MPGS)"
     vpago:
       payments:
         check_and_heal: "Auto correct"

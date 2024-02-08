@@ -1,13 +1,6 @@
 module Vpago
   module WingSdk
-    class PaymentRequestUpdater
-      attr_accessor :payment, :error_message
-
-      def initialize(payment, options={})
-        @options = options
-        @payment = payment
-      end
-
+    class PaymentRequestUpdater < ::Vpago::PaymentRequestUpdater
       def call
         return if @payment.order.paid?
 
@@ -25,7 +18,7 @@ module Vpago
 
           marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
           marker.call
-        else
+        elsif !ignore_on_failed?
           @error_message = checker.error_message[0...255]
           marker_options = @options.merge(status: false, description: @error_message)
 
@@ -38,10 +31,6 @@ module Vpago
         return if @payment.present?
 
         @payment = find_payment
-      end
-
-      def success?
-        @error_message.nil?
       end
 
       private

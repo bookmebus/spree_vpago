@@ -11,6 +11,20 @@ module Spree
     preference :deeplink_data_encryption_key, :string
     preference :success_url, :string
     preference :error_url, :string
+    preference :other_url, :string
+    preference :acleda_company_name, :string
+    preference :acleda_payment_card, :integer
+
+    TYPES = %w[KHQR XPAY-MPGS].freeze
+    preference :acleda_type, :string
+
+    def xpay_mpgs?
+      preferred_acleda_type == 'XPAY-MPGS'
+    end
+
+    def khqr?
+      preferred_acleda_type == 'KHQR'
+    end
 
     def payment_source_class
       Spree::VpagoPaymentSource

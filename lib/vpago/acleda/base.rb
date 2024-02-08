@@ -27,11 +27,47 @@ module Vpago
       end
 
       def success_url
-        "#{@payment.payment_method.preferences[:success_url]}?app_checkout=#{app_checkout}"
+        preferred_success_url = @payment.payment_method.preferred_success_url
+        return nil if preferred_success_url.blank?
+
+        query_string = {
+          app_checkout: app_checkout,
+          order_number: order_number
+        }.to_query
+
+        "#{preferred_success_url}?#{query_string}"
       end
 
       def error_url
-        "#{@payment.payment_method.preferences[:error_url]}?app_checkout=#{app_checkout}"
+        preferred_error_url = @payment.payment_method.preferred_error_url
+        return nil if preferred_error_url.blank?
+
+        query_string = {
+          app_checkout: app_checkout,
+          order_number: order_number
+        }.to_query
+
+        "#{preferred_error_url}?#{query_string}"
+      end
+
+      def other_url
+        preferred_other_url = @payment.payment_method.preferred_other_url
+        return nil if preferred_other_url.blank?
+
+        query_string = {
+          app_checkout: app_checkout,
+          order_number: order_number
+        }.to_query
+
+        "#{preferred_other_url}?#{query_string}"
+      end
+
+      def acleda_company_name
+        @payment.payment_method.preferences[:acleda_company_name]
+      end
+
+      def acleda_payment_card
+        @payment.payment_method.preferences[:acleda_payment_card]
       end
 
       def login_id
@@ -67,7 +103,7 @@ module Vpago
       end
 
       def action_url
-        "#{host}/VETDIGITAL/paymentPage.jsp"
+        "#{host}/#{merchant_name}/paymentPage.jsp"
       end
     end
   end

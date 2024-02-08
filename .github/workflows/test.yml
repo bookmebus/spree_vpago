@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - develop
+      - spree-4-5-0
   push:
     branches:
       - 112-ci-cd
@@ -22,7 +23,7 @@ jobs:
           POSTGRES_PASSWORD: mypassword
           POSTGRES_DB: test_db
 
-        ports: ["5432:5432"]
+        ports: ['5432:5432']
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -38,7 +39,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "2.7.6"
+          ruby-version: '3.2.0'
 
           # bundle-cache might cause problem when upgrading ruby. Disable it when upgrading to solve the problem.
           # bundler-cache: true
