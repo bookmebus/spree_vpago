@@ -37,13 +37,13 @@ module Vpago
     end
 
     def successful_payment
-      paid? || payments.any? {|p| p.after_pay_method? && p.authorized?}
+      paid? || payments.any? { |p| p.after_pay_method? && p.authorized? }
     end
 
     alias paid_or_authorized? successful_payment
 
     def authorized?
-      payments.last.authorized?
+      payments.any?(&:authorized?)
     end
 
     def order_adjustment_total

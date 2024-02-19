@@ -29,11 +29,7 @@ module Vpago
     end
 
     def authorized?
-      if source.is_a? Spree::VpagoPaymentSource
-        pending?
-      else
-        false
-      end
+      completed?
     end
   end
 end
