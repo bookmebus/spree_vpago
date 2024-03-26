@@ -26,6 +26,8 @@ module Vpago
     end
 
     def check_and_process_payment
+      @payment.process!
+
       if payment_method.type_payway_v2?
         process_aba_v2_gateway
       elsif payment_method.type_payway?
@@ -56,8 +58,6 @@ module Vpago
 
     def process_aba_v2_gateway
       payment_option = @payment.payment_method.preferences[:payment_option]
-
-      @payment.process!
 
       if payment_option == 'abapay'
         process_abapay_v2_deeplink
@@ -113,8 +113,6 @@ module Vpago
 
     def process_aba_gateway
       payment_option = @payment.payment_method.preferences[:payment_option]
-
-      @payment.process!
       payment_option == 'abapay' ? process_abapay_deeplink : process_payway_card
     end
 
