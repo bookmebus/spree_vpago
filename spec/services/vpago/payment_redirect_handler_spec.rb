@@ -55,6 +55,9 @@ RSpec.describe Vpago::PaymentRedirectHandler do
 
     context "when payment options is acleda" do
       it 'processes payment & calls process_acleda_gateway' do
+        # avoid vcr error
+        allow(acleda_payment.payment_method).to receive(:vapgo_checkout_service).and_return(nil)
+
         handler = Vpago::PaymentRedirectHandler.new(payment: acleda_payment)
 
         expect(acleda_payment).to receive(:process!)

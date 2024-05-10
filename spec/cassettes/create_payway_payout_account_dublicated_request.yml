@@ -1,0 +1,59 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://checkout-sandbox.payway.com.kh/api/merchant-portal/merchant-access/whitelist-account/add-whitelist-payout
+    body:
+      encoding: UTF-8
+      string: '{"request_time":"20240510000000","merchant_id":"contigoasia","merchant_auth":"FLai9jANeu7Vl233+/wgIURakGutnft75AjatTJ9V2EagLbn4MBm5nnIVlpqqCOuYWF0DZYg2cH4JF6IH8iOQ9Gv19q5eUmYF3jId6VlL7tKyeKFUhR6CyMlr9PrmUPqMDBEGmpw91SEAwFT1HoLARnTpOtANriB7sa1odKYVWA=","hash":"WMX3UTQHHRFlMNjEa0AT0My4pjeu+sgYfYBTy+UEoeQLqvn3oelJBc+RvWmxq3DhUBwAgbUgO/saDfqAnf6P6Q=="}'
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      language:
+      - en
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 403
+      message: Forbidden
+    headers:
+      date:
+      - Fri, 10 May 2024 07:15:48 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      cache-control:
+      - private, must-revalidate
+      pragma:
+      - no-cache
+      expires:
+      - "-1"
+      x-ratelimit-limit:
+      - '100000'
+      x-ratelimit-remaining:
+      - '99987'
+      access-control-allow-origin:
+      - "*"
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-xss-protection:
+      - 1; mode=block
+      x-content-type-options:
+      - nosniff
+      cf-cache-status:
+      - DYNAMIC
+      server:
+      - cloudflare
+      cf-ray:
+      - 881823d27c56833d-SIN
+      content-encoding:
+      - gzip
+    body:
+      encoding: ASCII-8BIT
+      string: '{"status":{"code":"PTL148","message":"Payee already exists.","tran_id":"171532534657953"}}'
+  recorded_at: Fri, 10 May 2024 07:15:48 GMT
+recorded_with: VCR 6.2.0
