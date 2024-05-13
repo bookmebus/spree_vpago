@@ -12,12 +12,14 @@ module Spree
     validates :bank_account_number, presence: true, uniqueness: { scope: [:type, :vendor_id] }
 
     scope :payway, -> { where(type: 'Spree::PayoutProfiles::PaywayV2') }
+    scope :verified, -> { where.not(verified_at: nil) }
+    scope :active, -> { where(active: true) }
 
     before_save :ensure_default_exists_and_clear_vendor
     before_destroy :confirm_destroyable
 
     def self.default
-      Rails.cache.fetch("default_payout_account_#{self.name}") do
+      Rails.cache.fetch("default_payout_account/#{self.name.underscore}") do
         find_by(type: self.name, default: true)
       end
     end

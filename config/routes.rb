@@ -60,5 +60,15 @@ Spree::Core::Engine.add_routes do
     resources :payment_payway_queriers, only: [:show]
     resources :payment_payway_checkers
     resources :payment_payway_markers
+
+    resources :products do
+      resources :payout_profile_products
+    end
+
+    resources :payout_profiles do
+      member do
+        post :verify_with_bank
+      end
+    end
   end
 end

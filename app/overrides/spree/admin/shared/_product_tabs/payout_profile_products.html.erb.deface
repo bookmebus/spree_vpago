@@ -1,0 +1,8 @@
+<!-- insert_after "erb[silent]:contains('Spree::Digital')" -->
+
+<%= content_tag :li, class: 'nav-item' do %>
+  <%= link_to_with_icon 'wallet2.svg',
+    Spree.t(:payout_profile_products),
+    admin_product_payout_profile_products_url(@product),
+    class: "nav-link #{'active' if current == :payout_profile_products}" %>
+<% end if can?(:admin, Spree::PayoutProfileProduct) %>
