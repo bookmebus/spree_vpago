@@ -109,6 +109,13 @@ module Vpago
         {tran_id: transaction_id}.to_json
       end
 
+      def payout
+        @payout ||= begin
+          payouts = Vpago::PaywayV2::PayoutsConstructor.new(@payment).call
+          payouts.empty? ? nil : Base64.strict_encode64(payouts.to_json)
+        end
+      end
+
       def hash_hmac
         hash = Base64.strict_encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha512'), api_key, hash_data))
       
@@ -120,7 +127,8 @@ module Vpago
 
       def hash_data
         result = "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}#{email}#{phone}#{payment_option}#{return_url}#{continue_success_url}#{return_params}"
-        
+        result += payout if payout.present?
+
         log_hash_data = "Hash data: #{result}"
         Rails.logger.info(log_hash_data)
 
