@@ -8,6 +8,8 @@ end
 group :development, :test do
   gem 'brakeman'
   gem 'rails-controller-testing'
+  gem 'vcr'
+  gem 'webmock'
 end
 
 group :test do
