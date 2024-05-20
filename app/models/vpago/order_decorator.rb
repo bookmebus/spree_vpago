@@ -29,6 +29,20 @@ module Vpago
       consider_risk
     end
 
+    def required_payway_payout?
+      line_items.any?(&:required_payway_payout?)
+    end
+
+    # override
+    def available_payment_methods(store = nil)
+      payment_methods = collect_payment_methods(store)
+
+      @available_payment_methods ||= if required_payway_payout?
+        payment_methods.select { |payment| payment.type_payway_v2? }
+      else
+        payment_methods
+      end
+    end
 
     def send_confirmation_email!
       if !confirmation_delivered? && (paid? || authorized?)

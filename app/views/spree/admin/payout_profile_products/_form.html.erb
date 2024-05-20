@@ -1,0 +1,5 @@
+<%= f.field_container :payout_profile_id do %>
+  <%= f.label :payout_profile_id, Spree.t(:payout_profile) %>
+  <%= f.collection_select :payout_profile_id, @product.vendor.payout_profiles, :id, :name, { prompt: Spree.t('match_choices.none') }, class: 'form-control select2' %>
+  <%= f.error_message_on :payout_profile_id %>
+<% end %>

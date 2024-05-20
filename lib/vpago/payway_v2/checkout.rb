@@ -19,6 +19,7 @@ module Vpago
         }
 
         result[:view_type] = view_type unless view_type.nil?
+        result[:payout] = payout unless payout.nil?
         result
       end
 
