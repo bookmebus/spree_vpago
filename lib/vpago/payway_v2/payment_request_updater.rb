@@ -6,18 +6,18 @@ module Vpago
 
         checker = check_payway_status
 
-        if(checker.success?)
+        if checker.success?
           @error_message = nil
           checker_result = {
             status: true,
             description: nil,
-            payway_v2_response: checker.result,
+            payouts: checker.build_payout_profile_payments,
+            payway_v2_response: checker.json_response,
           }
           marker_options = @options.merge(checker_result)
-
           marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
           marker.call
-        elsif !ignore_on_failed?
+        elsif checker.failed?
           @error_message = checker.error_message
           marker_options = @options.merge(status: false, description: @error_message)
 

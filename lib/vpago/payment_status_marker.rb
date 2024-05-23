@@ -6,8 +6,10 @@ module Vpago
     def initialize(payment, options={})
       @payment = payment
       @options = options
-
       @options[:status] =  @options[:status] || false
+
+      # payouts must be constructed array of Spree::PayoutProfilePayment
+      @payouts = @options[:payouts]
     end
 
     def call
@@ -54,6 +56,15 @@ module Vpago
     def transition_to_paid!
       complete_payment!
       complete_order!
+      save_payout_payments!
+    end
+
+    def save_payout_payments!
+      return unless @payouts.present?
+
+      ActiveRecord::Base.transaction do
+        @payouts.each { |payment| payment.save! }
+      end
     end
 
     def transition_to_failed!
