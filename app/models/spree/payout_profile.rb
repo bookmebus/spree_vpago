@@ -19,14 +19,33 @@ module Spree
     before_save :ensure_default_exists_and_clear_vendor
     before_destroy :confirm_destroyable
 
+    self.whitelisted_ransackable_attributes = %w[name vendor_id]
+
     def self.default
       Rails.cache.fetch("default_payout_account/#{self.name.underscore}") do
         find_by(type: self.name, default: true)
       end
     end
 
+    def bank_name
+      'None'
+    end
+
+    def display_name
+      display_name = name
+    
+      bank_info = [bank_name, bank_account_number].compact.join(" - ")
+      display_name += " (#{bank_info})" unless bank_info.empty?
+    
+      display_name
+    end
+
     def verified?
       verified_at.present?
+    end
+
+    def receivable?
+      verified? && active?
     end
 
     def registered_in_bank?

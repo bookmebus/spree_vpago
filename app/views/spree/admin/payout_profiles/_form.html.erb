@@ -13,7 +13,7 @@
 
           <%= f.field_container :vendor do %>
             <%= f.label :vendor, Spree.t(:vendors) %>
-            <%= f.collection_select :vendor_id, Spree::Vendor.all, :id, :name, { prompt: Spree.t('match_choices.none') }, class: 'form-control select2' %>
+            <%= f.collection_select :vendor_id, Spree::Vendor.all, :id, :name, { prompt: Spree.t('match_choices.none'), selected: f.object.vendor_id || params[:vendor_id] }, class: 'form-control select2' %>
             <%= f.error_message_on :vendor_id %>
           <% end unless f.object.default? %>
 

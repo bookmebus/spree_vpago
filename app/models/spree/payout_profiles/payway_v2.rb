@@ -30,6 +30,11 @@ module Spree
           preferred_api_key.present? &&
           preferred_rsa_public_key.present?
       end
+
+      # override
+      def bank_name
+        'ABA'
+      end
     end
   end
 end
