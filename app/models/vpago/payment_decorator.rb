@@ -1,5 +1,8 @@
 module Vpago
   module PaymentDecorator
+    def self.prepended(base)
+      base.has_many :payout_profile_payments, class_name: 'Spree::PayoutProfilePayment', inverse_of: :payment
+    end
 
     # On the first call, everything works. The order is transitioned to complete and one Spree::Payment, 
     # which redirect the payment. But, after making the same call again,

@@ -3,31 +3,34 @@ require 'faraday'
 module Vpago
   module PaywayV2
     class TransactionStatus < Base
-      attr_accessor :error_message
-      attr_accessor :result
-
+      # status:
+      # 0 – Approved, PRE_AUTH, PREAUTH_APPROVED
+      # 1 – Created
+      # 2 – Pending
+      # 3 – Declined
+      # 4 – Refunded
+      # 5 – Wrong Hash
+      # 11 – Other Server-side Error
       def call
-        prepare
-        process
-      end
-
-      def prepare
-        @error_message = nil
-        @result = nil
-      end
-
-      def process
         @response = check_remote_status
+      end
 
-        if @response.status == 200
-          if json_response['status'] != 0 
-            fail!(json_response['description'])
-          else
-            @result = json_response
-          end
-        else
-          fail!( @response.body)
-        end
+      def status
+        json_response['status']&.to_s
+      end
+
+      def success?
+        status == '0'
+      end
+
+      # request failed does not mean payment failed.
+      # but it failed when status is failed.
+      def pending?
+        %w(1 2).include?(status)
+      end
+    
+      def failed?
+        %w(3 4 5).include?(status)
       end
 
       def check_remote_status
@@ -45,16 +48,32 @@ module Vpago
        conn.post(check_transaction_url, data)
       end
 
+      def error_message
+        json_response['description'].presence
+      end
+
       def json_response
-        @json ||= JSON.parse(@response.body)
+        @json ||= begin
+          JSON.parse(@response.body)
+        rescue JSON::ParserError
+          {}
+        end
       end
 
-      def fail!(message)
-        @error_message = message
-      end
+      def build_payout_profile_payments
+        payouts_response = json_response['payout']
 
-      def success?
-        @error_message == nil
+        return [] if payouts_response.nil? || !payouts_response.is_a?(Array) || payouts_response.empty?
+
+        payouts_response.map do |payout|
+          payout_profile = Spree::PayoutProfiles::PaywayV2.where(bank_account_number: payout['acc']).first_or_create! do |profile|
+            profile.name = payout['acc_name']&.strip
+          end
+
+          payout_profile_payment = Spree::PayoutProfilePayment.where(payout_profile: payout_profile, payment: @payment).first_or_initialize
+          payout_profile_payment.amount = payout['amt'].to_f
+          payout_profile_payment
+        end
       end
 
       def checker_hmac

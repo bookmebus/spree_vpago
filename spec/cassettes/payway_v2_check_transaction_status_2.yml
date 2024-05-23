@@ -1,0 +1,64 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction
+    body:
+      encoding: UTF-8
+      string: hash=FhjdXfo5NXw8k0GQTF8f%2F%2B5OdTMY15VmmvT5fTPuC7W1dhwRwxW8pn2A%2F%2Bk6hYqfxQrtKLamnUKlrmPsJ%2B546g%3D%3D&merchant_id=contigoasia&req_time=20240520113210&tran_id=P6I6BMCH
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Content-Type:
+      - application/x-www-form-urlencoded
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Mon, 20 May 2024 11:32:11 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      cache-control:
+      - private, must-revalidate
+      pragma:
+      - no-cache
+      expires:
+      - "-1"
+      x-ratelimit-limit:
+      - '100000'
+      x-ratelimit-remaining:
+      - '99984'
+      access-control-allow-origin:
+      - "*"
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-xss-protection:
+      - 1; mode=block
+      x-content-type-options:
+      - nosniff
+      content-security-policy:
+      - upgrade-insecure-requests
+      referrer-policy:
+      - same-origin
+      permissions-policy:
+      - geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()
+      cf-cache-status:
+      - DYNAMIC
+      server:
+      - cloudflare
+      cf-ray:
+      - 886c012dfd9a5fcc-SIN
+      content-encoding:
+      - gzip
+    body:
+      encoding: ASCII-8BIT
+      string: '{"status":2,"description":"pending","amount":25,"totalAmount":25,"apv":"","payment_status":"PENDING","datetime":"2024-05-20
+        18:31:46","payout":[{"acc":"070486124","amt":"25.00","acc_name":"*********ount"}]}'
+  recorded_at: Mon, 20 May 2024 11:32:11 GMT
+recorded_with: VCR 6.2.0
