@@ -3,8 +3,12 @@
 <% end %>
 
 <% content_for :page_actions do %>
-  <%= button_link_to Spree.t(:new), new_object_url, class: "btn-success", icon: 'add.svg' %>
+  <%= button_link_to Spree.t(:new), new_object_url(vendor_id: params.dig(:q, :vendor_id_eq)), class: "btn-success", icon: 'add.svg' %>
 <% end if can? :create, Spree::PayoutProfile %>
+
+<% content_for :table_filter do %>
+  <% render partial: 'filter' %>
+<% end %>
 
 <% if @payout_profiles.any? %>
 <div class="table-responsive border rounded bg-white mb-3">
@@ -52,7 +56,7 @@
 <% else %>
   <div class="text-center no-objects-found m-5">
     <%= Spree.t(:no_resource_found, resource: plural_resource_name(Spree::PayoutProfile)) %>,
-    <%= link_to(Spree.t(:add_one), new_object_url) if can? :create, Spree::PayoutProfile %>!
+    <%= link_to(Spree.t(:add_one), new_object_url(vendor_id: params.dig(:q, :vendor_id_eq))) if can? :create, Spree::PayoutProfile %>!
   </div>
 <% end %>
 
