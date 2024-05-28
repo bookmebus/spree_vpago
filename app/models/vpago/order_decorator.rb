@@ -29,8 +29,18 @@ module Vpago
       consider_risk
     end
 
+    # currently does not support payout when having adjustment/promotion or having tax.
+    def allowed_payout?
+      return false if adjustment_total > 0
+      return false if included_tax_total > 0
+      return false if additional_tax_total > 0
+      return false if promo_total > 0
+
+      true
+    end
+
     def required_payway_payout?
-      line_items.any?(&:required_payway_payout?)
+      allowed_payout? && line_items.any?(&:required_payway_payout?)
     end
 
     # override

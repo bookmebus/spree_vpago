@@ -23,12 +23,23 @@ RSpec.describe Vpago::PaywayV2::PayoutsConstructor do
   subject { described_class.new(payment) }
 
   describe '#call' do
-    it 'constuct payouts for all 4 line items, add default payout for remaining amount, and group them' do
-      expect(subject.call).to eq([
-        { acc: payout_profile1.bank_account_number, amt: '10.00' }, # 5$ + 5$ | line_item_0 + line_item_1
-        { acc: payout_profile2.bank_account_number, amt: '11.00' },
-        { acc: default_payout_profile.bank_account_number, amt: '12.00' },
-      ])
+    context 'when allowed_payout? is false' do
+      it 'return empty payouts' do
+        allow(order).to receive(:allowed_payout?).and_return(false)
+
+        expect(subject.call).to eq([])
+      end
+    end
+
+    context 'when allowed_payout? is true' do
+      it 'constuct payouts for all 4 line items, add default payout for remaining amount, and group them' do
+        expect(order.allowed_payout?).to be true
+        expect(subject.call).to eq([
+          { acc: payout_profile1.bank_account_number, amt: '10.00' }, # 5$ + 5$ | line_item_0 + line_item_1
+          { acc: payout_profile2.bank_account_number, amt: '11.00' },
+          { acc: default_payout_profile.bank_account_number, amt: '12.00' },
+        ])
+      end
     end
   end
 

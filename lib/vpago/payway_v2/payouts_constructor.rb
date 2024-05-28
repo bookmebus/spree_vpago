@@ -3,8 +3,7 @@
 # Currently, we send the total amount of each line item to select a payout profile if available.
 # Any remaining amount from line items without a payout profile will be sent to the default account.
 # 
-# TODO:
-# Implement handling of commissions for each product and send them to the default account.
+# Remaining amount also include commission & shipment amount which of course send to default account.
 module Vpago
   module PaywayV2
     class PayoutsConstructor
@@ -16,6 +15,8 @@ module Vpago
       end
 
       def call
+        return [] unless @payment.order.allowed_payout?
+
         payouts = build_payouts_for_line_items
         payouts = include_default_payout_for_remaining_amounts(payouts)
         payouts = group_payouts(payouts)
@@ -29,7 +30,7 @@ module Vpago
           payout_profile = line_item.active_payway_payout_profiles.first
 
           if payout_profile.present?
-            payouts << { acc: payout_profile.bank_account_number, amt: line_item.total }
+            payouts << { acc: payout_profile.bank_account_number, amt: line_item.pre_commission_amount }
           end
         end
       end

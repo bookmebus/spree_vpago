@@ -12,6 +12,19 @@ module Vpago
     def required_payway_payout?
       required_active_payout_profiles.payway.exists?
     end
+
+    def commission_rate
+      product_commission_rate = product.respond_to?(:commission_rate) ? product.commission_rate : nil
+      product_commission_rate || vendor&.commission_rate ||  0
+    end
+
+    def commission_amount
+      pre_tax_amount * commission_rate / 100.0
+    end
+
+    def pre_commission_amount
+      pre_tax_amount - commission_amount
+    end
   end
 end
 
