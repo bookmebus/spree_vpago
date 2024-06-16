@@ -1,7 +1,13 @@
 module Vpago
   module PaymentDecorator
     def self.prepended(base)
-      base.has_many :payout_profile_payments, class_name: 'Spree::PayoutProfilePayment', inverse_of: :payment
+      base.has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payment
+
+      base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :support_payout?
+    end
+
+    def support_payout?
+      payment_method.support_payout?
     end
 
     # On the first call, everything works. The order is transitioned to complete and one Spree::Payment, 

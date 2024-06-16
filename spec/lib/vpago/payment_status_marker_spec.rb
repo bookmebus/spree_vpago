@@ -39,7 +39,7 @@ RSpec.describe Vpago::PaymentStatusMarker do
       it 'call transition_to_failed!' do  
         expect(subject).to receive(:complete_payment!).and_call_original
         expect(subject).to receive(:complete_order!).and_call_original
-        expect(subject).to receive(:save_payout_payments!).and_call_original
+        expect(subject).to receive(:confirm_payouts!).and_call_original
 
         subject.send(:transition_to_paid!)
       end
@@ -47,12 +47,12 @@ RSpec.describe Vpago::PaymentStatusMarker do
   end
 
   describe '#transition_to_paid' do
-    subject { described_class.new(payment, { payouts: checker.build_payout_profile_payments }) }
+    subject { described_class.new(payment) }
 
     it 'call transition_to_paid!' do  
       expect(subject).to receive(:complete_payment!).and_call_original
       expect(subject).to receive(:complete_order!).and_call_original
-      expect(subject).to receive(:save_payout_payments!).and_call_original
+      expect(subject).to receive(:confirm_payouts!).and_call_original
 
       subject.send(:transition_to_paid!)
 
@@ -60,36 +60,35 @@ RSpec.describe Vpago::PaymentStatusMarker do
 
       expect(payment.completed?).to be true
       expect(payment.order.completed?).to be true
-      expect(payment.payout_profile_payments.size).to eq 2
     end
   end
   
-  describe '#save_payout_payments!' do
-    context 'when payouts present?' do
-      subject { described_class.new(payment, { payouts: checker.build_payout_profile_payments }) }
+  describe '#confirm_payouts!' do
+    context 'when payout_confirmed is true' do
+      let!(:payout1) { create(:payout, payment: payment, amount: 25.0, state: :created) }
+      let!(:payout2) { create(:payout, payment: payment, amount: 30.0, state: :created) }
 
-      it 'save payout payments that pass to them' do
-        result = subject.send(:save_payout_payments!)
+      subject { described_class.new(payment, { payout_confirmed: true }) }
 
-        expect(result.size).to eq 2
-        expect(result[0].persisted?).to be true
-        expect(result[1].persisted?).to be true
-    
-        expect(result[0].payout_profile.bank_account_number).to eq '070486124'
-        expect(result[1].payout_profile.bank_account_number).to eq '111111111'
-    
-        expect(result[0].amount).to eq 25
-        expect(result[1].amount).to eq 30
+      it 'save update payment.payouts state to confirm' do
+        subject.send(:confirm_payouts!)
+
+        expect(payout1.reload.state).to eq('confirmed')
+        expect(payout2.reload.state).to eq('confirmed')
       end
     end
 
-    context 'when payouts not present?' do
+    context 'when payout_confirmed is false' do
       subject { described_class.new(payment) }
 
-      it 'does nothing' do
-        result = subject.send(:save_payout_payments!)
+      let!(:payout1) { create(:payout, payment: payment, amount: 25.0, state: :created) }
+      let!(:payout2) { create(:payout, payment: payment, amount: 30.0, state: :created) }
 
-        expect(result).to be nil
+      it 'does nothing' do
+        subject.send(:confirm_payouts!)
+
+        expect(payout1.reload.state).to eq 'created'
+        expect(payout2.reload.state).to eq 'created'
       end
     end
   end

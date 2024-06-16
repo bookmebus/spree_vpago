@@ -4,7 +4,7 @@ module Vpago
       class PayoutProfileRequestCreator < BasePayoutProfileRequest
         # override
         def request_path
-          "api/merchant-portal/merchant-access/whitelist-account/add-whitelist-payout"
+          "/api/merchant-portal/merchant-access/whitelist-account/add-whitelist-payout"
         end
 
         # code:

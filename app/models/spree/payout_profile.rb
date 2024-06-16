@@ -2,7 +2,7 @@ module Spree
   class PayoutProfile < Base
     acts_as_paranoid
 
-    has_many :payout_profile_payments, class_name: 'Spree::PayoutProfilePayment', inverse_of: :payout_profile
+    has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payout_profile
     has_many :payout_profile_products, class_name: 'Spree::PayoutProfileProduct', inverse_of: :payout_profile
     has_many :products, class_name: "Spree::Product", through: :payout_profile_products
 
@@ -25,6 +25,10 @@ module Spree
       Rails.cache.fetch("default_payout_account/#{self.name.underscore}") do
         find_by(type: self.name, default: true)
       end
+    end
+
+    def default?
+      id == self.class.default&.id
     end
 
     def bank_name

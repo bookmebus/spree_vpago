@@ -77,36 +77,37 @@ RSpec.describe Vpago::PaywayV2::TransactionStatus do
     end
   end
 
-  describe '#build_payout_profile_payments' do
+  describe '#payout_confirmed?' do
     let!(:existing_payout_profile) { create(:payway_payout_profile, bank_account_number: '070486124') }
 
     before do
       VCR.use_cassette('payway_v2_check_transaction_status_0') { subject.call }
     end
 
-    let(:payout_profile_payments) {  subject.build_payout_profile_payments }
+    subject { described_class.new(payment) }
 
-    it 'build payout profile payments base on payout response' do
-      expect(subject.json_response['payout'].to_json).to eq([
-        { acc: "070486124", amt: "25.00", acc_name: "*********ount" },
-        { acc: "111111111", amt: "30.00", acc_name: "*********ount" }
-      ].to_json)
+    context 'when payouts amount == payout amount from response' do
+      let!(:payout1) { create(:payout, payment: payment, amount: 25.0) }
+      let!(:payout2) { create(:payout, payment: payment, amount: 30.0) }
 
-      expect(payout_profile_payments.size).to eq 2
-      expect(payout_profile_payments[0].amount).to eq 25
-      expect(payout_profile_payments[1].amount).to eq 30
+      it 'return true' do
+        expect(subject.json_response['payout'].map { |payout| payout['amt'].to_f || 0 }.sum).to eq(25 + 30)
+        expect(payment.payouts.sum(:amount)).to eq(25 + 30)
+
+        expect(subject.payout_confirmed?).to eq true
+      end
     end
 
-    it 'find existing profile to build payout profile payment' do
-      expect(payout_profile_payments[0].payout_profile.bank_account_number).to eq '070486124'
-      expect(payout_profile_payments[0].payout_profile).to eq existing_payout_profile
-    end
+    context 'when payouts amount != payout amount from response' do
+      let!(:payout1) { create(:payout, payment: payment, amount: 25.0) }
+      let!(:payout2) { create(:payout, payment: payment, amount: 2.0) }
 
-    it 'create new payout profile when not exist' do
-      expect(payout_profile_payments[1].payout_profile.bank_account_number).to eq '111111111'
-      expect(payout_profile_payments[1].payout_profile.name).to eq '*********ount'
-      expect(payout_profile_payments[1].payout_profile.persisted?).to be true
-      expect(payout_profile_payments[1].amount).to eq 30
+      it 'return true' do
+        expect(subject.json_response['payout'].map { |payout| payout['amt'].to_f || 0 }.sum).to eq(25 + 30)
+        expect(payment.payouts.sum(:amount)).to eq(25 + 2.0)
+
+        expect(subject.payout_confirmed?).to eq false
+      end
     end
   end
 end

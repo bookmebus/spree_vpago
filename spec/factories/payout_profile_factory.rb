@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :payout_profile, class: Spree::PayoutProfile do
     name { FFaker::Name.name }
-    bank_account_number { '002094060' }
+    sequence(:bank_account_number) { |n| "00209406#{n}" }
 
     factory :payway_payout_profile, class: Spree::PayoutProfiles::PaywayV2 do
       preferred_base_url { 'https://checkout-sandbox.payway.com.kh' }

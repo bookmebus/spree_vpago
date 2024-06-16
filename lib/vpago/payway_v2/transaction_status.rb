@@ -60,20 +60,15 @@ module Vpago
         end
       end
 
-      def build_payout_profile_payments
+      def payout_confirmed?
         payouts_response = json_response['payout']
 
         return [] if payouts_response.nil? || !payouts_response.is_a?(Array) || payouts_response.empty?
 
-        payouts_response.map do |payout|
-          payout_profile = Spree::PayoutProfiles::PaywayV2.where(bank_account_number: payout['acc']).first_or_create! do |profile|
-            profile.name = payout['acc_name']&.strip
-          end
+        total_from_db = @payment.payouts.sum(:amount)
+        total_from_bank = payouts_response.map { |payout| payout['amt'].to_f || 0 }.sum
 
-          payout_profile_payment = Spree::PayoutProfilePayment.where(payout_profile: payout_profile, payment: @payment).first_or_initialize
-          payout_profile_payment.amount = payout['amt'].to_f
-          payout_profile_payment
-        end
+        total_from_bank == total_from_db
       end
 
       def checker_hmac

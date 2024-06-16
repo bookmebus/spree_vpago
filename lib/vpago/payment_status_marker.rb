@@ -7,9 +7,6 @@ module Vpago
       @payment = payment
       @options = options
       @options[:status] =  @options[:status] || false
-
-      # payouts must be constructed array of Spree::PayoutProfilePayment
-      @payouts = @options[:payouts]
     end
 
     def call
@@ -56,14 +53,18 @@ module Vpago
     def transition_to_paid!
       complete_payment!
       complete_order!
-      save_payout_payments!
+      confirm_payouts!
     end
 
-    def save_payout_payments!
-      return unless @payouts.present?
+    def payout_confirmed?
+      @options[:payout_confirmed] == true
+    end
 
-      ActiveRecord::Base.transaction do
-        @payouts.each { |payment| payment.save! }
+    def confirm_payouts!
+      return unless payout_confirmed?
+
+      @payment.payouts.find_each do |payout|
+        payout.update!(state: :confirmed)
       end
     end
 

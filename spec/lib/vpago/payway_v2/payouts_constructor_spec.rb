@@ -7,80 +7,140 @@ RSpec.describe Vpago::PaywayV2::PayoutsConstructor do
   let(:payout_profile1) { create(:payway_payout_profile, active: true, bank_account_number: '111', verified_at: DateTime.current)}
   let(:payout_profile2) { create(:payway_payout_profile, active: true, bank_account_number: '222', verified_at: DateTime.current)}
 
-  let(:product0) { create(:product, payout_profiles: [payout_profile1]) }
-  let(:product1) { create(:product, payout_profiles: [payout_profile1]) }
-  let(:product2) { create(:product, payout_profiles: [payout_profile2]) }
+  let(:product0) { create(:product_in_stock, payout_profiles: [payout_profile1]) }
+  let(:product1) { create(:product_in_stock, payout_profiles: [payout_profile2]) }
+  let(:product2) { create(:product_in_stock) }
 
-  let(:payout_line_item0) { create(:line_item, product: product0, price: 5.0) }
-  let(:payout_line_item1) { create(:line_item, product: product1, price: 5.0) }
-  let(:payout_line_item2) { create(:line_item, product: product2, price: 11.0) }
-  let(:no_payout_line_item) { create(:line_item, price: 12.0) }
+  let(:line_item0) { create(:line_item, price: 5.0, product: product0) }
+  let(:line_item1) { create(:line_item, price: 5.0, product: product1) }
+  let(:line_item2) { create(:line_item, price: 11.0, product: product2) }
 
-  let(:order) { create(:order, line_items: [payout_line_item0, payout_line_item1, payout_line_item2, no_payout_line_item]) }
-
-  let(:payment) { create(:payment, payment_method: payment_method, order: order, amount: 5.0 + 5.0 + 11 + 12)}
+  let(:order) { create(:order, line_items: [line_item0, line_item1, line_item2]) }
+  let!(:payment) { create(:payway_v2_payment, payment_method: payment_method, order: order, amount: 5.0 + 5.0 + 11.0) }
 
   subject { described_class.new(payment) }
 
   describe '#call' do
-    context 'when allowed_payout? is false' do
-      it 'return empty payouts' do
-        allow(order).to receive(:allowed_payout?).and_return(false)
+    it 'build_payouts_for_line_items, include_default_payout_for_remaining_amounts, group_payouts, check if payout valid, and format payout' do
+      expect(subject).to receive(:build_payouts_for_line_items).and_call_original
+      expect(subject).to receive(:include_default_payout_for_remaining_amounts).and_call_original
+      expect(subject).to receive(:group_payouts).and_call_original
+      expect(subject).to receive(:valid_payout_total?).and_call_original
+      expect(subject).to receive(:format_payouts).and_call_original
 
-        expect(subject.call).to eq([])
+      subject.call
+    end
+
+    it 'return constructed payouts base on payout record from payment' do
+      expect(payment.payouts[0].amount).to eq 5.0
+      expect(payment.payouts[1].amount).to eq 5.0
+      expect(payment.payouts[2].amount).to eq 11.0
+
+      expect(subject.call).to eq([
+        {:acc => "111", :amt => "5.00"},
+        {:acc => "222", :amt => "5.00"},
+        {:acc => "333", :amt => "11.00"}
+      ])
+    end
+
+    context 'when valid_payout_total = true during .call' do
+      it 'return constructed payout' do
+        allow(subject).to receive(:valid_payout_total?).and_return(true)
+
+        expect(subject.call).to_not be_empty
       end
     end
 
-    context 'when allowed_payout? is true' do
-      it 'constuct payouts for all 4 line items, add default payout for remaining amount, and group them' do
-        expect(order.allowed_payout?).to be true
-        expect(subject.call).to eq([
-          { acc: payout_profile1.bank_account_number, amt: '10.00' }, # 5$ + 5$ | line_item_0 + line_item_1
-          { acc: payout_profile2.bank_account_number, amt: '11.00' },
-          { acc: default_payout_profile.bank_account_number, amt: '12.00' },
-        ])
+    context 'when valid_payout_total = false during .call' do
+      it 'return empty payouts, meaning that we still accept payment & deal with this issue later' do
+        allow(subject).to receive(:valid_payout_total?).and_return(false)
+
+        expect(subject.call).to be_empty
       end
     end
   end
 
   describe '#build_payouts_for_line_items' do
-    it 'return payout for all 4 line items' do
+    let!(:order) { create(:order, line_items: [line_item0, line_item1, line_item2], payments: [previous_payment, current_payment]) }
+
+    let(:previous_payment) { build(:payway_v2_payment, payment_method: payment_method, amount: 5.0 + 5.0 + 11.0) }
+    let(:current_payment) { build(:payway_v2_payment, payment_method: payment_method, amount: 5.0 + 5.0 + 11.0) }
+
+    before do
+      Spree::Payout.destroy_all
+
+      create(:payout, payment: previous_payment, amount: 13, line_item: line_item0, payout_profile: payout_profile1)
+      create(:payout, payment: current_payment, amount: 17, line_item: line_item0, payout_profile: payout_profile1)
+      create(:payout, payment: current_payment, amount: 15, line_item: line_item1, payout_profile: payout_profile2)
+    end
+
+    it 'build payouts params base on payout of current_payment' do
+      subject = described_class.new(current_payment)
+
       expect(subject.build_payouts_for_line_items).to eq([
-        { acc: payout_profile1.bank_account_number, amt: 5.0 },
-        { acc: payout_profile1.bank_account_number, amt: 5.0 },
-        { acc: payout_profile2.bank_account_number, amt: 11.0 }
+        {:acc => "111", :amt => 17},
+        {:acc => "222", :amt => 15}
       ])
     end
   end
 
   describe '#include_default_payout_for_remaining_amounts' do
-    let(:payment) { create(:payment, payment_method: payment_method, order: order, amount: 10.0 + 11.0 + 12.0)}
+    let(:payment) { create(:payment, payment_method: payment_method, order: order, amount: 5.0 + 5.0 + 11.0 + remaining_amount)}
 
-    context 'when has remaing amount' do
-      it 'return construct default payout for remaining amount 12.0' do
-        payouts = subject.build_payouts_for_line_items
-  
-        expect(subject.include_default_payout_for_remaining_amounts(payouts)).to eq([
-          { acc: payout_profile1.bank_account_number, amt: 5.0 },
-          { acc: payout_profile1.bank_account_number, amt: 5.0 },
-          { acc: payout_profile2.bank_account_number, amt: 11.0 },
-          { acc: default_payout_profile.bank_account_number, amt: 12.0 },
+    context 'when there are remaining amount' do
+      let(:remaining_amount) { 30 }
+
+      it 'add remaining amount with default account to existing payout' do
+        result = subject.include_default_payout_for_remaining_amounts([
+          {:acc => "111", :amt => 5.0},
+          {:acc => "111", :amt => 5.0},
+          {:acc => "222", :amt => 11.0}
+        ])
+
+        expect(result).to eq([
+          {:acc => "111", :amt => 5.0},
+          {:acc => "111", :amt => 5.0},
+          {:acc => "222", :amt => 11.0},
+          {:acc => default_payout_profile.bank_account_number, :amt => remaining_amount},
         ])
       end
     end
 
-    context 'when has NO remaing amount' do
-      # override
-      let(:payment) { create(:payment, payment_method: payment_method, order: order, amount: 10.0 + 11.0)}
+    context 'when there are no remaining amount' do
+      let(:remaining_amount) { 0 }
 
-      it 'return does not return with default payout profile' do
-        payouts = subject.build_payouts_for_line_items
-  
-        expect(subject.include_default_payout_for_remaining_amounts(payouts)).to eq([
-          { acc: payout_profile1.bank_account_number, amt: 5.0 },
-          { acc: payout_profile1.bank_account_number, amt: 5.0 },
-          { acc: payout_profile2.bank_account_number, amt: 11.0 },
+      it 'does not change anything' do
+        result = subject.include_default_payout_for_remaining_amounts([
+          {:acc => "111", :amt => 5.0},
+          {:acc => "111", :amt => 5.0},
+          {:acc => "222", :amt => 11.0}
         ])
+
+        expect(result).to eq([
+          {:acc => "111", :amt => 5.0},
+          {:acc => "111", :amt => 5.0},
+          {:acc => "222", :amt => 11.0}
+        ])
+      end
+    end
+  end
+
+  describe '#valid_payout_total?' do
+    context 'when sum of payout != payment amount' do
+      let(:payment) { create(:payment, payment_method: payment_method, order: order, amount: 10) }
+      let(:payouts) { [ { acc: "111", amt: 12 } ]}
+
+      it 'return false' do
+        expect(subject.valid_payout_total?(payouts)).to be false
+      end
+    end
+
+    context 'when sum of payout == payment amount' do
+      let(:payment) { create(:payment, payment_method: payment_method, order: order, amount: 10) }
+      let(:payouts) { [ { acc: "111", amt: 10 } ]}
+
+      it 'return true' do
+        expect(subject.valid_payout_total?(payouts)).to be true
       end
     end
   end
@@ -94,32 +154,26 @@ RSpec.describe Vpago::PaywayV2::PayoutsConstructor do
       ]
 
       expect(subject.group_payouts(payouts)).to eq([
-        { acc: "111", amt: "21.00" },
-        { acc: "222", amt: "20.00" },
-        { acc: "333", amt: "14.00" }
+        { acc: "111", amt: 10 + 11 },
+        { acc: "222", amt: 12 + 8 },
+        { acc: "333", amt: 14 }
       ])
     end
   end
 
-  describe '#format_amount' do
-    it 'formats the amount with two decimal places' do
-      formatted_amount = subject.format_amount(123.456)
-      expect(formatted_amount).to eq '123.46'
-    end
+  describe '#format_payouts' do
+    it 'format payout amount' do
+      payouts = [ 
+        { acc: "111", amt: 21 },
+        { acc: "222", amt: 20 },
+        { acc: "333", amt: 14 }
+      ]
 
-    it 'formats the amount correctly when it is an integer' do
-      formatted_amount = subject.format_amount(100)
-      expect(formatted_amount).to eq '100.00'
-    end
-
-    it 'formats the amount correctly when it has one decimal place' do
-      formatted_amount = subject.format_amount(55.5)
-      expect(formatted_amount).to eq '55.50'
-    end
-
-    it 'formats the amount correctly when it is zero' do
-      formatted_amount = subject.format_amount(0)
-      expect(formatted_amount).to eq '0.00'
+      expect(subject.format_payouts(payouts)).to eq([
+        { acc: "111", amt: "21.00" },
+        { acc: "222", amt: "20.00" },
+        { acc: "333", amt: "14.00" }
+      ])
     end
   end
 end

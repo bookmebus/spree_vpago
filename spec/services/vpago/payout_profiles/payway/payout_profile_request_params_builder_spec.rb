@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe Vpago::PayoutProfiles::Payway::PayoutProfileRequestParamsBuilder do
   let(:request_time) { DateTime.new(2024, 05, 07, 05, 33, 10) }
-  let(:profile) { create(:payway_payout_profile) }
+  let(:profile) { create(:payway_payout_profile, bank_account_number: '002094060') }
 
   subject { described_class.new(request_time, profile) }
 

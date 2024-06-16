@@ -21,81 +21,23 @@ RSpec.describe Spree::Order, type: :model do
     end
   end
 
-  describe '#allowed_payout?' do
-    let(:order) { build(:order) }
-
-    context 'when adjustment_total > 0' do
-      it 'returns false' do
-        order.adjustment_total = 1
-        expect(order.allowed_payout?).to be false
-      end
-    end
-  
-    context 'when included_tax_total > 0' do
-      it 'returns false' do
-        order.included_tax_total = 1
-        expect(order.allowed_payout?).to be false
-      end
-    end
-  
-    context 'when additional_tax_total > 0' do
-      it 'returns false' do
-        order.additional_tax_total = 1
-        expect(order.allowed_payout?).to be false
-      end
-    end
-  
-    context 'when promo_total > 0' do
-      it 'returns false' do
-        order.promo_total = 1
-        expect(order.allowed_payout?).to be false
-      end
-    end
-  
-    context 'when all totals are 0' do
-      it 'returns true' do
-        order.adjustment_total = 0
-        order.included_tax_total = 0
-        order.additional_tax_total = 0
-        order.promo_total = 0
-
-        expect(order.allowed_payout?).to be true
-      end
-    end
-  end
-
   describe '#required_payway_payout?' do
-    context 'when allowed_payout is false' do
-      before do
-        order.promo_total = 1
-        expect(order.allowed_payout?).to be false
-      end
+    let(:line_item_a) { create(:line_item) }
+    let(:line_item_b) { create(:line_item) }
+    let(:order) { create(:order, line_items: [line_item_a, line_item_b])}
 
-      it 'return false' do
-        expect(order.required_payway_payout?).to be false
-      end
+    before do
+      order.adjustment_total = 0
+      order.included_tax_total = 0
+      order.additional_tax_total = 0
+      order.promo_total = 0
     end
 
-    context 'when allowed_payout is true' do
-      let(:line_item_a) { create(:line_item) }
-      let(:line_item_b) { create(:line_item) }
-      let(:order) { create(:order, line_items: [line_item_a, line_item_b])}
+    it 'return true when any of line item is required payway payout' do
+      allow(line_item_a).to receive(:required_payway_payout?).and_return(true)
+      allow(line_item_b).to receive(:required_payway_payout?).and_return(false)
 
-      before do
-        order.adjustment_total = 0
-        order.included_tax_total = 0
-        order.additional_tax_total = 0
-        order.promo_total = 0
-
-        expect(order.allowed_payout?).to be true
-      end
-
-      it 'return true when any of line item is required payway payout' do
-        allow(line_item_a).to receive(:required_payway_payout?).and_return(true)
-        allow(line_item_b).to receive(:required_payway_payout?).and_return(false)
-  
-        expect(order.required_payway_payout?).to be true
-      end
+      expect(order.required_payway_payout?).to be true
     end
   end
 
