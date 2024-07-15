@@ -15,7 +15,7 @@ module Vpago
 
     def commission_rate
       product_commission_rate = product.respond_to?(:commission_rate) ? product.commission_rate : nil
-      product_commission_rate || vendor&.commission_rate ||  0
+      product_commission_rate || vendor&.commission_rate || 0
     end
 
     def commission_amount

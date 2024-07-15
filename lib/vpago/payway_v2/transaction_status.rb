@@ -26,16 +26,16 @@ module Vpago
       # request failed does not mean payment failed.
       # but it failed when status is failed.
       def pending?
-        %w(1 2).include?(status)
+        %w[1 2].include?(status)
       end
-    
+
       def failed?
-        %w(3 4 5).include?(status)
+        %w[3 4 5].include?(status)
       end
 
       def check_remote_status
         conn = Faraday::Connection.new do |faraday|
-          faraday.request  :url_encoded
+          faraday.request :url_encoded
         end
 
         data = {
@@ -45,7 +45,7 @@ module Vpago
           hash: checker_hmac
         }
 
-       conn.post(check_transaction_url, data)
+        conn.post(check_transaction_url, data)
       end
 
       def error_message
@@ -60,22 +60,6 @@ module Vpago
         end
       end
 
-      def build_payout_profile_payments
-        payouts_response = json_response['payout']
-
-        return [] if payouts_response.nil? || !payouts_response.is_a?(Array) || payouts_response.empty?
-
-        payouts_response.map do |payout|
-          payout_profile = Spree::PayoutProfiles::PaywayV2.where(bank_account_number: payout['acc']).first_or_create! do |profile|
-            profile.name = payout['acc_name']&.strip
-          end
-
-          payout_profile_payment = Spree::PayoutProfilePayment.where(payout_profile: payout_profile, payment: @payment).first_or_initialize
-          payout_profile_payment.amount = payout['amt'].to_f
-          payout_profile_payment
-        end
-      end
-
       def checker_hmac
         data = "#{req_time}#{merchant_id}#{transaction_id}"
         hash = Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha512'), api_key, data))
@@ -85,7 +69,7 @@ module Vpago
       end
 
       def check_transaction_url
-        "#{host}#{ENV['PAYWAY_CHECK_TRANSACTION_PATH']}"
+        "#{host}#{ENV.fetch('PAYWAY_CHECK_TRANSACTION_PATH', nil)}"
       end
     end
   end

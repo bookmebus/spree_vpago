@@ -1,21 +1,27 @@
 module Vpago
   module PaymentMethodDecorator
-    TYPE_PAYWAY = 'Spree::Gateway::Payway'
-    TYPE_PAYWAY_V2 = 'Spree::Gateway::PaywayV2'
-    TYPE_WINGSDK = 'Spree::Gateway::WingSdk'
-    TYPE_ACLEDA = 'Spree::Gateway::Acleda'
-    TYPE_ACLEDA_MOBILE = 'Spree::Gateway::AcledaMobile'
+    TYPE_PAYWAY = 'Spree::Gateway::Payway'.freeze
+    TYPE_PAYWAY_V2 = 'Spree::Gateway::PaywayV2'.freeze
+    TYPE_WINGSDK = 'Spree::Gateway::WingSdk'.freeze
+    TYPE_ACLEDA = 'Spree::Gateway::Acleda'.freeze
+    TYPE_ACLEDA_MOBILE = 'Spree::Gateway::AcledaMobile'.freeze
 
     def self.prepended(base)
       base.preference :icon_name, :string, default: 'cheque'
 
       def base.vpago_payments
-        [Spree::PaymentMethod::TYPE_PAYWAY_V2, Spree::PaymentMethod::TYPE_PAYWAY, Spree::PaymentMethod::TYPE_WINGSDK, Spree::PaymentMethod::TYPE_ACLEDA, Spree::PaymentMethod::TYPE_ACLEDA_MOBILE]
+        [
+          Spree::PaymentMethod::TYPE_PAYWAY_V2,
+          Spree::PaymentMethod::TYPE_PAYWAY,
+          Spree::PaymentMethod::TYPE_WINGSDK,
+          Spree::PaymentMethod::TYPE_ACLEDA,
+          Spree::PaymentMethod::TYPE_ACLEDA_MOBILE
+        ]
       end
     end
 
     def vpago_payment?
-      self.class.vpago_payments.include?(self.type)
+      self.class.vpago_payments.include?(type)
     end
 
     def vapgo_checkout_service
@@ -40,7 +46,7 @@ module Vpago
       elsif type_acleda?
         ::Vpago::Acleda::PaymentRequestUpdater
       elsif type_acleda_mobile?
-        ::Vpago::AcledaMobile::PaymentRequestUpdater 
+        ::Vpago::AcledaMobile::PaymentRequestUpdater
       end
     end
 

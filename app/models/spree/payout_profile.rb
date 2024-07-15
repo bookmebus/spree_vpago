@@ -2,15 +2,14 @@ module Spree
   class PayoutProfile < Base
     acts_as_paranoid
 
-    has_many :payout_profile_payments, class_name: 'Spree::PayoutProfilePayment', inverse_of: :payout_profile
     has_many :payout_profile_products, class_name: 'Spree::PayoutProfileProduct', inverse_of: :payout_profile
-    has_many :products, class_name: "Spree::Product", through: :payout_profile_products
+    has_many :products, class_name: 'Spree::Product', through: :payout_profile_products
 
     belongs_to :vendor, class_name: 'Spree::Vendor', optional: true, inverse_of: :payout_profiles
 
     validates :type, presence: true
     validates :name, presence: true
-    validates :bank_account_number, presence: true, uniqueness: { scope: [:type, :vendor_id] }
+    validates :bank_account_number, presence: true, uniqueness: { scope: %i[type vendor_id] }
 
     scope :payway, -> { where(type: 'Spree::PayoutProfiles::PaywayV2') }
     scope :verified, -> { where.not(verified_at: nil) }
@@ -22,8 +21,8 @@ module Spree
     self.whitelisted_ransackable_attributes = %w[name vendor_id]
 
     def self.default
-      Rails.cache.fetch("default_payout_account/#{self.name.underscore}") do
-        find_by(type: self.name, default: true)
+      Rails.cache.fetch("default_payout_account/#{name.underscore}") do
+        find_by(type: name, default: true)
       end
     end
 
@@ -33,10 +32,10 @@ module Spree
 
     def display_name
       display_name = name
-    
-      bank_info = [bank_name, bank_account_number].compact.join(" - ")
+
+      bank_info = [bank_name, bank_account_number].compact.join(' - ')
       display_name += " (#{bank_info})" unless bank_info.empty?
-    
+
       display_name
     end
 
@@ -86,10 +85,10 @@ module Spree
     end
 
     def confirm_destroyable
-      unless can_be_deleted?
-        errors.add(:base, :cannot_destroy_only_payout_profile)
-        throw(:abort)
-      end
-    end  
+      return if can_be_deleted?
+
+      errors.add(:base, :cannot_destroy_only_payout_profile)
+      throw(:abort)
+    end
   end
 end

@@ -39,7 +39,6 @@ RSpec.describe Vpago::PaymentStatusMarker do
       it 'call transition_to_failed!' do  
         expect(subject).to receive(:complete_payment!).and_call_original
         expect(subject).to receive(:complete_order!).and_call_original
-        expect(subject).to receive(:save_payout_payments!).and_call_original
 
         subject.send(:transition_to_paid!)
       end
@@ -47,12 +46,11 @@ RSpec.describe Vpago::PaymentStatusMarker do
   end
 
   describe '#transition_to_paid' do
-    subject { described_class.new(payment, { payouts: checker.build_payout_profile_payments }) }
+    subject { described_class.new(payment) }
 
     it 'call transition_to_paid!' do  
       expect(subject).to receive(:complete_payment!).and_call_original
       expect(subject).to receive(:complete_order!).and_call_original
-      expect(subject).to receive(:save_payout_payments!).and_call_original
 
       subject.send(:transition_to_paid!)
 
@@ -60,37 +58,6 @@ RSpec.describe Vpago::PaymentStatusMarker do
 
       expect(payment.completed?).to be true
       expect(payment.order.completed?).to be true
-      expect(payment.payout_profile_payments.size).to eq 2
-    end
-  end
-  
-  describe '#save_payout_payments!' do
-    context 'when payouts present?' do
-      subject { described_class.new(payment, { payouts: checker.build_payout_profile_payments }) }
-
-      it 'save payout payments that pass to them' do
-        result = subject.send(:save_payout_payments!)
-
-        expect(result.size).to eq 2
-        expect(result[0].persisted?).to be true
-        expect(result[1].persisted?).to be true
-    
-        expect(result[0].payout_profile.bank_account_number).to eq '070486124'
-        expect(result[1].payout_profile.bank_account_number).to eq '111111111'
-    
-        expect(result[0].amount).to eq 25
-        expect(result[1].amount).to eq 30
-      end
-    end
-
-    context 'when payouts not present?' do
-      subject { described_class.new(payment) }
-
-      it 'does nothing' do
-        result = subject.send(:save_payout_payments!)
-
-        expect(result).to be nil
-      end
     end
   end
 end

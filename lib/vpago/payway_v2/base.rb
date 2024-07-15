@@ -1,7 +1,7 @@
 module Vpago
   module PaywayV2
     class Base
-      def initialize(payment, options={})
+      def initialize(payment, options = {})
         @options = options
         @payment = payment
       end
@@ -15,19 +15,19 @@ module Vpago
       end
 
       def amount
-        "%.2f" % ( @payment.amount + transaction_fee )
+        format('%.2f', (@payment.amount + transaction_fee))
       end
 
       def transaction_fee_fix
         @payment.payment_method.preferences[:transaction_fee_fix].to_f
       end
-    
+
       def transaction_fee_percentage
         @payment.payment_method.preferences[:transaction_fee_percentage].to_f
       end
-    
+
       def transaction_fee
-        transaction_fee_fix + (@payment.amount * transaction_fee_percentage ) / 100
+        transaction_fee_fix + ((@payment.amount * transaction_fee_percentage) / 100)
       end
 
       def merchant_id
@@ -39,7 +39,7 @@ module Vpago
       end
 
       def email
-        @payment.order.email.presence || ENV['DEFAULT_EMAIL_FOR_PAYMENT']
+        @payment.order.email.presence || ENV.fetch('DEFAULT_EMAIL_FOR_PAYMENT', nil)
       end
 
       def first_name
@@ -51,9 +51,9 @@ module Vpago
       end
 
       def return_url
-        preferred_return_url = ENV['PAYWAY_RETURN_CALLBACK_URL']
+        preferred_return_url = ENV.fetch('PAYWAY_RETURN_CALLBACK_URL', nil)
         return nil if preferred_return_url.blank?
-        
+
         Base64.encode64(preferred_return_url).delete("\n")
       end
 
@@ -68,16 +68,16 @@ module Vpago
       end
 
       def continue_success_url
-        preferred_continue_url = ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL']
+        preferred_continue_url = ENV.fetch('PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL', nil)
         return nil if preferred_continue_url.blank?
 
         query_string = {
           tran_id: transaction_id,
           app_checkout: app_checkout,
-          order_number: @payment.order.number,
+          order_number: @payment.order.number
         }.to_query
 
-        preferred_continue_url.index("?") == nil ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
+        preferred_continue_url.index('?').nil? ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
       end
 
       # null, hosted_view, checkout, qr
@@ -90,11 +90,11 @@ module Vpago
 
         return 'abapay_deeplink' if is_app_checkout? && card_option == 'abapay'
 
-        Vpago::Payway::CARD_TYPES.index(card_option) == nil ?  Vpago::Payway::CARD_TYPE_ABAPAY : card_option
+        Vpago::Payway::CARD_TYPES.index(card_option).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : card_option
       end
 
       def phone_country_code
-        "+855"
+        '+855'
       end
 
       def phone
@@ -106,7 +106,7 @@ module Vpago
       end
 
       def return_params
-        {tran_id: transaction_id}.to_json
+        { tran_id: transaction_id }.to_json
       end
 
       def payout
@@ -118,10 +118,10 @@ module Vpago
 
       def hash_hmac
         hash = Base64.strict_encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha512'), api_key, hash_data))
-      
+
         log_hash_data = "Hash hmac: #{hash}"
         Rails.logger.info(log_hash_data)
-        
+
         hash
       end
 
