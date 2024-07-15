@@ -48,6 +48,14 @@ module Vpago
         conn.post(check_transaction_url, data)
       end
 
+      def payout_total
+        payouts_response = json_response['payout']
+
+        return nil if payouts_response.nil? || !payouts_response.is_a?(Array) || payouts_response.empty?
+
+        payouts_response.map { |payout| payout['amt'].to_f || 0 }.sum
+      end
+
       def error_message
         json_response['description'].presence
       end

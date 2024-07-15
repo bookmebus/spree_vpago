@@ -20,6 +20,10 @@ module Vpago
       end
     end
 
+    def support_payout?
+      type_payway_v2?
+    end
+
     def vpago_payment?
       self.class.vpago_payments.include?(type)
     end

@@ -2,6 +2,7 @@ module Spree
   class PayoutProfile < Base
     acts_as_paranoid
 
+    has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payout_profile
     has_many :payout_profile_products, class_name: 'Spree::PayoutProfileProduct', inverse_of: :payout_profile
     has_many :products, class_name: 'Spree::Product', through: :payout_profile_products
 

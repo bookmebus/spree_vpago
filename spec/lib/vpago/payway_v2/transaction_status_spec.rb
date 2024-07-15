@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe Vpago::PaywayV2::TransactionStatus do
+  let!(:default_payout_profile) { create(:payway_payout_profile, active: true, bank_account_number: '333', default: true, verified_at: DateTime.current)}
+
   let(:payment_method) { create(:payway_v2_gateway) }
   let(:payment) { create(:payment, payment_method: payment_method) }
 

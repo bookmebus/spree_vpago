@@ -111,7 +111,7 @@ module Vpago
 
       def payout
         @payout ||= begin
-          payouts = Vpago::PaywayV2::PayoutsConstructor.new(@payment).call
+          payouts = Vpago::PaywayV2::PayoutsParamsConstructor.new(@payment).call
           payouts.empty? ? nil : Base64.strict_encode64(payouts.to_json)
         end
       end

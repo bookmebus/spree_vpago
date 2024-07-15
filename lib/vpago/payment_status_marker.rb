@@ -54,6 +54,7 @@ module Vpago
     def transition_to_paid!
       complete_payment!
       complete_order!
+      confirm_payouts!
     end
 
     def transition_to_failed!
@@ -87,6 +88,18 @@ module Vpago
       order = @payment.order
       order.finalize!
       order.update(state: 'complete', completed_at: Time.zone.now)
+    end
+
+    def payout_confirmed?
+      @options[:payout_total] == @payment.payouts.sum(:amount)
+    end
+
+    def confirm_payouts!
+      return unless payout_confirmed?
+
+      @payment.payouts.find_each do |payout|
+        payout.update!(state: :confirmed)
+      end
     end
 
     def notify_failed_payment

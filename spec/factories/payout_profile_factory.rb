@@ -3,6 +3,10 @@ FactoryBot.define do
     name { FFaker::Name.name }
     bank_account_number { '002094060' }
 
+    trait :random do
+      sequence(:bank_account_number) { |n| "00209406#{n}" }
+    end
+
     factory :payway_payout_profile, class: Spree::PayoutProfiles::PaywayV2 do
       preferred_base_url { 'https://checkout-sandbox.payway.com.kh' }
       preferred_merchant_id { 'contigoasia' }

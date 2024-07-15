@@ -11,7 +11,8 @@ module Vpago
           checker_result = {
             status: true,
             description: nil,
-            payway_v2_response: checker.json_response
+            payway_v2_response: checker.json_response,
+            payout_total: checker.payout_total
           }
           marker_options = @options.merge(checker_result)
           marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)

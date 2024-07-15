@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe Vpago::PaywayV2::Base do
+  let!(:default_payout_profile) { create(:payway_payout_profile, active: true, bank_account_number: '333', default: true, verified_at: DateTime.current)}
 
   describe "#first_name" do
     it "return its first_name if there is no space surrounding it" do
@@ -82,7 +83,7 @@ RSpec.describe Vpago::PaywayV2::Base do
       let(:payouts) { [{ acc: '123456789', amt: '100.00' }] }
 
       it 'returns encoded payouts JSON' do
-        allow_any_instance_of(Vpago::PaywayV2::PayoutsConstructor).to receive(:call).and_return(payouts)
+        allow_any_instance_of(Vpago::PaywayV2::PayoutsParamsConstructor).to receive(:call).and_return(payouts)
 
         encoded_payouts = Base64.strict_encode64(payouts.to_json)
 
@@ -94,7 +95,7 @@ RSpec.describe Vpago::PaywayV2::Base do
       let(:empty_payouts) { [] }
 
       it 'returns nil' do
-        allow_any_instance_of(Vpago::PaywayV2::PayoutsConstructor).to receive(:call).and_return(empty_payouts)
+        allow_any_instance_of(Vpago::PaywayV2::PayoutsParamsConstructor).to receive(:call).and_return(empty_payouts)
 
         expect(subject.payout).to be_nil
       end
@@ -135,8 +136,10 @@ RSpec.describe Vpago::PaywayV2::Base do
       allow(subject).to receive(:return_params).and_return(return_params)
     end
 
-    context 'when payout is nil' do
+    context 'when payout is nil' do      
       it 'constuct without payout' do
+        allow(subject).to receive(:payout).and_return(nil)
+
         expect(subject.hash_data).to eq([
           req_time,
           merchant_id,

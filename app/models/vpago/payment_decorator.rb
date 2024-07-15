@@ -1,5 +1,14 @@
 module Vpago
   module PaymentDecorator
+    def self.prepended(base)
+      base.has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payment
+      base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :support_payout?
+    end
+
+    def support_payout?
+      payment_method.support_payout?
+    end
+
     # On the first call, everything works. The order is transitioned to complete and one Spree::Payment,
     # which redirect the payment. But, after making the same call again,
     # for instance because the payment wasn't completed or failed,
