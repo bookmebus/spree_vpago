@@ -7,5 +7,5 @@ module Spree
     validates :product, presence: true
 
     validates :payout_profile_id, uniqueness: { scope: :product_id }
-  end  
+  end
 end

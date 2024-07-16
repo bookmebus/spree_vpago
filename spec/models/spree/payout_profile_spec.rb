@@ -13,7 +13,6 @@ RSpec.describe Spree::PayoutProfile, type: :model do
   end
 
   describe "associations" do
-    it { should have_many(:payout_profile_payments).class_name('Spree::PayoutProfilePayment').inverse_of(:payout_profile) }
     it { should have_many(:payout_profile_products).class_name('Spree::PayoutProfileProduct').inverse_of(:payout_profile) }
     it { should have_many(:products).class_name('Spree::Product').through(:payout_profile_products) }
     it { should belong_to(:vendor).class_name('Spree::Vendor').optional(true).inverse_of(:payout_profiles) }

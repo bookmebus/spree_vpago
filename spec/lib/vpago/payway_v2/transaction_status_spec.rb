@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe Vpago::PaywayV2::TransactionStatus do
+  let!(:default_payout_profile) { create(:payway_payout_profile, active: true, bank_account_number: '333', default: true, verified_at: DateTime.current)}
+
   let(:payment_method) { create(:payway_v2_gateway) }
   let(:payment) { create(:payment, payment_method: payment_method) }
 
@@ -74,39 +76,6 @@ RSpec.describe Vpago::PaywayV2::TransactionStatus do
 
       allow(subject).to receive(:status).and_return('5')
       expect(subject.failed?).to be true
-    end
-  end
-
-  describe '#build_payout_profile_payments' do
-    let!(:existing_payout_profile) { create(:payway_payout_profile, bank_account_number: '070486124') }
-
-    before do
-      VCR.use_cassette('payway_v2_check_transaction_status_0') { subject.call }
-    end
-
-    let(:payout_profile_payments) {  subject.build_payout_profile_payments }
-
-    it 'build payout profile payments base on payout response' do
-      expect(subject.json_response['payout'].to_json).to eq([
-        { acc: "070486124", amt: "25.00", acc_name: "*********ount" },
-        { acc: "111111111", amt: "30.00", acc_name: "*********ount" }
-      ].to_json)
-
-      expect(payout_profile_payments.size).to eq 2
-      expect(payout_profile_payments[0].amount).to eq 25
-      expect(payout_profile_payments[1].amount).to eq 30
-    end
-
-    it 'find existing profile to build payout profile payment' do
-      expect(payout_profile_payments[0].payout_profile.bank_account_number).to eq '070486124'
-      expect(payout_profile_payments[0].payout_profile).to eq existing_payout_profile
-    end
-
-    it 'create new payout profile when not exist' do
-      expect(payout_profile_payments[1].payout_profile.bank_account_number).to eq '111111111'
-      expect(payout_profile_payments[1].payout_profile.name).to eq '*********ount'
-      expect(payout_profile_payments[1].payout_profile.persisted?).to be true
-      expect(payout_profile_payments[1].amount).to eq 30
     end
   end
 end
