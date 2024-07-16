@@ -6,9 +6,31 @@ module Spree
 
     enum state: { created: 0, confirmed: 1 }
 
-    validates :payout_profile_id, uniqueness: { scope: %i[line_item_id payment_id] }
-
     extend DisplayMoney
-    money_methods :amount, :outstanding_amount
+    money_methods :amount, :outstanding_amount,
+                  :commission_amount,
+                  :pre_commission_amount,
+                  :subtotal_with_vendor_adjustment_total,
+                  :vendor_adjustment_total
+
+    def commission_rate
+      private_metadata&.dig('commission_rate')&.to_f
+    end
+
+    def commission_amount
+      private_metadata&.dig('commission_amount')&.to_f
+    end
+
+    def pre_commission_amount
+      private_metadata&.dig('pre_commission_amount')&.to_f
+    end
+
+    def subtotal_with_vendor_adjustment_total
+      private_metadata&.dig('subtotal_with_vendor_adjustment_total')&.to_f
+    end
+
+    def vendor_adjustment_total
+      private_metadata&.dig('vendor_adjustment_total')&.to_f
+    end
   end
 end

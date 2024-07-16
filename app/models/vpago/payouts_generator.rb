@@ -40,8 +40,10 @@ module Vpago
           line_item: line_item,
           payment: payment,
           payout_profile: payout_profile,
+          currency: payment.currency,
           amount: payout_amount,
-          outstanding_amount: outstanding_amount
+          outstanding_amount: outstanding_amount,
+          private_metadata: line_item.private_metadata
         )
 
         self.remaining_amount -= payout_amount
@@ -58,6 +60,7 @@ module Vpago
           state: :created,
           payment: payment,
           payout_profile: Spree::PayoutProfiles::PaywayV2.default,
+          currency: payment.currency,
           amount: self.remaining_amount
         )
       ]

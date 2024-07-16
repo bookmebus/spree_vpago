@@ -1,5 +1,9 @@
 module Vpago
   module OrderDecorator
+    def self.prepended(base)
+      base.has_many :payouts, class_name: 'Spree::Payout', through: :payments
+    end
+
     extend Spree::DisplayMoney
     money_methods :order_adjustment_total, :shipping_discount
 
@@ -10,7 +14,7 @@ module Vpago
 
       # update payment and shipment(s) states, and save
       updater.update_payment_state
-      
+
       shipments.each do |shipment|
         shipment.update!(self)
         shipment.finalize! if paid? || authorized?
@@ -22,25 +26,31 @@ module Vpago
 
       touch :completed_at
 
-      if !confirmation_delivered? && (paid? || authorized?)
-        deliver_order_confirmation_email
-      end
+      deliver_order_confirmation_email if !confirmation_delivered? && (paid? || authorized?)
 
       consider_risk
     end
 
-    # currently does not support payout when having adjustment/promotion or having tax.
-    def allowed_payout?
-      return false if adjustment_total > 0
-      return false if included_tax_total > 0
-      return false if additional_tax_total > 0
-      return false if promo_total > 0
-
-      true
+    def required_payway_payout?
+      line_items.any?(&:required_payway_payout?)
     end
 
-    def required_payway_payout?
-      allowed_payout? && line_items.any?(&:required_payway_payout?)
+    def line_items_count
+      line_items.size
+    end
+
+    def generate_commissions_to_line_items
+      line_items.each do |line_item|
+        private_metadata = line_item.private_metadata || {}
+
+        private_metadata[:commission_rate] = line_item.commission_rate
+        private_metadata[:commission_amount] = line_item.commission_amount
+        private_metadata[:pre_commission_amount] = line_item.pre_commission_amount
+        private_metadata[:subtotal_with_vendor_adjustment_total] = line_item.subtotal_with_vendor_adjustment_total
+        private_metadata[:vendor_adjustment_total] = line_item.vendor_adjustment_total
+
+        line_item.update!(private_metadata: private_metadata)
+      end
     end
 
     # override
@@ -48,20 +58,20 @@ module Vpago
       payment_methods = collect_payment_methods(store)
 
       @available_payment_methods ||= if required_payway_payout?
-        payment_methods.select { |payment| payment.type_payway_v2? }
-      else
-        payment_methods
-      end
+                                       payment_methods.select(&:type_payway_v2?)
+                                     else
+                                       payment_methods
+                                     end
     end
 
     def send_confirmation_email!
-      if !confirmation_delivered? && (paid? || authorized?)
-        deliver_order_confirmation_email
-      end
+      return unless !confirmation_delivered? && (paid? || authorized?)
+
+      deliver_order_confirmation_email
     end
 
     def successful_payment
-      paid? || payments.any? {|p| p.after_pay_method? && p.authorized?}
+      paid? || payments.any? { |p| p.after_pay_method? && p.authorized? }
     end
 
     alias paid_or_authorized? successful_payment
@@ -73,11 +83,10 @@ module Vpago
     def order_adjustment_total
       adjustments.eligible.sum(:amount)
     end
-
-    def has_order_adjustments?
-      order_adjustment_total.abs > 0
-    end
   end
 end
 
-Spree::Order.prepend(Vpago::OrderDecorator)
+if Spree::Order.included_modules.exclude?(Vpago::OrderDecorator)
+  Spree::Order.register_update_hook(:generate_commissions_to_line_items)
+  Spree::Order.prepend(Vpago::OrderDecorator)
+end
