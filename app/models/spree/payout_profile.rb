@@ -6,6 +6,12 @@ module Spree
     has_many :payout_profile_products, class_name: 'Spree::PayoutProfileProduct', inverse_of: :payout_profile
     has_many :products, class_name: 'Spree::Product', through: :payout_profile_products
 
+    has_many :payout_profile_shipping_methods,
+             class_name: 'Spree::PayoutProfileShippingMethod',
+             inverse_of: :payout_profile
+
+    has_many :shipping_methods, class_name: 'Spree::ShippingMethod', through: :payout_profile_shipping_methods
+
     belongs_to :vendor, class_name: 'Spree::Vendor', optional: true, inverse_of: :payout_profiles
 
     validates :type, presence: true
