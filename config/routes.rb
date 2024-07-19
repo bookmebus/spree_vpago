@@ -19,10 +19,10 @@ Spree::Core::Engine.add_routes do
 
   namespace :webhook do
     resource :payways, only: [] do
-      match 'return', to: 'payways#return', via: [:get, :post]
+      match 'return', to: 'payways#return', via: %i[get post]
       get 'continue', to: 'payways#continue'
 
-      match 'v2_return', to: 'payways#v2_return', via: [:get, :post]
+      match 'v2_return', to: 'payways#v2_return', via: %i[get post]
       get 'v2_continue', to: 'payways#v2_continue'
     end
 
@@ -37,7 +37,7 @@ Spree::Core::Engine.add_routes do
     end
 
     resources :wings, only: [:create] do
-      match 'return', to: 'wings#return', via: [:get, :post]
+      match 'return', to: 'wings#return', via: %i[get post]
     end
   end
 
@@ -63,6 +63,14 @@ Spree::Core::Engine.add_routes do
 
     resources :products do
       resources :payout_profile_products
+    end
+
+    resources :orders do
+      resources :payouts
+    end
+
+    resources :shipping_methods do
+      resources :payout_profile_shipping_methods
     end
 
     resources :payout_profiles do

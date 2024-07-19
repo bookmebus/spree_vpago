@@ -1,0 +1,10 @@
+<!-- insert_top "[data-hook='admin_tax_category_form_fields']" -->
+
+<%= f.field_container :collect_by do %>
+  <%= f.label :collect_by, raw(Spree.t(:collect_by) + required_span_tag) %>
+  <%= f.select :collect_by, Spree::TaxCategory.collect_bies.keys.map {|item| [item.capitalize, item]}, {}, :class => "fullwidth select2" %>
+  <%= f.error_message_on :collect_by %>
+  <small class="form-text text-muted">
+    This information is crucial for the financial report.
+  </small>
+<% end %>

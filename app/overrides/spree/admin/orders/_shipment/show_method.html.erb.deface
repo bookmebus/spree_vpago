@@ -1,0 +1,27 @@
+<!-- replace ".show-method" -->
+
+<tr class="show-method total">
+  <% if shipment.selected_shipping_rate.present? %>
+    <td colspan="2">
+      <strong><%= shipment.selected_shipping_rate.name %></strong>
+    </td>
+    <td colspan="2" class="text-center">
+      <%= link_to edit_admin_shipping_method_path(shipment.shipping_method) do %>
+        Handled by <%= shipment.selected_shipping_rate.handle_by.capitalize %>
+      <% end %>
+    </td>
+    <td class="total text-center">
+      <%= shipment.display_cost %>
+    </td>
+  <% else %>
+    <td colspan='5'><%= Spree.t(:no_shipping_method_selected) %></td>
+  <% end %>
+
+  <td class="actions">
+    <span class="d-flex justify-content-center">
+      <% if( (can? :update, shipment) and !shipment.shipped?) %>
+        <%= link_to_with_icon 'edit.svg', Spree.t('edit'), "javascript:;", class: 'edit-method with-tip btn btn-sm btn-light', data: {action: 'edit'}, no_text: true %>
+      <% end %>
+    </span>
+  </td>
+</tr>
