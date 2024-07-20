@@ -19,3 +19,4 @@ public/spree
 .ruby-gemset
 gemfiles/*.gemfile.lock
 vendor/cache
+.byebug_history

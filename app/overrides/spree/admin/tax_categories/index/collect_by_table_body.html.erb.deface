@@ -1,0 +1,4 @@
+<!-- insert_top "[data-hook='tax_row']" -->
+
+<td><%= tax_category.id %></td>
+<td class="text-center"><%= tax_category.collect_by.to_s.capitalize %></td>

@@ -1,4 +1,4 @@
-<!-- insert_after "erb[silent]:contains('Spree::Digital')" -->
+<!-- insert_after "erb[silent]:contains('Spree::Price')" -->
 
 <%= content_tag :li, class: 'nav-item' do %>
   <%= link_to_with_icon 'wallet2.svg',

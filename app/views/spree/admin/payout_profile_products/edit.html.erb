@@ -1,7 +1,7 @@
 <%= render partial: 'spree/admin/shared/product_tabs', locals: { current: :payout_profile_products } %>
 <%= render partial: 'spree/admin/shared/error_messages', locals: { target: @payout_profile_product } %>
 
-<%= render partial: 'payout_profile_status', locals: { payout_profile: @payout_profile_product.payout_profile } %>
+<%= render partial: 'spree/admin/shared/payout_profile/status', locals: { payout_profile: @payout_profile_product.payout_profile } %>
 
 <% content_for :page_actions do %>
   <%= button_link_to Spree.t(:add_profiles), admin_payout_profiles_url(q: { vendor_id_eq: @product.vendor_id }), icon: 'arrow-right-circle.svg' %>

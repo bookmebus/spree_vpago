@@ -3,7 +3,7 @@ module Spree
     class PayoutProfilesController < Spree::Admin::ResourceController
       before_action :load_types
 
-      skip_before_action :load_resource, only: [:index, :verify_with_bank]
+      skip_before_action :load_resource, only: %i[index verify_with_bank]
 
       create.after :reset_verification
       update.after :reset_verification
@@ -33,10 +33,10 @@ module Spree
         @object = Spree::PayoutProfile.find(params[:id])
 
         instance = if @object.registered_in_bank?
-          request_updater.new(@object)
-        else
-          request_creator.new(@object)
-        end
+                     request_updater.new(@object)
+                   else
+                     request_creator.new(@object)
+                   end
 
         if instance.call
           flash[:success] = flash_message_for(@object, :successfully_updated)
