@@ -21,80 +21,71 @@ RSpec.describe Spree::Order, type: :model do
     end
   end
 
-  describe '#allowed_payout?' do
-    let(:order) { build(:order) }
+  describe '#generate_line_items_total_metadata' do
+    let(:vendor_a) { create(:vendor, commission_rate: 10) }
+    let(:vendor_b) { create(:vendor, commission_rate: 15) }
 
-    context 'when adjustment_total > 0' do
-      it 'returns false' do
-        order.adjustment_total = 1
-        expect(order.allowed_payout?).to be false
-      end
-    end
-  
-    context 'when included_tax_total > 0' do
-      it 'returns false' do
-        order.included_tax_total = 1
-        expect(order.allowed_payout?).to be false
-      end
-    end
-  
-    context 'when additional_tax_total > 0' do
-      it 'returns false' do
-        order.additional_tax_total = 1
-        expect(order.allowed_payout?).to be false
-      end
-    end
-  
-    context 'when promo_total > 0' do
-      it 'returns false' do
-        order.promo_total = 1
-        expect(order.allowed_payout?).to be false
-      end
-    end
-  
-    context 'when all totals are 0' do
-      it 'returns true' do
-        order.adjustment_total = 0
-        order.included_tax_total = 0
-        order.additional_tax_total = 0
-        order.promo_total = 0
+    let(:product_a) { create(:product_in_stock, vendor: vendor_a) }
+    let(:product_b) { create(:product_in_stock, vendor: vendor_b) }
 
-        expect(order.allowed_payout?).to be true
-      end
+    let(:line_item_a) { create(:line_item, product: product_a) }
+    let(:line_item_b) { create(:line_item, product: product_b) }
+
+    let(:order) { create(:order, line_items: [line_item_a, line_item_b])}
+
+    it 'save commission_rate, commission_amount, pre_commission_amount, subtotal_with_vendor_adjustment_total, vendor_adjustment_total to private_metadata' do
+      expect(line_item_a.private_metadata).to eq({})
+      expect(line_item_b.private_metadata).to eq({})
+
+      order.generate_line_items_total_metadata
+
+      expect(line_item_a.private_metadata).to eq({"commission_amount"=>1.0, "commission_rate"=>10.0, "pre_commission_amount"=>9.0, "subtotal"=>10.0, "vendor_adjustments_total_excluding_tax"=>0.0, "vendor_pre_tax_amount"=>10.0, "vendor_tax_total"=>0.0})
+      expect(line_item_b.private_metadata).to eq({"commission_amount"=>1.5, "commission_rate"=>15.0, "pre_commission_amount"=>8.5, "subtotal"=>10.0, "vendor_adjustments_total_excluding_tax"=>0.0, "vendor_pre_tax_amount"=>10.0, "vendor_tax_total"=>0.0})
     end
   end
 
   describe '#required_payway_payout?' do
-    context 'when allowed_payout is false' do
-      before do
-        order.promo_total = 1
-        expect(order.allowed_payout?).to be false
-      end
+    let(:order) { create(:order_ready_to_ship, line_items_count: 2) }
 
-      it 'return false' do
-        expect(order.required_payway_payout?).to be false
+    before do
+      order.adjustment_total = 0
+      order.included_tax_total = 0
+      order.additional_tax_total = 0
+      order.promo_total = 0
+    end
+
+    context 'when some line items are required payway payout' do
+      it 'return true' do
+        allow(order.line_items[0]).to receive(:required_payway_payout?).and_return(true)
+        allow(order.line_items[1]).to receive(:required_payway_payout?).and_return(false)
+        
+        # true even shipment does not required
+        allow(order.shipments[0]).to receive(:required_payway_payout?).and_return(false)
+
+        expect(order.required_payway_payout?).to be true
       end
     end
 
-    context 'when allowed_payout is true' do
-      let(:line_item_a) { create(:line_item) }
-      let(:line_item_b) { create(:line_item) }
-      let(:order) { create(:order, line_items: [line_item_a, line_item_b])}
-
-      before do
-        order.adjustment_total = 0
-        order.included_tax_total = 0
-        order.additional_tax_total = 0
-        order.promo_total = 0
-
-        expect(order.allowed_payout?).to be true
-      end
-
-      it 'return true when any of line item is required payway payout' do
-        allow(line_item_a).to receive(:required_payway_payout?).and_return(true)
-        allow(line_item_b).to receive(:required_payway_payout?).and_return(false)
+    context 'when some shipments are required payway payout' do
+      it 'return true' do
+        allow(order.shipments[0]).to receive(:required_payway_payout?).and_return(true)
   
+        # true even line items does not required
+        allow(order.line_items[0]).to receive(:required_payway_payout?).and_return(false)
+        allow(order.line_items[1]).to receive(:required_payway_payout?).and_return(false)
+
         expect(order.required_payway_payout?).to be true
+      end
+    end
+
+    context 'when no shipment or line item are required payway payout' do
+      it 'return true' do
+        allow(order.shipments[0]).to receive(:required_payway_payout?).and_return(false)
+  
+        allow(order.line_items[0]).to receive(:required_payway_payout?).and_return(false)
+        allow(order.line_items[1]).to receive(:required_payway_payout?).and_return(false)
+
+        expect(order.required_payway_payout?).to be false
       end
     end
   end

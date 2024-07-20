@@ -1,23 +1,30 @@
 # generate payouts for remaining amount of provided payment.
 module Vpago
   class PayoutsGenerator
-    attr_reader :payment, :line_items
+    attr_reader :payment, :line_items, :shipments
 
     attr_accessor :remaining_amount
 
     def initialize(payment)
       @payment = payment
+
       @line_items = payment.order.line_items.includes(
         :active_payway_payout_profiles,
         :confirmed_payouts_for_vendor,
         :adjustments
       )
 
+      @shipments = payment.order.shipments.includes(
+        :confirmed_payouts_for_vendor,
+        :adjustments,
+        selected_shipping_rate: :active_payway_payout_profiles
+      )
+
       self.remaining_amount = payment.amount
     end
 
     def call
-      payouts = vendor_payouts + store_payouts
+      payouts = vendor_payouts + vendor_shipment_payouts + store_payouts
 
       ActiveRecord::Base.transaction { payouts.each(&:save!) }
     end
@@ -37,11 +44,53 @@ module Vpago
         payouts << Spree::Payout.new(
           default: false,
           state: :created,
-          line_item: line_item,
+          payoutable: line_item,
           payment: payment,
           payout_profile: payout_profile,
           amount: payout_amount,
-          outstanding_amount: outstanding_amount
+          outstanding_amount: outstanding_amount,
+          private_metadata: {
+            total_confirmed_payouts: total_confirmed_payouts,
+            amount_owed_to_vendor: amount_owed_to_vendor,
+            payoutable: line_item.latest_private_metadata
+          }
+        )
+
+        self.remaining_amount -= payout_amount
+      end
+    end
+
+    def vendor_shipment_payouts
+      shipments.each_with_object([]) do |shipment, payouts|
+        next unless shipment.selected_shipping_rate.handle_by_vendor?
+
+        payout_profile = shipment.selected_shipping_rate.active_payway_payout_profiles.first
+        next unless payout_profile.present?
+
+        total_confirmed_payouts = shipment.confirmed_payouts_for_vendor.sum(:amount)
+        next if total_confirmed_payouts >= shipment.cost_with_vendor_adjustment_total
+
+        amount_owed_to_shipping_vendor = shipment.cost_with_vendor_adjustment_total - total_confirmed_payouts
+        payout_amount = [amount_owed_to_shipping_vendor, remaining_amount].min
+        outstanding_amount = [amount_owed_to_shipping_vendor - payout_amount, 0].max
+
+        payouts << Spree::Payout.new(
+          default: false,
+          state: :created,
+          payoutable: shipment,
+          payment: payment,
+          payout_profile: payout_profile,
+          amount: payout_amount,
+          outstanding_amount: outstanding_amount,
+          private_metadata: {
+            total_confirmed_payouts: total_confirmed_payouts,
+            amount_owed_to_vendor: amount_owed_to_shipping_vendor,
+            payoutable: {
+              cost: shipment.cost,
+              vendor_adjustment_total: shipment.vendor_adjustment_total,
+              cost_with_vendor_adjustment_total: shipment.cost_with_vendor_adjustment_total
+            }
+          }
         )
 
         self.remaining_amount -= payout_amount

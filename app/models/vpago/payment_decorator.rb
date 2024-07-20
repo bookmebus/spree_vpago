@@ -2,7 +2,11 @@ module Vpago
   module PaymentDecorator
     def self.prepended(base)
       base.has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payment
-      base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :support_payout?
+      base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :should_generate_payouts?
+    end
+
+    def should_generate_payouts?
+      support_payout? && payouts.empty?
     end
 
     def support_payout?
