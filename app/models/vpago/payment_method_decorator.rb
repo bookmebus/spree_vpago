@@ -21,7 +21,14 @@ module Vpago
     end
 
     def support_payout?
-      type_payway_v2?
+      return false unless type_payway_v2?
+      return false unless default_payout_profile.present? && default_payout_profile.receivable?
+
+      true
+    end
+
+    def default_payout_profile
+      Spree::PayoutProfiles::PaywayV2.default
     end
 
     def vpago_payment?
