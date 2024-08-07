@@ -74,7 +74,8 @@ module Vpago
         query_string = {
           tran_id: transaction_id,
           app_checkout: app_checkout,
-          order_number: @payment.order.number
+          order_number: @payment.order.number,
+          order_channel: @payment.order.channel
         }.to_query
 
         preferred_continue_url.index('?').nil? ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"

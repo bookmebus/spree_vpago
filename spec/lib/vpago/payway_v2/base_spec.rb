@@ -55,7 +55,7 @@ RSpec.describe Vpago::PaywayV2::Base do
       allow(payment).to receive(:number).and_return "PF2IM21Q"
       allow(payment.order).to receive(:number).and_return "R226226575"
 
-      expect(subject.continue_success_url).to eq 'https://contigo.asia/webhook/payways/v2_continue?app_checkout=no&order_number=R226226575&tran_id=PF2IM21Q'
+      expect(subject.continue_success_url).to eq  'https://contigo.asia/webhook/payways/v2_continue?app_checkout=no&order_channel=spree&order_number=R226226575&tran_id=PF2IM21Q'
     end
   end
 

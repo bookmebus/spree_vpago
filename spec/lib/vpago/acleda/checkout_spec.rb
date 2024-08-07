@@ -94,7 +94,7 @@ RSpec.describe Vpago::Acleda::Checkout do
         :invoiceid=>"R156303026",
         :currencytype=>"USD",
         :transactionID=>"PXDMNSPA",
-        :successUrlToReturn=>"https://example/webhook/acledas/success?app_checkout=0&order_number=R156303026",
+        :successUrlToReturn=>"https://example/webhook/acledas/success?app_checkout=0&order_channel=spree&order_number=R156303026",
         :errorUrl=>"https://example/webhook/acledas/error?app_checkout=0&order_number=R156303026",
         :companyName=>"BookMe+",
         :companyLogo=>ActionController::Base.helpers.image_url('vpago/payway/acleda_merchant_logo_300x300.png')
