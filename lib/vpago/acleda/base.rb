@@ -3,7 +3,7 @@ module Vpago
     class Base
       include Vpago::PaymentAmountCalculator
 
-      def initialize(payment, options={})
+      def initialize(payment, options = {})
         @options = options
         @payment = payment
       end
@@ -32,7 +32,8 @@ module Vpago
 
         query_string = {
           app_checkout: app_checkout,
-          order_number: order_number
+          order_number: order_number,
+          order_channel: @payment.order.channel
         }.to_query
 
         "#{preferred_success_url}?#{query_string}"
@@ -93,9 +94,9 @@ module Vpago
       def expiry_time
         @payment.payment_method.preferences[:payment_expiry_time_in_mn]
       end
-      
+
       def purchase_date
-        @payment.created_at.strftime("%d-%m-%Y")
+        @payment.created_at.strftime('%d-%m-%Y')
       end
 
       def order_number
