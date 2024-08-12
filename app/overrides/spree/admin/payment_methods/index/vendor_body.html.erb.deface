@@ -1,0 +1,5 @@
+<!-- insert_before "[data-hook='admin_payment_methods_index_row_actions']" -->
+
+<% if params[:tab] == 'vendors' %>
+  <td class="text-center"><%= method.vendor&.name || 'N/A' %></td>
+<% end %>

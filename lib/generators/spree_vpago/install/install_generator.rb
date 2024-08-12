@@ -5,6 +5,7 @@ module SpreeVpago
       source_root File.expand_path('templates', __dir__)
 
       def add_migrations
+        run 'bundle exec rake railties:install:migrations FROM=spree_multi_vendor'
         run 'bundle exec rake railties:install:migrations FROM=spree_vpago'
       end
 

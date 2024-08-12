@@ -1,0 +1,15 @@
+<% content_for(:page_tabs) do %>
+  <%= content_tag :li, class: 'nav-item' do %>
+    <%= link_to_with_icon 'building.svg',
+      Spree::Store.default&.name || Spree.t(:store),
+      admin_payment_methods_url,
+      class: "nav-link #{'active' if params[:tab].blank? }" %>
+  <% end if can?(:admin, Spree::PaymentMethod) %>
+
+  <%= content_tag :li, class: 'nav-item' do %>
+    <%= link_to_with_icon 'store.svg',
+      Spree.t(:vendors),
+      admin_payment_methods_url(tab: :vendors),
+      class: "nav-link #{'active' if params[:tab] == 'vendors' }" %>
+  <% end if can?(:admin, Spree::PaymentMethod) %>
+<% end %>

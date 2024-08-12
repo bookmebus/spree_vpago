@@ -8,6 +8,9 @@ module Vpago
       base.has_many :active_payway_payout_profiles, class_name: 'Spree::PayoutProfile', through: :product
 
       base.has_many :required_active_payout_profiles, class_name: 'Spree::PayoutProfile', through: :product
+
+      base.has_one :vendor, through: :variant
+      base.has_many :vendor_payment_methods, class_name: 'Spree::PaymentMethod', through: :variant
     end
 
     # considred required when there are any required profiles.
@@ -69,4 +72,4 @@ module Vpago
   end
 end
 
-Spree::LineItem.prepend(Vpago::LineItemDecorator)
+Spree::LineItem.prepend(Vpago::LineItemDecorator) if Spree::LineItem.included_modules.exclude?(Vpago::LineItemDecorator)

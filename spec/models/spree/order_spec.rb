@@ -10,6 +10,57 @@ RSpec.describe Spree::Order, type: :model do
     create(:payway_payment, payment_method: gateway, source: payment_source, order: order, amount: order.total, state: 'completed') 
   }
 
+  context 'state machine' do
+    context 'before transition cart -> any' do
+      describe 'callback: ensure_valid_vendor_payment_methods' do
+        let(:vendor1) { create(:vendor) }
+        let(:vendor2) { create(:vendor) }
+    
+        let!(:vendor1_line_item1) { create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1)) }
+        let!(:vendor1_line_item2) { create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1)) }
+
+        let!(:vendor2_line_item1) { create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor2)) }
+        let!(:vendor2_line_item2) { create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor2)) }
+
+        context 'when line items from same vendor' do
+          it 'does not return any error' do
+            payment_method1 = create(:payment_method, vendor: vendor1)
+            order = create(:order, state: :cart, line_items: [vendor1_line_item1, vendor1_line_item2])
+
+            expect(order.line_items_from_same_vendor?).to be true
+            expect(order.next).to be true
+            expect(order.state).to eq 'address'
+          end
+        end
+
+        context 'when line items from different vendor & each line item has no payment_methods' do
+          it 'does not return any error' do
+            order = create(:order, state: :cart, line_items: [vendor1_line_item1, vendor2_line_item1])
+
+            expect(order.line_items_from_same_vendor?).to be false
+            expect(order.vendor_payment_methods.size).to eq 0
+            expect(order.next).to be true
+            expect(order.state).to eq 'address'
+          end
+        end
+
+        context 'when line items from different vendor & some line items has their own payment_methods' do
+          it 'return error & keep order.state the same' do
+            payment_method1 = create(:payment_method, vendor: vendor1)
+            order = create(:order, state: :cart, line_items: [vendor1_line_item1, vendor2_line_item2])
+  
+            expect(order.line_items_from_same_vendor?).to be false
+            expect(order.vendor_payment_methods.size).to eq 1
+
+            expect(order.next).to be false
+            expect(order.state).to eq 'cart'
+            expect(order.errors.messages).to include(line_items: include('some_payment_methods_cant_be_used_across_vendors'))
+          end
+        end
+      end
+    end
+  end
+
   context '#cancel' do
     it 'marks the payway to void' do
       allow_any_instance_of(Spree::Shipment).to receive(:refresh_rates).and_return(true)
@@ -18,6 +69,55 @@ RSpec.describe Spree::Order, type: :model do
       order.reload
 
       expect(order.payments.first).to be_void
+    end
+  end
+
+  describe '#line_items_from_same_vendor?' do
+    let(:vendor1) { create(:vendor) }
+    let(:vendor2) { create(:vendor) }
+    let(:order) { create(:order) }
+
+    it 'return true when line item from same vendor' do
+      line_item1 = create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1))
+      line_item2 = create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1))
+      order.reload
+
+      expect(order.line_items.size).to eq 2
+      expect(order.line_items_from_same_vendor?).to be true
+    end
+
+    it 'return false when line item from different vendor' do
+      line_item1 = create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1))
+      line_item2 = create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor2))
+      order.reload
+
+      expect(order.line_items.size).to eq 2
+      expect(order.line_items_from_same_vendor?).to be false
+    end
+  end
+
+  describe '#available_payment_methods' do
+    let(:vendor1) { create(:vendor) }
+    let(:vendor2) { create(:vendor) }
+
+    let(:order) { create(:order) }
+
+    let!(:line_item1) { create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1)) }
+    let!(:line_item2) { create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor2)) }
+
+    context 'when have vendor payment methods in line items' do
+      let!(:payment_method0) { create(:payment_method) }
+      let!(:payment_method1) { create(:payment_method, vendor: vendor1) }
+      let!(:payment_method2) { create(:payment_method, vendor: vendor2) }
+
+      it 'return all payment methods associated with line items vendor' do
+        expect(order.available_payment_methods.size).to eq 2
+        expect(order.available_payment_methods.pluck(:id)).to eq [payment_method1.id, payment_method2.id]
+      end
+
+      it 'return does not return any store payment methods (has no associated vendor)' do
+        expect(order.available_payment_methods.pluck(:id)).not_to include(payment_method0.id)
+      end
     end
   end
 

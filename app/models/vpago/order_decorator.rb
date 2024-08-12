@@ -5,6 +5,24 @@ module Vpago
 
     def self.prepended(base)
       base.has_many :payouts, class_name: 'Spree::Payout', through: :payments
+      base.has_many :vendor_payment_methods, -> { unscope(:order).distinct },
+                    class_name: 'Spree::PaymentMethod',
+                    through: :line_items
+
+      base.state_machine.before_transition from: :cart, do: :ensure_valid_vendor_payment_methods
+    end
+
+    def ensure_valid_vendor_payment_methods
+      return if line_items_from_same_vendor?
+      return unless vendor_payment_methods.any?
+
+      errors.add(:line_items, 'some_payment_methods_cant_be_used_across_vendors')
+
+      false
+    end
+
+    def line_items_from_same_vendor?
+      line_items.joins(:variant).pluck('spree_variants.vendor_id').uniq.size == 1
     end
 
     # Make sure the order confirmation is delivered when the order has been paid for.
@@ -37,7 +55,11 @@ module Vpago
 
     # override
     def available_payment_methods(store = nil)
-      payment_methods = collect_payment_methods(store)
+      payment_methods = if vendor_payment_methods.any?
+                          vendor_payment_methods
+                        else
+                          collect_payment_methods(store)
+                        end
 
       @available_payment_methods ||= if required_payway_payout?
                                        payment_methods.select(&:type_payway_v2?)
