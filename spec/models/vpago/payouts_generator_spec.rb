@@ -44,30 +44,91 @@ RSpec.describe Vpago::PayoutsGenerator do
   subject { described_class.new(payment) }
 
   describe '#call' do
-    it 'generates and saves payouts combine of vendor_payouts, vendor_shipment_payouts & store_payouts' do
-      expect(subject).to receive(:vendor_payouts).and_call_original
-      expect(subject).to receive(:vendor_shipment_payouts).and_call_original
-      expect(subject).to receive(:store_payouts).and_call_original
+    context 'when all built payouts are payout to store' do
+      # no payout profile to line item, mean it use default.
+      let(:line_item0) { create(:line_item, price: 5.0) }
+      let(:line_item1) { create(:line_item, price: 6.0) }
+      let(:line_item2) { create(:line_item, price: 11.0) }
 
-      payouts = subject.call
+      let(:order1) { create(:order_with_line_items, line_items: [line_item0, line_item1, line_item2], without_line_items: true) }
 
-      expect(payouts.size).to eq 4
+      let!(:payment) { create(:payway_v2_payment, order: order1, amount: 5 + 6 + 11) }
 
-      expect(payouts[0].amount).to eq 5.0
-      expect(payouts[0].payoutable).to eq line_item0
-      expect(payouts[0].payout_profile).to eq payout_profile1
+      it 'does not create payouts to db & return empty' do
+        payouts = subject.call
 
-      expect(payouts[1].amount).to eq 6.0
-      expect(payouts[1].payoutable).to eq line_item1
-      expect(payouts[1].payout_profile).to eq payout_profile2
+        expect(subject.vendor_payouts).to eq([])
+        expect(subject.vendor_shipment_payouts).to eq([])
+        expect(subject.store_payouts.size).to eq 1
 
-      expect(payouts[2].amount).to eq order.shipment_total
-      expect(payouts[2].payoutable).to eq shipment
-      expect(payouts[2].payout_profile).to eq payout_profile3
+        expect(payouts).to eq([])
+      end
+    end
 
-      expect(payouts[3].amount).to eq 11.0
-      expect(payouts[3].payoutable).to eq nil
-      expect(payouts[3].payout_profile).to eq default_payout_profile
+    context 'when some built payouts are invalid' do
+      it 'does not create payouts to db & return empty' do
+        allow(subject).to receive(:validated?).and_return(false)
+
+        payouts = subject.call
+
+        expect(payouts).to eq([])
+      end
+    end
+
+    context 'when all built payouts are not just to store & valid' do
+      it 'generates and saves payouts combine of vendor_payouts, vendor_shipment_payouts & store_payouts' do
+        expect(subject).to receive(:vendor_payouts).and_call_original
+        expect(subject).to receive(:vendor_shipment_payouts).and_call_original
+        expect(subject).to receive(:store_payouts).and_call_original
+  
+        payouts = subject.call
+  
+        expect(payouts.size).to eq 4
+  
+        expect(payouts[0].amount).to eq 5.0
+        expect(payouts[0].payoutable).to eq line_item0
+        expect(payouts[0].payout_profile).to eq payout_profile1
+  
+        expect(payouts[1].amount).to eq 6.0
+        expect(payouts[1].payoutable).to eq line_item1
+        expect(payouts[1].payout_profile).to eq payout_profile2
+  
+        expect(payouts[2].amount).to eq order.shipment_total
+        expect(payouts[2].payoutable).to eq shipment
+        expect(payouts[2].payout_profile).to eq payout_profile3
+  
+        expect(payouts[3].amount).to eq 11.0
+        expect(payouts[3].payoutable).to eq nil
+        expect(payouts[3].payout_profile).to eq default_payout_profile
+      end
+    end
+  end
+
+  describe '#validated?' do
+    context 'when merchant id of payout profile & payment_method is different' do
+      let(:payment) { create(:payway_v2_payment, payment_method: create(:payway_v2_gateway, preferred_merchant_id: 'xxxx')) }
+      let(:payout_profile) { create(:payway_payout_profile, preferred_merchant_id: 'zzzzz')}
+      let(:payout) { create(:payout, payout_profile: payout_profile) }
+
+      subject { described_class.new(payment) }
+
+      it 'return false' do
+        expect(payout.payout_profile.preferred_merchant_id).not_to eq payment.payment_method.preferred_merchant_id
+        expect(subject.validated?(payout)).to be false
+      end
+    end
+
+    context 'when merchant id of payout profile & payment_method is same' do
+      let(:payment) { create(:payway_v2_payment, payment_method: create(:payway_v2_gateway, preferred_merchant_id: 'xxxx')) }
+      let(:payout_profile) { create(:payway_payout_profile, preferred_merchant_id: 'xxxx')}
+      let(:payout) { create(:payout, payout_profile: payout_profile) }
+
+      subject { described_class.new(payment) }
+
+      it 'return true' do
+        expect(payout.payout_profile.preferred_merchant_id).to eq payment.payment_method.preferred_merchant_id
+        expect(subject.validated?(payout)).to be true
+      end
     end
   end
 
