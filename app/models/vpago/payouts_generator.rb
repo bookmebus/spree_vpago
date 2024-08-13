@@ -1,4 +1,5 @@
 # generate payouts for remaining amount of provided payment.
+# currently only support for PaywayV2 payment.
 module Vpago
   class PayoutsGenerator
     attr_reader :payment, :line_items, :shipments
@@ -26,7 +27,16 @@ module Vpago
     def call
       payouts = vendor_payouts + vendor_shipment_payouts + store_payouts
 
+      return [] if payouts.all?(&:default?)
+      return [] unless payouts.all? { |payout| validated?(payout) }
+
       ActiveRecord::Base.transaction { payouts.each(&:save!) }
+    end
+
+    def validated?(payout)
+      return false if payout.payout_profile.preferred_merchant_id != payment.payment_method.preferred_merchant_id
+
+      true
     end
 
     def vendor_payouts
