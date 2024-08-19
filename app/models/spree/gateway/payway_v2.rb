@@ -7,6 +7,7 @@ module Spree
     preference :api_key, :string
     preference :merchant_id, :string
     preference :payment_option, :string # 'abapay', 'cards', 'abapay_deeplink'
+    preference :deeplink_scheme, :string # eg. 'bookmeplus', 'vtenh'
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
 
@@ -24,7 +25,7 @@ module Spree
     end
 
     def card_type
-      Vpago::Payway::CARD_TYPES.index(preferences[:payment_option]) == nil ? Vpago::Payway::CARD_TYPE_ABAPAY : preferences[:payment_option]
+      Vpago::Payway::CARD_TYPES.index(preferences[:payment_option]).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : preferences[:payment_option]
     end
 
     def is_card?
@@ -37,7 +38,7 @@ module Spree
 
     # partial to render the gateway.
     def method_type
-      "payway_v2"
+      'payway_v2'
     end
 
     def available_for_order?(_order)
@@ -55,21 +56,19 @@ module Spree
       true
     end
 
-    def process(money, source, gateway_options)
-      Rails.logger.debug{"About to create payment for order #{gateway_options[:order_id]}"}
+    def process(_money, _source, gateway_options)
+      Rails.logger.debug { "About to create payment for order #{gateway_options[:order_id]}" }
       # First of all, invalidate all previous tranx orders to prevent multiple paid orders
       # source.save!
       ActiveMerchant::Billing::Response.new(true, 'Order created')
     end
 
-    def cancel(response_code)
+    def cancel(_response_code)
       # we can use this to send request to payment gateway api to cancel the payment ( void )
       # currently Payway does not support to cancel the gateway
-      
+
       # in our case don't do anything
       ActiveMerchant::Billing::Response.new(true, 'Payway order has been cancelled.')
     end
-
   end
-
 end

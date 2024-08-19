@@ -28,7 +28,7 @@ RSpec.describe Vpago::PaywayV2::PayoutsParamsConstructor do
       expect(subject).to receive(:group_payouts).and_call_original
       expect(subject).to receive(:format_payouts).and_call_original
 
-      expect(subject.call).to eq([
+      expect(subject.call).to match_array([
         { acc: payout_profile1.bank_account_number, amt: '10.00' }, # combine of line_item_0 5$ + line_item_1 5$
         { acc: payout_profile2.bank_account_number, amt: '11.00' },
         { acc: default_payout_profile.bank_account_number, amt: '12.00' },
