@@ -117,22 +117,6 @@ module Vpago
         end
       end
 
-      def return_deeplink_url
-        scheme = @payment.payment_method.preferences[:deeplink_scheme]
-        return nil unless scheme.present?
-        return nil unless continue_success_url.present?
-
-        uri = URI.parse(continue_success_url)
-        uri.scheme = scheme
-        uri.to_s
-      end
-
-      def return_deeplink
-        return nil unless return_deeplink_url.present?
-
-        Base64.strict_encode64({ android_scheme: return_deeplink_url, ios_scheme: return_deeplink_url }.to_json)
-      end
-
       def hash_hmac
         hash = Base64.strict_encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha512'), api_key, hash_data))
 
@@ -143,13 +127,7 @@ module Vpago
       end
 
       def hash_data
-        result = "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}#{email}#{phone}"
-
-        result += payment_option if payment_option.present?
-        result += return_url if return_url.present?
-        result += continue_success_url if continue_success_url.present?
-        result += return_deeplink if return_deeplink.present?
-        result += return_params if return_params.present?
+        result = "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}#{email}#{phone}#{payment_option}#{return_url}#{continue_success_url}#{return_params}"
         result += payout if payout.present?
 
         log_hash_data = "Hash data: #{result}"

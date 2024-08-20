@@ -18,17 +18,16 @@ module Vpago
           hash: hash_hmac
         }
 
-        result[:return_deeplink] = return_deeplink unless return_deeplink.nil?
         result[:view_type] = view_type unless view_type.nil?
         result[:payout] = payout unless payout.nil?
         result
       end
 
       def checkout_url
-        "#{host}#{ENV.fetch('PAYWAY_CHECKOUT_PATH', nil)}"
+        "#{host}#{ENV['PAYWAY_CHECKOUT_PATH']}"
       end
 
-      alias action_url checkout_url
+      alias_method :action_url, :checkout_url
     end
   end
 end
