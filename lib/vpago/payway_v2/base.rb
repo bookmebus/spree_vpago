@@ -90,6 +90,7 @@ module Vpago
         card_option = @payment.payment_method.preferences[:payment_option]
 
         return 'abapay_deeplink' if is_app_checkout? && card_option == 'abapay'
+        return 'abapay_khqr' if !is_app_checkout? && card_option == 'abapay_khqr_deeplink'
 
         Vpago::Payway::CARD_TYPES.index(card_option).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : card_option
       end

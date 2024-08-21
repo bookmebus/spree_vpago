@@ -53,6 +53,20 @@ RSpec.describe Vpago::PaymentRedirectHandler do
       end
     end
 
+    context "when payment options is abapay_khqr_deeplink" do
+      let(:payment_method) { create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr_deeplink')}
+      let(:payment) { create(:payway_v2_payment, payment_method: payment_method) }
+
+      it 'process abapay deeplink' do
+        handler = Vpago::PaymentRedirectHandler.new(payment: payment)
+
+        expect(payment).to receive(:process!)
+        expect(handler).to receive(:process_abapay_v2_deeplink)
+
+        handler.check_and_process_payment
+      end
+    end
+
     context "when payment options is acleda" do
       it 'processes payment & calls process_acleda_gateway' do
         # avoid vcr error

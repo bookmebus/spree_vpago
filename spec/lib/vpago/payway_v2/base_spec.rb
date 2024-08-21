@@ -156,6 +156,29 @@ RSpec.describe Vpago::PaywayV2::Base do
     end
   end
 
+  describe '#payment_option' do
+    context 'when payment_option is abapay_khqr_deeplink' do
+      let(:payment_method) { create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr_deeplink') }
+      let(:payment) { create(:payway_payment, payment_method: payment_method) }
+
+      context 'when is not app checkout' do
+        subject { described_class.new(payment, { app_checkout: false }) }
+
+        it 'return payment_option = :abapay_khqr instead of :abapay_khqr_deeplink' do
+          expect(subject.payment_option).to eq 'abapay_khqr'
+        end
+      end
+
+      context 'when is app checkout' do
+        subject { described_class.new(payment, { app_checkout: true }) }
+
+        it 'return payment_option = :abapay_khqr_deeplink' do
+          expect(subject.payment_option).to eq 'abapay_khqr_deeplink'
+        end
+      end
+    end
+  end
+
   describe '#payout' do
     let(:payment) { create(:payway_payment) }
     subject { described_class.new(payment) }
