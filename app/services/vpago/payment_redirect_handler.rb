@@ -5,15 +5,22 @@ module Vpago
     include ActiveModel::Serialization
 
     attr_accessor :redirect_options, :error_message
-    attr_reader :payment, :payment_method_type, :gateway_params, :action_url, :vapgo_checkout_service
+    attr_reader :payment, :payment_method_type, :gateway_params, :action_url, :vapgo_checkout_service,
+                :override_return_deeplink_url
 
-    delegate      :id, :amount, :response_code, :number, :state,
-                  :payment_method_id, :payment_method_name,
-              to: :payment
+    delegate :id, :amount, :response_code, :number, :state,
+             :payment_method_id, :payment_method_name,
+             to: :payment
 
-    def initialize(payment:)
+    def initialize(payment:, override_return_deeplink_url: nil)
       @payment = payment
-      @vapgo_checkout_service = payment.payment_method.vapgo_checkout_service.presence&.new(payment)
+      @override_return_deeplink_url = override_return_deeplink_url
+
+      @vapgo_checkout_service = payment.payment_method.vapgo_checkout_service.presence&.new(
+        payment,
+        { override_return_deeplink_url: override_return_deeplink_url }
+      )
+
       @gateway_params = vapgo_checkout_service&.gateway_params
       @action_url = vapgo_checkout_service&.action_url
     end
@@ -96,7 +103,8 @@ module Vpago
 
     def send_process_payway_v2_payment
       options = {
-        app_checkout: true
+        app_checkout: true,
+        override_return_deeplink_url: override_return_deeplink_url,
       }
 
       abapay_payment = ::Vpago::PaywayV2::Checkout.new(@payment, options)
