@@ -120,11 +120,13 @@ module Vpago
 
       def return_deeplink_url
         scheme = @payment.payment_method.preferences[:deeplink_scheme]
-        return nil unless scheme.present?
+
+        # let client pass override return deeplink eg. from tg://t.me
+        return @options[:override_return_deeplink_url] if @options[:override_return_deeplink_url].present?
         return nil unless continue_success_url.present?
 
         uri = URI.parse(continue_success_url)
-        uri.scheme = scheme
+        uri.scheme = scheme if is_app_checkout? && scheme.present?
         uri.to_s
       end
 

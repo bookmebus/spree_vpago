@@ -9,8 +9,8 @@ module Spree
 
           # :order_token, :payment_number
           def request_update_payment
-          # this action is mostly called after order is completed. 
-          # spree_current_order will be nil in this case, so we need to manual find.
+            # this action is mostly called after order is completed.
+            # spree_current_order will be nil in this case, so we need to manual find.
             order = find_order_by_token(params[:order_token])
 
             if order.paid?
@@ -32,10 +32,15 @@ module Spree
             raise ActiveRecord::RecordNotFound if payments.blank?
 
             last_payment = payments.last
-            payment_redirect = ::Vpago::PaymentRedirectHandler.new(payment: last_payment).process
+            payment_redirect = ::Vpago::PaymentRedirectHandler.new(
+              payment: last_payment,
+              override_return_deeplink_url: params[:override_return_deeplink_url]
+            ).process
 
             if payment_redirect.error_message.blank?
-              render_serialized_payload { payment_redirect_serializer.new(payment_redirect, params: serializer_params).serializable_hash }
+              render_serialized_payload do
+                payment_redirect_serializer.new(payment_redirect, params: serializer_params).serializable_hash
+              end
             else
               render_error_payload(payment_redirect.error_message)
             end
@@ -69,4 +74,4 @@ module Spree
   end
 end
 
-::Spree::Api::V2::Storefront::CheckoutController.prepend(::Spree::Api::V2::Storefront::CheckoutControllerDecorator)
+Spree::Api::V2::Storefront::CheckoutController.prepend(Spree::Api::V2::Storefront::CheckoutControllerDecorator)
