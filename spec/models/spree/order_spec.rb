@@ -219,4 +219,47 @@ RSpec.describe Spree::Order, type: :model do
       end
     end
   end
+
+  describe '#available_vendor_payment_methods' do
+    let(:vendor1) { create(:vendor) }
+    let(:vendor2) { create(:vendor) }
+    let(:order) { create(:order) }
+
+    before do
+      create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1))
+      create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor2))
+    end
+
+    context 'when user is a ticket seller' do
+      before do
+        allow(order).to receive(:ticket_seller_user?).and_return(true)
+      end
+
+      it 'returns all vendor payment methods' do
+        payment_method1 = create(:payment_method, vendor: vendor1)
+        payment_method2 = create(:payment_method, vendor: vendor2, type: 'Spree::PaymentMethod::Check')
+
+        order.stub(:vendor_payment_methods) { [payment_method1, payment_method2] }
+        
+        expect(order.available_vendor_payment_methods).to match_array([payment_method1, payment_method2])
+      end
+    end
+
+    context 'when user is not a ticket seller' do
+      before do
+        allow(order).to receive(:ticket_seller_user?).and_return(false)
+      end
+
+      it 'returns vendor payment methods excluding the ones of type Check' do
+        payment_method1 = create(:payment_method, vendor: vendor1)
+        payment_method2 = create(:payment_method, vendor: vendor2)
+        payment_method_check = create(:payment_method, vendor: vendor1, type: 'Spree::PaymentMethod::Check')
+
+        order.stub(:vendor_payment_methods) { [payment_method1, payment_method2, payment_method_check] }
+
+        expect(order.available_vendor_payment_methods).to match_array([payment_method1, payment_method2])
+        expect(order.available_vendor_payment_methods).not_to include(payment_method_check)
+      end
+    end
+  end
 end

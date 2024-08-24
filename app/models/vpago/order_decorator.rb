@@ -56,7 +56,7 @@ module Vpago
     # override
     def available_payment_methods(store = nil)
       payment_methods = if vendor_payment_methods.any?
-                          vendor_payment_methods
+                          available_vendor_payment_methods
                         else
                           collect_payment_methods(store)
                         end
@@ -66,6 +66,20 @@ module Vpago
                                      else
                                        payment_methods
                                      end
+    end
+
+    def available_vendor_payment_methods
+      if ticket_seller_user?
+        vendor_payment_methods
+      else
+        vendor_payment_methods.reject { |pm| pm.type == 'Spree::PaymentMethod::Check' }
+      end
+    end
+
+    def ticket_seller_user?
+      return false if user.nil?
+
+      user.has_spree_role?('ticket_seller')
     end
 
     def line_items_count
