@@ -19,14 +19,14 @@
         </td>
       </tr>
 
-      <% if !payment.order.completed? && check_status_url.present? %>
+      <% if check_status_url.present? %>
         <tr>
           <th><%= Spree.t('vpago.payments.query_status') %></th>
           <td><%= link_to Spree.t('vpago.payments.query_status'), check_status_url %></td>
         </tr>
       <% end %>
 
-      <% if !payment.order.completed? && heal_payment_url.present? %>
+      <% if heal_payment_url.present? %>
         <tr>
           <th><%= Spree.t('vpago.payments.check_and_heal') %></th>
           <td><%= link_to Spree.t('vpago.payments.check_and_heal'), heal_payment_url, method: :put %></td>

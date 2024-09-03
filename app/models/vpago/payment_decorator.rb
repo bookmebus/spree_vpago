@@ -47,6 +47,12 @@ module Vpago
         false
       end
     end
+
+    def payment_url
+      return unless payment_method.type_payway_v2?
+
+      "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/payway_v2_card_popups?payment_number=#{number}"
+    end
   end
 end
 

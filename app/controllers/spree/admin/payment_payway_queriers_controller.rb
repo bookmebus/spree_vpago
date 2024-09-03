@@ -7,7 +7,8 @@ module Spree
         tran_status.call
 
         if tran_status.success?
-          flash[:success] = Spree.t('vpago.payments.payment_found_with_result', result: tran_status.result)
+          flash[:success] =
+            Spree.t('vpago.payments.payment_found_with_result', result: tran_status.json_response)
         else
           flash[:error] = Spree.t('vpago.payments.payment_not_found_with_error', error: tran_status.error_message)
         end
