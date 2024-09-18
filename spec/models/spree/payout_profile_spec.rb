@@ -31,6 +31,19 @@ RSpec.describe Spree::PayoutProfile, type: :model do
   end
 
   describe "callbacks" do
+    describe '#clear_default_cache' do
+      let(:default_payway_profile) { create(:payway_payout_profile, default: true, bank_account_number: '12345678') }
+      let(:not_default_payway_profile) { create(:payway_payout_profile, bank_account_number: '87654321') }
+
+      it 'call clear_default_cache on update & payout profile is default' do
+        expect(default_payway_profile).to receive(:clear_default_cache).once.and_call_original
+        expect(not_default_payway_profile).to_not receive(:clear_default_cache)
+
+        default_payway_profile.update!(name: 'New name')
+        not_default_payway_profile.update!(name: 'New name')
+      end
+    end
+
     describe "#ensure_default_exists_and_clear_vendor" do
       context "when setting a payout profile as default" do
         it "ensures only one payout profile of the same type is set as default" do

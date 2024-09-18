@@ -25,12 +25,18 @@ module Spree
     before_save :ensure_default_exists_and_clear_vendor
     before_destroy :confirm_destroyable
 
+    after_update :clear_default_cache, if: :default?
+
     self.whitelisted_ransackable_attributes = %w[name vendor_id]
 
     def self.default
       Rails.cache.fetch("default_payout_account/#{name.underscore}") do
         find_by(type: name, default: true)
       end
+    end
+
+    def clear_default_cache
+      Rails.cache.delete("default_payout_account/#{self.class.name.underscore}")
     end
 
     def bank_name
