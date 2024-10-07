@@ -46,6 +46,21 @@ module Spree
             end
           end
 
+          def check_line_items_stock
+            order = Spree::Order.find_by(token: params[:order_token])
+            if order.blank?
+              render_error_payload('Order not found')
+              return
+            end
+
+            out_of_stock_items = order.line_items.reject(&:sufficient_stock?)
+            if out_of_stock_items.any?
+              render_error_payload('Item is out of stock')
+            else
+              render_serialized_payload { serialize_resource(order) }
+            end
+          end
+
           def payment_redirect_serializer
             Spree::V2::Storefront::PaymentRedirectSerializer
           end
