@@ -21,6 +21,13 @@ module Vpago
         ]
       end
 
+      def available_transaction_types
+        %w[
+          purchase
+          pre-auth
+        ]
+      end
+
       def preference_field_for(form, field, options)
         case field
         when 'preferred_acleda_type'
@@ -29,6 +36,8 @@ module Vpago
           return form.select(:preferred_acleda_payment_card, acleda_payment_card_options, {}, class: 'fullwidth select2')
         when 'preferred_icon_name'
           return form.select(:preferred_icon_name, available_payment_icons, {}, class: 'fullwidth select2')
+        when 'preferred_transaction_type'
+          return form.select(:preferred_transaction_type, available_transaction_types, {}, class: 'fullwidth select2')
         end
 
         super
