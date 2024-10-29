@@ -236,6 +236,7 @@ RSpec.describe Vpago::PaywayV2::Base do
     let(:merchant_id) { 'contingo' }
     let(:transaction_id) { 'PFSG7VBE' }
     let(:amount) { '29.99' }
+    let(:type) { 'purchase' }
     let(:first_name) { 'John' }
     let(:last_name) { 'Doe' }
     let(:email) { 'john@example.com' }
@@ -251,6 +252,7 @@ RSpec.describe Vpago::PaywayV2::Base do
       allow(subject).to receive(:merchant_id).and_return(merchant_id)
       allow(subject).to receive(:transaction_id).and_return(transaction_id)
       allow(subject).to receive(:amount).and_return(amount)
+      allow(subject).to receive(:type).and_return(type)
       allow(subject).to receive(:first_name).and_return(first_name)
       allow(subject).to receive(:last_name).and_return(last_name)
       allow(subject).to receive(:email).and_return(email)
@@ -275,6 +277,7 @@ RSpec.describe Vpago::PaywayV2::Base do
           last_name,
           email,
           phone,
+          type,
           payment_option,
           return_url,
           continue_success_url,
@@ -299,6 +302,7 @@ RSpec.describe Vpago::PaywayV2::Base do
           last_name,
           email,
           phone,
+          type,
           payment_option,
           return_url,
           continue_success_url,
