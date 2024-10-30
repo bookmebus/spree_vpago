@@ -10,6 +10,7 @@ module Vpago
       # 3 – Declined
       # 4 – Refunded
       # 5 – Wrong Hash
+      # 7 - Cancelled
       # 11 – Other Server-side Error
       def call
         @response = check_remote_status
@@ -30,7 +31,7 @@ module Vpago
       end
 
       def failed?
-        %w[3 4 5].include?(status)
+        %w[3 4 5 7].include?(status)
       end
 
       def check_remote_status
