@@ -67,7 +67,7 @@ RSpec.describe Vpago::PaywayV2::TransactionStatus do
   end
 
   describe '#failed?' do
-    it 'return true when status is 3: Declined, 4: Refunded, 5: Wrong Hash' do
+    it 'return true when status is 3: Declined, 4: Refunded, 5: Wrong Hash, 7: cancelled' do
       allow(subject).to receive(:status).and_return('3')
       expect(subject.failed?).to be true
 
@@ -75,6 +75,9 @@ RSpec.describe Vpago::PaywayV2::TransactionStatus do
       expect(subject.failed?).to be true
 
       allow(subject).to receive(:status).and_return('5')
+      expect(subject.failed?).to be true
+
+      allow(subject).to receive(:status).and_return('7')
       expect(subject.failed?).to be true
     end
   end
