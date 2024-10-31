@@ -11,11 +11,15 @@ module Vpago
       end
 
       def type
-        @payment.payment_method.preferences[:transaction_type].presence || 'purchase'     
+        @payment.payment_method.preferences[:transaction_type].presence || 'purchase'
       end
 
       def host
         @payment.payment_method.preferences[:host]
+      end
+
+      def public_key
+        @payment.payment_method.preferences[:public_key]
       end
 
       def amount
