@@ -19,7 +19,7 @@ module Spree
               payment = find_payment(order, params[:payment_number])
               context = payment.request_update
 
-              if context.success?
+              if context.success? && context.error_message.blank?
                 render_serialized_payload { serialize_resource(order) }
               else
                 render_error_payload(context.error_message)
