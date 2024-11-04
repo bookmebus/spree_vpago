@@ -14,7 +14,8 @@ module Vpago
       private
 
       def mark_items_as_ineligible
-        marker_options = @options.merge(status: false, description: 'Items are not eligible due to insufficient stock')
+        @error_message = 'Items are not eligible due to insufficient stock'
+        marker_options = @options.merge(status: false, description:  @error_message)
         marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
         marker.call
       end

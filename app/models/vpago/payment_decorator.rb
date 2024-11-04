@@ -3,6 +3,10 @@ module Vpago
     def self.prepended(base)
       base.has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payment
       base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :should_generate_payouts?
+
+      # pre-authorization
+      base.state_machine.after_transition to: :completed, do: :capture
+      base.state_machine.after_transition to: :failed, do: :cancel
     end
 
     def should_generate_payouts?
@@ -52,6 +56,24 @@ module Vpago
       return unless payment_method.type_payway_v2?
 
       "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/payway_v2_card_popups?payment_number=#{number}"
+    end
+
+    def pre_auth?
+      return false unless payment_method.type_payway_v2?
+
+      payment_method.preferred_transaction_type == 'pre-auth'
+    end
+
+    def capture
+      return unless pre_auth?
+
+      Vpago::PaywayV2::PreAuthCompleter.new(self).call
+    end
+
+    def cancel
+      return unless pre_auth?
+
+      Vpago::PaywayV2::PreAuthCanceler.new(self).call
     end
   end
 end
