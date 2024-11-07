@@ -12,6 +12,7 @@
         <th class="text-center"><%= Spree.t(:payment_state) %></th>
         <th class="text-center"><%= Spree.t(:payment_url) %></th>
         <th class="text-center"><%= Spree.t(:gateway_status) %></th>
+        <th class="text-center"><%= Spree.t(:pre_auth_status) %></th>
         <th class="actions text-center"></th>
       </tr>
     </thead>
@@ -34,13 +35,24 @@
             </a>
           </td>
           <td class="text-center">
-          <div class="d-flex align-items-center justify-content-center">
-            <div class="mr-2"><%= payment.gateway_status %></div>
-             <%= link_to admin_payment_payway_querier_path(payment),
-              class: 'btn btn-primary btn-sm with-tip icon-link' do %>
-              <%= svg_icon name: "arrow-repeat.svg", width: '17', height: '17' %>
+            <div class="d-flex align-items-center justify-content-center">
+              <div class="mr-2"><%= payment.gateway_status %></div>
+              <%= link_to admin_payment_payway_querier_path(payment),
+                class: 'btn btn-primary btn-sm with-tip icon-link' do %>
+                <%= svg_icon name: "arrow-repeat.svg", width: '17', height: '17' %>
+              <% end %>
+            </div>
+          </td>
+          <td class="text-center">
+            <% if payment.pre_auth_completed? %>
+              <span class="badge badge-pill badge-success">
+                <%= payment.pre_auth_status %>
+              </span>
+            <% elsif payment.pre_auth_cancelled? %>
+              <span class="badge badge-pill badge-secondary">
+                <%= payment.pre_auth_status %>
+              </span>
             <% end %>
-          </div>
           </td>
           <td class="actions">
             <span class="d-flex justify-content-center payment-action-buttons">
