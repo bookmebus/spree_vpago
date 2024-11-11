@@ -3,6 +3,16 @@ module Vpago
     def self.prepended(base)
       base.has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payment
       base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :should_generate_payouts?
+      base.after_update :capture_pre_auth, if: :state_changed_to_complete?
+      base.after_update :cancel_pre_auth, if: :state_changed_to_failed?
+    end
+
+    def state_changed_to_complete?
+      saved_change_to_state? && state == 'completed'
+    end
+
+    def state_changed_to_failed?
+      saved_change_to_state? && state == 'failed'
     end
 
     def should_generate_payouts?
@@ -52,6 +62,37 @@ module Vpago
       return unless payment_method.type_payway_v2?
 
       "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/payway_v2_card_popups?payment_number=#{number}"
+    end
+
+    def pre_auth?
+      return false unless payment_method.type_payway_v2?
+
+      payment_method.preferred_transaction_type == 'pre-auth'
+    end
+
+    # COMPLETED, CANCELLED
+    def pre_auth_status
+      pre_auth_response['transaction_status']
+    end
+
+    def pre_auth_completed?
+      pre_auth_status == 'COMPLETED'
+    end
+
+    def pre_auth_cancelled?
+      pre_auth_status == 'CANCELLED'
+    end
+
+    def capture_pre_auth
+      return if !pre_auth? || pre_auth_completed?
+
+      Vpago::PaywayV2::PreAuthCompleter.new(self).call
+    end
+
+    def cancel_pre_auth
+      return if !pre_auth? || pre_auth_cancelled?
+
+      Vpago::PaywayV2::PreAuthCanceler.new(self).call
     end
   end
 end

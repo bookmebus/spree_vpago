@@ -10,8 +10,16 @@ module Vpago
         @payment.created_at.strftime('%Y%m%d%H%M%S')
       end
 
+      def type
+        @payment.payment_method.preferences[:transaction_type].presence || 'purchase'
+      end
+
       def host
         @payment.payment_method.preferences[:host]
+      end
+
+      def public_key
+        @payment.payment_method.preferences[:public_key]
       end
 
       def amount
@@ -148,6 +156,7 @@ module Vpago
       def hash_data
         result = "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}#{email}#{phone}"
 
+        result += type if type.present?
         result += payment_option if payment_option.present?
         result += return_url if return_url.present?
         result += continue_success_url if continue_success_url.present?

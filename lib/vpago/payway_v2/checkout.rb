@@ -7,6 +7,7 @@ module Vpago
           merchant_id: merchant_id,
           tran_id: transaction_id,
           amount: amount,
+          type: type,
           firstname: first_name,
           lastname: last_name,
           email: email,

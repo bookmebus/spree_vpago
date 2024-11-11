@@ -6,25 +6,25 @@ Introduction goes here.
 
 1. Add this extension to your Gemfile with this line:
 
-    ```ruby
-    gem 'spree_vpago', github: '[your-github-handle]/spree_vpago'
-    ```
+   ```ruby
+   gem 'spree_vpago', github: '[your-github-handle]/spree_vpago'
+   ```
 
 2. Install the gem using Bundler
 
-    ```ruby
-    bundle install
-    ```
+   ```ruby
+   bundle install
+   ```
 
 3. Copy & run migrations
 
-    ```ruby
-    bundle exec rails g spree_vpago:install
-    ```
+   ```ruby
+   bundle exec rails g spree_vpago:install
+   ```
 
 4. Restart your server
 
-  If your server was running, restart it so that it can find the assets properly.
+If your server was running, restart it so that it can find the assets properly.
 
 ## Testing
 
@@ -43,38 +43,48 @@ require 'spree_vpago/factories'
 ```
 
 Run test
+
 ```
 rspec spec/
 ```
+
 ## Required Variables
 
 ### Acleda
+
 For mobile
-    ```ruby
+`ruby
     ENV['ACLEDA_MOBILE_SECRET_HASH_KEY']
-    ```
+    `
 For desktop
-    ```ruby
+`ruby
     ENV['ACLEDA_CHECK_STATUS_PATH']
     ENV['ACLEDA_CREATE_SESSION_PATH']
-    ```
+    `
 Payment method configuration:
 
 ```
 Icon Name: acleda
 ```
+
 ### Payway
 
 ENV configuration:
+
 ```ruby
 ENV['PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE'] # html, json
 ENV['PAYWAY_CHECKOUT_PATH']
 ENV['PAYWAY_CHECK_TRANSACTION_PATH']
 ENV['PAYWAY_RETURN_CALLBACK_URL']
 ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL']
+
+#pre-auth
+ENV['PAYWAY_V2_PRE_AUTH_COMPLETE_PATH']
+ENV['PAYWAY_V2_PRE_AUTH_CANCEL_PATH']
 ```
 
 Payment method configuration:
+
 ```
 HOST: https://checkout-sandbox.payway.com.kh
 Payment Option: one of the [abapay, cards]
@@ -93,17 +103,21 @@ Format: html
 ```
 
 Make sure to set to env as well to let our system know how to handle when ABA push back.
+
 ```s
 PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE="html"
 ```
 
 ### Note
+
 > Most payment gateways are written in php, you might compare ruby with its php counterpart by running code in the .php file.
 
 ## Handle missing info
+
 > Some payment gateway require email for payment info. So we use enviroment variable "DEFAULT_EMAIL_FOR_PAYMENT" as default email when there is no email provided.
 
 ## Support Documents
+
 - [Setup ACLEDA payment methods](docs/acleda.md)
 
 ## Contributing
