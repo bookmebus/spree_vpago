@@ -47,7 +47,7 @@ module Vpago
       end
 
       def complete_url
-        "#{host}#{ENV.fetch('PAYWAY_V2_COMPLETE_PRE_AUTH_PATH')}"
+        "#{host}#{ENV.fetch('PAYWAY_V2_PRE_AUTH_COMPLETE_PATH')}"
       end
 
       def success?

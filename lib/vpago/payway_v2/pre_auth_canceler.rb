@@ -34,7 +34,7 @@ module Vpago
       end
 
       def cancel_url
-        "#{host}#{ENV.fetch('PAYWAY_V2_CANCEL_PRE_AUTH_PATH')}"
+        "#{host}#{ENV.fetch('PAYWAY_V2_PRE_AUTH_CANCEL_PATH')}"
       end
     end
   end
