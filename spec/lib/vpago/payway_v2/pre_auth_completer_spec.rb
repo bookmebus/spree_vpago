@@ -23,7 +23,7 @@ RSpec.describe Vpago::PaywayV2::PreAuthCompleter do
         subject.call
       end
 
-      response = payment.pre_auth_response
+      response = subject.json_response
 
       expect(subject.success?).to eq true 
       expect(response['transaction_status']).to eq 'COMPLETED' 
@@ -35,7 +35,7 @@ RSpec.describe Vpago::PaywayV2::PreAuthCompleter do
         subject.call
       end
 
-      response = payment.pre_auth_response
+      response = subject.json_response
 
       expect(subject.success?).to eq false 
       expect(response['status']['message']).to eq 'Invalid Transaction' 
@@ -46,7 +46,7 @@ RSpec.describe Vpago::PaywayV2::PreAuthCompleter do
         subject.call
       end
       
-      response = payment.pre_auth_response
+      response = subject.json_response
 
       expect(subject.success?).to eq false 
       expect(response['status']['message']).to eq 'Unable to complete or cancel Pre Auth' 

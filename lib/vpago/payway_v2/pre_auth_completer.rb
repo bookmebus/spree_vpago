@@ -5,7 +5,7 @@ module Vpago
     class PreAuthCompleter < Base
       def call
         @response = pre_auth_response
-        save_response
+        save_response if success?
       end
 
       def save_response
