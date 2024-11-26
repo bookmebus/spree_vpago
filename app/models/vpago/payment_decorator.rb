@@ -7,6 +7,22 @@ module Vpago
       base.after_update :cancel_pre_auth, if: :state_changed_to_failed?
     end
 
+    # @override
+    # order trigger payment.process! when calling order.next.
+    def process!
+      return complete! if payment_method.auto_capture? && payment_receive_manually?
+
+      super
+    end
+
+    def payment_receive_manually?
+      check_payment_method? && order.ticket_seller_user?
+    end
+
+    def check_payment_method?
+      payment_method.is_a?(Spree::PaymentMethod::Check)
+    end
+
     def state_changed_to_complete?
       saved_change_to_state? && state == 'completed'
     end
