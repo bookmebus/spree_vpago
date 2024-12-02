@@ -11,7 +11,7 @@ module Vpago
       end
 
       def type
-        @payment.payment_method.preferences[:transaction_type].presence || 'purchase'
+        @payment.payment_method.enable_pre_auth ? 'pre-auth' : 'purchase'
       end
 
       def host

@@ -10,7 +10,6 @@ module Spree
     preference :deeplink_scheme, :string # eg. 'bookmeplus', 'vtenh'
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
-    preference :transaction_type, :string # 'purchase', 'pre-auth'
     preference :public_key, :text
 
     # Only enable one-click payments if spree_auth_devise is installed
