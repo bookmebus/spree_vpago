@@ -64,12 +64,6 @@ module Vpago
       "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/payway_v2_card_popups?payment_number=#{number}"
     end
 
-    def pre_auth?
-      return false unless payment_method.type_payway_v2?
-
-      payment_method.preferred_transaction_type == 'pre-auth'
-    end
-
     # COMPLETED, CANCELLED
     def pre_auth_status
       pre_auth_response['transaction_status']
@@ -84,15 +78,23 @@ module Vpago
     end
 
     def capture_pre_auth
-      return if !pre_auth? || pre_auth_completed?
+      return if !enable_pre_auth? || pre_auth_completed?
 
-      Vpago::PaywayV2::PreAuthCompleter.new(self).call
+      pre_auth_service.capture_pre_auth(self)
     end
 
     def cancel_pre_auth
-      return if !pre_auth? || pre_auth_cancelled?
+      return if !enable_pre_auth? || pre_auth_cancelled?
 
-      Vpago::PaywayV2::PreAuthCanceler.new(self).call
+      pre_auth_service.cancel_pre_auth(self)
+    end
+
+    def pre_auth_service
+      payment_method.pre_auth_service
+    end
+
+    def enable_pre_auth?
+      payment_method.enable_pre_auth?
     end
   end
 end

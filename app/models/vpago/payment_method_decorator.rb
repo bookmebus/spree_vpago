@@ -28,6 +28,10 @@ module Vpago
       true
     end
 
+    def support_pre_auth?
+      type_payway_v2?
+    end
+
     def default_payout_profile
       Spree::PayoutProfiles::PaywayV2.default
     end
@@ -80,6 +84,14 @@ module Vpago
 
     def type_wingsdk?
       type == Spree::PaymentMethod::TYPE_WINGSDK
+    end
+
+    def pre_auth_service
+      if type_payway_v2?
+        Vpago::PaywayV2::PreAuthHandler.new
+      else
+        raise NotImplementedError, 'Pre-auth is not supported for this gateway'
+      end
     end
   end
 end
