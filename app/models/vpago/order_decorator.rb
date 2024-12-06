@@ -56,30 +56,34 @@ module Vpago
     # override
     def available_payment_methods(store = nil)
       payment_methods = if vendor_payment_methods.any?
-                          available_vendor_payment_methods
+                          vendor_payment_methods.active
                         else
                           collect_payment_methods(store)
                         end
 
-      @available_payment_methods ||= if required_payway_payout?
-                                       payment_methods.select(&:type_payway_v2?)
-                                     else
-                                       payment_methods
-                                     end
-    end
+      payment_methods = if required_payway_payout?
+                          payment_methods.select(&:type_payway_v2?)
+                        else
+                          payment_methods
+                        end
 
-    def available_vendor_payment_methods
-      if ticket_seller_user?
-        vendor_payment_methods
-      else
-        vendor_payment_methods.reject { |pm| pm.type == 'Spree::PaymentMethod::Check' }
+      @available_payment_methods ||= payment_methods.select do |payment_method|
+        payment_method_allowed?(payment_method)
       end
     end
 
-    def ticket_seller_user?
-      return false if user.nil?
+    def payment_method_allowed?(payment_method)
+      return true unless payment_method_set_allow_role?(payment_method)
+      return false if user.nil? && payment_method_set_allow_role?(payment_method)
 
-      user.has_spree_role?('ticket_seller')
+      user.role_users.any? do |role_user|
+        bit_field = Vpago::PaymentMethodDecorator::BIT_FIELDS[role_user.role.name.to_sym]
+        bit_field && (payment_method.preferred_allow_role & bit_field) != 0
+      end
+    end
+
+    def payment_method_set_allow_role?(payment_method)
+      payment_method.preferred_allow_role != 0
     end
 
     def line_items_count

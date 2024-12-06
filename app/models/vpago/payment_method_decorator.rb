@@ -6,9 +6,16 @@ module Vpago
     TYPE_ACLEDA = 'Spree::Gateway::Acleda'.freeze
     TYPE_ACLEDA_MOBILE = 'Spree::Gateway::AcledaMobile'.freeze
 
+    BIT_FIELDS = {
+      admin: 0b1,
+      organizer: 0b10,
+      ticket_seller: 0b100
+    }.freeze
+
     def self.prepended(base)
       base.preference :icon_name, :string, default: 'cheque'
       base.belongs_to :vendor, class_name: 'Spree::Vendor', optional: true, inverse_of: :payment_methods
+      base.preference :allow_role, :integer, default: 0
 
       def base.vpago_payments
         [
@@ -19,6 +26,10 @@ module Vpago
           Spree::PaymentMethod::TYPE_ACLEDA_MOBILE
         ]
       end
+    end
+
+    def allow_role_enabled?(bit_value)
+      preferred_allow_role & bit_value != 0
     end
 
     def support_payout?
@@ -85,7 +96,7 @@ module Vpago
     def type_wingsdk?
       type == Spree::PaymentMethod::TYPE_WINGSDK
     end
-
+    
     def pre_auth_service
       if type_payway_v2?
         Vpago::PaywayV2::PreAuthHandler.new

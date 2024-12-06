@@ -24,13 +24,19 @@ module Vpago
       def preference_field_for(form, field, options)
         case field
         when 'preferred_acleda_type'
-          return form.select(:preferred_acleda_type, form.object.class::TYPES, {}, class: 'fullwidth select2')
+          form.select(:preferred_acleda_type, form.object.class::TYPES, {}, class: 'fullwidth select2')
         when 'preferred_acleda_payment_card'
-          return form.select(:preferred_acleda_payment_card, acleda_payment_card_options, {}, class: 'fullwidth select2')
+          form.select(:preferred_acleda_payment_card, acleda_payment_card_options, {}, class: 'fullwidth select2')
         when 'preferred_icon_name'
-          return form.select(:preferred_icon_name, available_payment_icons, {}, class: 'fullwidth select2')
+          form.select(:preferred_icon_name, available_payment_icons, {}, class: 'fullwidth select2')
+        when 'preferred_allow_role'
+          Vpago::PaymentMethodDecorator::BIT_FIELDS.map do |role, bit_value|
+            form.check_box(role, class: 'mx-1', checked: form.object.allow_role_enabled?(bit_value)) +
+              form.label(role, Spree.t(role), class: 'mx-1')
+          end.join.html_safe
+        else
+          super
         end
-        super
       end
     end
   end
