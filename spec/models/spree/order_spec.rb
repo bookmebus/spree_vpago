@@ -220,46 +220,38 @@ RSpec.describe Spree::Order, type: :model do
     end
   end
 
-  describe '#available_vendor_payment_methods' do
-    let(:vendor1) { create(:vendor) }
-    let(:vendor2) { create(:vendor) }
+  describe '#payment_method_allowed?' do
+    let(:organizer){ create(:organizer) }
+    let(:ticket_seller_user){ create(:ticket_seller_user) }
+    let(:payment_method) { create(:payment_method) }
     let(:order) { create(:order) }
 
-    before do
-      create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1))
-      create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor2))
+    it 'return true when payment_method allow role is nil' do
+      payment_method.preferred_allow_role = 0
+      result = order.payment_method_allowed?(payment_method)
+      expect(result).to be true
     end
 
-    context 'when user is a ticket seller' do
-      before do
-        allow(order).to receive(:ticket_seller_user?).and_return(true)
-      end
-
-      it 'returns all vendor payment methods' do
-        payment_method1 = create(:payment_method, vendor: vendor1)
-        payment_method2 = create(:payment_method, vendor: vendor2, type: 'Spree::PaymentMethod::Check')
-
-        order.stub(:vendor_payment_methods) { [payment_method1, payment_method2] }
-        
-        expect(order.available_vendor_payment_methods).to match_array([payment_method1, payment_method2])
-      end
+    it 'return true when user role match with payment_method allow role' do 
+      payment_method.preferred_allow_role = 4   # preferred_allow_role: ticket_seller 
+      order.user = ticket_seller_user
+      result = order.payment_method_allowed?(payment_method)
+      expect(result).to be true
     end
 
-    context 'when user is not a ticket seller' do
-      before do
-        allow(order).to receive(:ticket_seller_user?).and_return(false)
-      end
+    it 'return false when user is unmatch with payment_method allow role' do 
+      payment_method.preferred_allow_role = 1   # preferred_allow_role: admin 
+      order.user = ticket_seller_user
+      result = order.payment_method_allowed?(payment_method)
+      expect(result).to be false
+    end
 
-      it 'returns vendor payment methods excluding the ones of type Check' do
-        payment_method1 = create(:payment_method, vendor: vendor1)
-        payment_method2 = create(:payment_method, vendor: vendor2)
-        payment_method_check = create(:payment_method, vendor: vendor1, type: 'Spree::PaymentMethod::Check')
+    it 'returns false when user is nil and payment_method have allow role set' do
+      order.user = nil
+      payment_method.preferred_allow_role = 1   # preferred_allow_role: admin
 
-        order.stub(:vendor_payment_methods) { [payment_method1, payment_method2, payment_method_check] }
-
-        expect(order.available_vendor_payment_methods).to match_array([payment_method1, payment_method2])
-        expect(order.available_vendor_payment_methods).not_to include(payment_method_check)
-      end
+      result = order.payment_method_allowed?(payment_method)
+      expect(result).to be false
     end
   end
 end
