@@ -46,6 +46,7 @@ Spree::Core::Engine.add_routes do
       namespace :storefront do
         resource :checkout, controller: :checkout do
           get :payment_redirect
+          patch :request_update_all_payments
           patch :request_update_payment
         end
       end

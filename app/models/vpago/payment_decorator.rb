@@ -5,6 +5,7 @@ module Vpago
       base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :should_generate_payouts?
       base.after_update :capture_pre_auth, if: :state_changed_to_complete?
       base.after_update :cancel_pre_auth, if: :state_changed_to_failed?
+      base.scope :processing, -> { where(state: 'processing') }
     end
 
     def state_changed_to_complete?
@@ -44,8 +45,8 @@ module Vpago
       process! if order.completed?
     end
 
-    def request_update
-      updater = payment_method.payment_request_updater.new(self, { ignore_on_failed: true })
+    def request_update(ignore_on_failed: true)
+      updater = payment_method.payment_request_updater.new(self, { ignore_on_failed: ignore_on_failed })
       updater.call
       updater
     end

@@ -10,6 +10,7 @@ module Vpago
       # 3 – Declined
       # 4 – Refunded
       # 5 – Wrong Hash
+      # 6 - tran_id not found
       # 7 - Cancelled
       # 11 – Other Server-side Error
       def call

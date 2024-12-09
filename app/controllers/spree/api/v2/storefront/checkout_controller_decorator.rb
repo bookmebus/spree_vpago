@@ -7,17 +7,18 @@ module Spree
             base.skip_before_action :ensure_order, only: [:request_update_payment]
           end
 
-          # :order_token, :payment_number
+          # :order_token, :payment_number, :ignore_on_failed
           def request_update_payment
             # this action is mostly called after order is completed.
             # spree_current_order will be nil in this case, so we need to manual find.
             order = find_order_by_token(params[:order_token])
+            ignore_on_failed = params[:ignore_on_failed] == true
 
             if order.paid?
               render_serialized_payload { serialize_resource(order) }
             else
               payment = find_payment(order, params[:payment_number])
-              context = payment.request_update
+              context = payment.request_update(ignore_on_failed: ignore_on_failed)
 
               if context.success? && context.error_message.blank?
                 render_serialized_payload { serialize_resource(order) }
@@ -25,6 +26,22 @@ module Spree
                 render_error_payload(context.error_message)
               end
             end
+          end
+
+          # :order_token, :ignore_on_failed
+          def request_update_all_payments
+            order = find_order_by_token(params[:order_token])
+            ignore_on_failed = params[:ignore_on_failed] == true
+
+            return render_serialized_payload { serialize_resource(order) } if order.paid?
+
+            # check if there is a completed payment
+            order.payments.processing.each do |payment|
+              context = payment.request_update(ignore_on_failed: ignore_on_failed)
+              return render_serialized_payload { serialize_resource(order) } if context.success? && payment.completed?
+            end
+
+            head :unprocessable_entity
           end
 
           def payment_redirect
@@ -62,7 +79,6 @@ module Spree
 
           def find_order_by_token(token)
             order = Spree::Order.find_by(token: token)
-
             raise ActiveRecord::RecordNotFound if order.nil?
             raise ActiveRecord::RecordNotFound if order.payments.blank?
 
