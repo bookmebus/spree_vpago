@@ -17,6 +17,12 @@ module Spree
     #   Gem.loaded_specs.key?('spree_auth_devise')
     # end
 
+    validates :preferred_public_key, presence: true, if: :require_public_key?
+
+    def require_public_key?
+      enable_pre_auth == true
+    end
+
     def payment_source_class
       Spree::VpagoPaymentSource
     end
