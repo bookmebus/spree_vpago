@@ -3,8 +3,7 @@ require 'faraday'
 module Vpago
   module Payway
     class TransactionStatus < Base
-      attr_accessor :error_message
-      attr_accessor :result
+      attr_accessor :error_message, :result
 
       def call
         prepare
@@ -26,33 +25,33 @@ module Vpago
 
       def check_remote_status
         conn = Faraday::Connection.new do |faraday|
-          faraday.request  :url_encoded
+          faraday.request :url_encoded
         end
-    
+
         data = {
           tran_id: transaction_id,
           hash: checker_hmac
         }
 
-       conn.post(check_transaction_url, data)
+        conn.post(check_transaction_url, data)
       end
 
       def process
         @response = check_remote_status
-    
+
         if @response.status == 200
-          if json_response['status'] != 0 
-            fail!(json_response['description'])
-          else
+          if json_response['status'].zero?
             @result = json_response
+          else
+            fail!(json_response['description'])
           end
         else
-          fail!( @response.body)
+          fail!(@response.body)
         end
       end
 
       def json_response
-        @json ||= JSON.parse(@response.body)
+        @json_response ||= JSON.parse(@response.body)
       end
 
       def fail!(message)
@@ -60,18 +59,16 @@ module Vpago
       end
 
       def success?
-        @error_message == nil
+        @error_message.nil?
       end
 
       def check_transaction_url
-        if(endpoint[-1] == "/")
+        if endpoint[-1] == '/'
           "#{host}#{endpoint}check/transaction/"
         else
           "#{host}#{endpoint}/check/transaction/"
         end
       end
-
     end
-
   end
 end

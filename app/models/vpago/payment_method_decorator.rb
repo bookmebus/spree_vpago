@@ -87,13 +87,11 @@ module Vpago
     end
 
     def pre_auth_service
-      if type_payway_v2?
-        Vpago::PaywayV2::PreAuthHandler.new
-      else
-        raise NotImplementedError, 'Pre-auth is not supported for this gateway'
-      end
+      raise NotImplementedError, 'Pre-auth is not supported for this gateway' unless type_payway_v2?
+
+      Vpago::PaywayV2::PreAuthHandler.new
     end
   end
 end
 
-Spree::PaymentMethod.prepend(Vpago::PaymentMethodDecorator)
+Spree::PaymentMethod.prepend(Vpago::PaymentMethodDecorator) unless Spree::PaymentMethod.included_modules.include?(Vpago::PaymentMethodDecorator)

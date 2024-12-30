@@ -99,4 +99,4 @@ module Vpago
   end
 end
 
-Spree::Payment.prepend(Vpago::PaymentDecorator)
+Spree::Payment.prepend(Vpago::PaymentDecorator) unless Spree::Payment.included_modules.include?(Vpago::PaymentDecorator)

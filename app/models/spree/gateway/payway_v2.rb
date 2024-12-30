@@ -32,24 +32,24 @@ module Spree
     end
 
     def card_type
-      Vpago::Payway::CARD_TYPES.index(preferences[:payment_option]).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : preferences[:payment_option]
+      if Vpago::Payway::CARD_TYPES.index(preferences[:payment_option]).nil?
+        Vpago::Payway::CARD_TYPE_ABAPAY
+      else
+        preferences[:payment_option]
+      end
     end
 
-    def is_card?
+    def payment_option_card?
       preferences[:payment_option] == Vpago::Payway::CARD_TYPE_CARDS
     end
 
-    def is_aba?
+    def payment_option_aba?
       preferences[:payment_option] == Vpago::Payway::CARD_TYPE_ABAPAY
     end
 
     # partial to render the gateway.
     def method_type
       'payway_v2'
-    end
-
-    def available_for_order?(_order)
-      true
     end
 
     # Custom PaymentMethod/Gateway can redefine this method to check method

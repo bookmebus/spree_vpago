@@ -13,10 +13,10 @@ module Vpago
       end
 
       def app_checkout
-        is_app_checkout? ? '1' : '0'
+        app_checkout? ? '1' : '0'
       end
 
-      def is_app_checkout?
+      def app_checkout?
         return false if @options[:app_checkout].blank?
 
         @options[:app_checkout]
@@ -31,8 +31,8 @@ module Vpago
         return nil if preferred_success_url.blank?
 
         query_string = {
-          app_checkout: app_checkout,
-          order_number: order_number,
+          app_checkout:,
+          order_number:,
           order_channel: @payment.order.channel
         }.to_query
 
@@ -44,8 +44,8 @@ module Vpago
         return nil if preferred_error_url.blank?
 
         query_string = {
-          app_checkout: app_checkout,
-          order_number: order_number
+          app_checkout:,
+          order_number:
         }.to_query
 
         "#{preferred_error_url}?#{query_string}"
@@ -56,8 +56,8 @@ module Vpago
         return nil if preferred_other_url.blank?
 
         query_string = {
-          app_checkout: app_checkout,
-          order_number: order_number
+          app_checkout:,
+          order_number:
         }.to_query
 
         "#{preferred_other_url}?#{query_string}"

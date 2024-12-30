@@ -4,12 +4,12 @@ module Vpago
       def call
         checker = payment_status_checker
 
-        if(checker.success?)
+        if checker.success?
           @error_message = nil
           checker_result = {
             status: true,
             description: nil,
-            acleda_response: checker.result,
+            acleda_response: checker.result
           }
           marker_options = @options.merge(checker_result)
 
@@ -26,7 +26,7 @@ module Vpago
 
       def payment_status_checker
         trans_status = Vpago::AcledaMobile::TransactionStatus.new(@payment)
-        trans_status.call(@options[:payment_token_id]) ##TO DO: remove payment_token_id when check transaction status api ready
+        trans_status.call(@options[:payment_token_id]) # #TO DO: remove payment_token_id when check transaction status api ready
         trans_status
       end
     end

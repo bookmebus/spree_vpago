@@ -6,6 +6,4 @@ module Vpago
   end
 end
 
-unless Spree::TaxCategory.included_modules.include?(Vpago::TaxCategoryDecorator)
-  Spree::TaxCategory.prepend(Vpago::TaxCategoryDecorator)
-end
+Spree::TaxCategory.prepend(Vpago::TaxCategoryDecorator) unless Spree::TaxCategory.included_modules.include?(Vpago::TaxCategoryDecorator)

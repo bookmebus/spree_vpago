@@ -13,6 +13,11 @@ group :development, :test do
   gem 'webmock'
 end
 
+group :development do
+  gem 'pg'
+  gem 'spree_dev_tools'
+end
+
 group :test do
   gem 'shoulda-matchers'
 end

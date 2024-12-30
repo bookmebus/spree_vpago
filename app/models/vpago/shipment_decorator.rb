@@ -20,6 +20,4 @@ module Vpago
   end
 end
 
-unless Spree::Shipment.included_modules.include?(Vpago::ShipmentDecorator)
-  Spree::Shipment.prepend(Vpago::ShipmentDecorator)
-end
+Spree::Shipment.prepend(Vpago::ShipmentDecorator) unless Spree::Shipment.included_modules.include?(Vpago::ShipmentDecorator)

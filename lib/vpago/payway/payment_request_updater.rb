@@ -4,10 +4,10 @@ module Vpago
       def call
         checker = check_payway_status
 
-        if(checker.success?)
+        if checker.success?
           @error_message = nil
 
-          marker_options = @options.merge( status: true, description: nil)
+          marker_options = @options.merge(status: true, description: nil)
           marker = ::Vpago::Payway::PaymentStatusMarker.new(@payment, marker_options)
           marker.call
         elsif !ignore_on_failed?
@@ -20,6 +20,7 @@ module Vpago
       end
 
       private
+
       def check_payway_status
         trans_status = Vpago::Payway::TransactionStatus.new(@payment)
         trans_status.call

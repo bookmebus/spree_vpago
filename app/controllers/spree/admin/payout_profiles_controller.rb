@@ -40,11 +40,11 @@ module Spree
 
         if instance.call
           flash[:success] = flash_message_for(@object, :successfully_updated)
-          redirect_to edit_object_url(@object)
         else
           flash[:error] = instance.error_messages.to_s
-          redirect_to edit_object_url(@object)
         end
+
+        redirect_to edit_object_url(@object)
       end
 
       def request_updater

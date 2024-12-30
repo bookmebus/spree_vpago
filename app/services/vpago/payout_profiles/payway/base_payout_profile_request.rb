@@ -21,15 +21,14 @@ module Vpago
 
         def request_to_payway
           response = connection.post(request_path) do |request|
-            request.headers['language'] = "en"
-            request.headers['Content-Type'] = "application/json"
+            request.headers['language'] = 'en'
+            request.headers['Content-Type'] = 'application/json'
             request.body = PayoutProfileRequestParamsBuilder.new(Date.current, profile).request_params.to_json
           end
 
           json_response = JSON.parse(response.body)
-          if json_response.nil? || json_response['status'].nil?
-            @error_messages << response.body
-          end
+
+          @error_messages << response.body if json_response.nil? || json_response['status'].nil?
 
           json_response
         end

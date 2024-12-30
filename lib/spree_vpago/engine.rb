@@ -12,17 +12,17 @@ module SpreeVpago
     end
 
     initializer 'spree_vpago.environment', before: :load_config_initializers do |_app|
-      Config = Configuration.new
+      Config = Configuration.new # rubocop:disable Lint/ConstantDefinitionInBlock
     end
 
     config.after_initialize do
-      Rails.application.config.spree.payment_methods.concat [
+      Rails.application.config.spree.payment_methods.push(
         Spree::Gateway::Payway,
         Spree::Gateway::PaywayV2,
         Spree::Gateway::WingSdk,
         Spree::Gateway::Acleda,
         Spree::Gateway::AcledaMobile
-      ]
+      )
     end
 
     def self.activate

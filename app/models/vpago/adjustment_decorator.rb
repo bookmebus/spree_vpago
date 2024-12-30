@@ -25,6 +25,4 @@ module Vpago
   end
 end
 
-unless Spree::Adjustment.included_modules.include?(Vpago::AdjustmentDecorator)
-  Spree::Adjustment.prepend(Vpago::AdjustmentDecorator)
-end
+Spree::Adjustment.prepend(Vpago::AdjustmentDecorator) unless Spree::Adjustment.included_modules.include?(Vpago::AdjustmentDecorator)

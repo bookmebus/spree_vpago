@@ -7,4 +7,4 @@ module Vpago
   end
 end
 
-Spree::Vendor.prepend(Vpago::VendorDecorator)
+Spree::Vendor.prepend(Vpago::VendorDecorator) unless Spree::Vendor.included_modules.include?(Vpago::VendorDecorator)

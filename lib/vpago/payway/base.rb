@@ -1,7 +1,7 @@
 module Vpago
   module Payway
     class Base
-      def initialize(payment, options={})
+      def initialize(payment, options = {})
         @options = options
         @payment = payment
       end
@@ -11,19 +11,19 @@ module Vpago
       end
 
       def amount
-        "%.2f" % ( @payment.amount + transaction_fee )
+        format('%.2f', (@payment.amount + transaction_fee))
       end
 
       def transaction_fee_fix
         @payment.payment_method.preferences[:transaction_fee_fix].to_f
       end
-    
+
       def transaction_fee_percentage
         @payment.payment_method.preferences[:transaction_fee_percentage].to_f
       end
-    
+
       def transaction_fee
-        transaction_fee_fix + (@payment.amount * transaction_fee_percentage ) / 100
+        transaction_fee_fix + ((@payment.amount * transaction_fee_percentage) / 100)
       end
 
       def merchant_id
@@ -35,7 +35,7 @@ module Vpago
       end
 
       def email
-        @payment.order.email.presence || ENV['DEFAULT_EMAIL_FOR_PAYMENT']
+        @payment.order.email.presence || ENV.fetch('DEFAULT_EMAIL_FOR_PAYMENT', nil)
       end
 
       def first_name
@@ -49,15 +49,15 @@ module Vpago
       def return_url
         preferred_return_url = @payment.payment_method.preferences[:return_url]
         return nil if preferred_return_url.blank?
-        
+
         Base64.encode64(preferred_return_url)
       end
 
       def app_checkout
-        is_app_checkout? ? 'yes' : 'no'
+        app_checkout? ? 'yes' : 'no'
       end
 
-      def is_app_checkout?
+      def app_checkout?
         return false if @options[:app_checkout].blank?
 
         @options[:app_checkout]
@@ -68,16 +68,16 @@ module Vpago
         return nil if preferred_continue_url.blank?
 
         query_string = "tran_id=#{transaction_id}&app_checkout=#{app_checkout}"
-        preferred_continue_url.index("?") == nil ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
+        preferred_continue_url.index('?').nil? ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
       end
 
       def payment_option
         card_option = @payment.payment_method.preferences[:payment_option]
-        Vpago::Payway::CARD_TYPES.index(card_option) == nil ?  Vpago::Payway::CARD_TYPE_ABAPAY : card_option
+        Vpago::Payway::CARD_TYPES.index(card_option).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : card_option
       end
 
       def phone_country_code
-        "+855"
+        '+855'
       end
 
       def phone
@@ -89,7 +89,7 @@ module Vpago
       end
 
       def return_params
-        {tran_id: transaction_id}.to_json
+        { tran_id: transaction_id }.to_json
       end
 
       def hash_hmac

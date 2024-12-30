@@ -23,16 +23,16 @@ module Vpago
     end
 
     def json_params
-      { :tran_id => params[:tran_id] }
+      { tran_id: params[:tran_id] }
     end
 
     def html_params
       payload = JSON.parse(params[:response])
-      { :tran_id => payload["tran_id"] }
+      { tran_id: payload['tran_id'] }
     end
 
     def merchant_profile_content_type
-      ENV["PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE"].presence || 'html'
+      ENV['PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE'].presence || 'html'
     end
   end
 end

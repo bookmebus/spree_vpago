@@ -62,7 +62,7 @@ module Vpago
       end
 
       def json_response
-        @json ||= begin
+        @json_response ||= begin
           JSON.parse(@response.body)
         rescue JSON::ParserError
           {}

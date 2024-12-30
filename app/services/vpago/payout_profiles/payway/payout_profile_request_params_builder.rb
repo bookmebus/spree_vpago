@@ -16,7 +16,7 @@ module Vpago
         def status = profile.active ? '1' : '0'
 
         def formatted_request_time
-          request_time.strftime("%Y%m%d%H%M%S")
+          request_time.strftime('%Y%m%d%H%M%S')
         end
 
         def merchant_auth_data
@@ -34,7 +34,6 @@ module Vpago
           ).call
         end
 
-
         def hash_data
           "#{formatted_request_time}#{merchant_auth}"
         end
@@ -50,7 +49,7 @@ module Vpago
             request_time: formatted_request_time,
             merchant_id: merchant_id,
             merchant_auth: merchant_auth,
-            hash: encoded_hash,
+            hash: encoded_hash
           }
         end
       end

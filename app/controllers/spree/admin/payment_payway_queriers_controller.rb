@@ -4,7 +4,6 @@ module Spree
       include Spree::Backend::Callbacks
       around_action :set_writing_role, only: %i[show]
 
-
       def show
         tran_status = transaction_status_service.new(@payment)
         tran_status.call
