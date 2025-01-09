@@ -17,4 +17,6 @@ group :test do
   gem 'shoulda-matchers'
 end
 
+gem 'jwt'
+
 gemspec

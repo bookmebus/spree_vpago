@@ -83,7 +83,8 @@ module Vpago
           tran_id: transaction_id,
           app_checkout: app_checkout,
           order_number: @payment.order.number,
-          order_channel: @payment.order.channel
+          order_channel: @payment.order.channel,
+          order_jwt_token: order_jwt_token
         }.to_query
 
         preferred_continue_url.index('?').nil? ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
@@ -168,6 +169,11 @@ module Vpago
         Rails.logger.info(log_hash_data)
 
         result
+      end
+
+      def order_jwt_token
+        payload = { order_number: @payment.order.number, order_id: @payment.order.id }
+        JWT.encode(payload, @payment.order.token, 'HS256')
       end
     end
   end
