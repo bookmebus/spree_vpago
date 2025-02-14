@@ -55,7 +55,7 @@ module Spree
       ActiveMerchant::Billing::Response.new(true, 'Order created')
     end
 
-    def cancel(_response_code)
+    def cancel(_response_code, _gateway_options)
       # we can use this to send request to payment gateway api to cancel the payment ( void )
       # currently Payway does not support to cancel the gateway
 

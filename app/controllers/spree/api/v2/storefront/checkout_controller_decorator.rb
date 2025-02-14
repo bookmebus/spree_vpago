@@ -7,6 +7,12 @@ module Spree
             base.skip_before_action :ensure_order, only: [:request_update_payment]
           end
 
+          # override
+          def create_payment_service
+            Vpago::Payments::Create
+          end
+
+          # This API are deprecated
           # :order_token, :payment_number
           def request_update_payment
             # this action is mostly called after order is completed.
@@ -27,6 +33,7 @@ module Spree
             end
           end
 
+          # This API are deprecated
           def payment_redirect
             payments = spree_current_order.payments
             raise ActiveRecord::RecordNotFound if payments.blank?

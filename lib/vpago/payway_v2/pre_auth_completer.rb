@@ -4,9 +4,14 @@ module Vpago
   module PaywayV2
     class PreAuthCompleter < Base
       def call
+        return if completed? || cancelled?
+
         @response = pre_auth_response
         save_response if success?
       end
+
+      def completed? = @payment.pre_auth_response['transaction_status'] == 'COMPLETED'
+      def cancelled? = @payment.pre_auth_response['transaction_status'] == 'CANCELLED'
 
       def save_response
         @payment.update(pre_auth_response: json_response)
@@ -17,13 +22,16 @@ module Vpago
           faraday.request :url_encoded
         end
 
-        data = {
+        conn.post(complete_url, request_data)
+      end
+
+      def request_data
+        {
           request_time: req_time,
           merchant_id: merchant_id,
           merchant_auth: merchant_auth_encryption,
           hash: hash_data
         }
-        conn.post(complete_url, data)
       end
 
       def hash_data
@@ -55,6 +63,8 @@ module Vpago
       end
 
       def json_response
+        return @payment.pre_auth_response if @payment.pre_auth_response.present?
+
         @json_response ||= begin
           JSON.parse(@response.body)
         rescue JSON::ParserError
