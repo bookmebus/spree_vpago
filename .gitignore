@@ -20,3 +20,4 @@ public/spree
 gemfiles/*.gemfile.lock
 vendor/cache
 .byebug_history
+node_modules/

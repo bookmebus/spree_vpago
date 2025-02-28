@@ -2,6 +2,10 @@ spree:
   acleda_type: "Payment Type"
   acleda_company_name: "Product Name in ACLEDA view"
   acleda_payment_card: "Payment Card"
+  payment_process_failed: "Payment process failed"
+  insufficient_payment_amount_to_cover_the_total: "ចំនួនទឹកប្រាក់នៃការទូទាត់គឺមិនគ្រប់គ្រាន់"
+  qr_code: "QR code"
+  open_checkout: "Open Checkout"
   vpago:
     payments:
       check_and_heal: "កែស្វ័យប្រវត្តិ"

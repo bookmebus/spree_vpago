@@ -6,6 +6,10 @@ en:
     acleda_type: "Payment Type"
     acleda_company_name: "Product Name in ACLEDA view"
     acleda_payment_card: "Payment Card (only required for XPAY-MPGS)"
+    payment_process_failed: "Payment process failed"
+    insufficient_payment_amount_to_cover_the_total: "Payment amount is insufficient to cover the total"
+    qr_code: "QR code"
+    open_checkout: "Open Checkout"
     vpago:
       payments:
         check_and_heal: "Auto correct"

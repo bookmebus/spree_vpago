@@ -1,0 +1,49 @@
+<h1 id="status">THIS IS CURRENT STATE</h1>
+<p id="message"></p>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    let firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
+    let orderNumber = "<%= @order.number %>";
+
+    window.listenToProcessingState({
+      firebaseConfigs: firebaseConfigs,
+      orderNumber: orderNumber,
+      onPaymentIsProcessing: function (orderState, paymentState, logMessage) {
+        document.getElementById("status").innerText = "Payment is processing";
+        document.getElementById("message").innerText = logMessage;
+      },
+      onOrderIsProcessing: function (orderState, paymentState, logMessage) {
+        document.getElementById("status").innerText = "Order is processing";
+        document.getElementById("message").innerText = logMessage;
+      },
+      onOrderIsCompleted: function (orderState, paymentState, logMessage) {
+        document.getElementById("status").innerText = "Order is completed";
+        document.getElementById("message").innerText = logMessage;
+      },
+      onOrderProcessFailed: function (orderState, paymentState, logMessage) {
+        document.getElementById("status").innerText = "Order process failed";
+        document.getElementById("message").innerText = logMessage;
+      },
+      onPaymentIsRefunded: function (orderState, paymentState, logMessage) {
+        document.getElementById("status").innerText = "Payment is refunded";
+        document.getElementById("message").innerText = logMessage
+      },
+      onPaymentProcessFailed: function (orderState, paymentState, logMessage) {
+        document.getElementById("status").innerText = "Payment process failed";
+        document.getElementById("message").innerText = logMessage;
+      },
+      onCompleted: function (orderState, paymentState, logMessage) {
+        let successPath = "<%= @payment.success_url %>";
+        window.location.href = successPath;
+      },
+    });
+  });
+
+  window.requestProcessPayment({
+    url: "<%= @payment.process_payment_url %>",
+    params: <%= params.except(:action, :controller, :amp).to_json.html_safe %>,
+    maxRetries: 5,
+    retryDelayMs: 1000,
+  })
+</script>

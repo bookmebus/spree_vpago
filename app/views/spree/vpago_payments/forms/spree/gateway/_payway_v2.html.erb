@@ -1,0 +1,13 @@
+<% @checkout = ::Vpago::PaywayV2::Checkout.new(@payment) %>
+
+<form method="POST" action="<%= @checkout.checkout_url %>" id="aba_merchant_request">
+  <% @checkout.gateway_params.each do |key, value| %>
+    <input type='hidden' name='<%= key %>' value='<%= value %>' />
+  <% end %>
+</form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("aba_merchant_request").submit()
+  })
+</script>
