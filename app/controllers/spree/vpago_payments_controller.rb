@@ -5,11 +5,14 @@ module Spree
 
     skip_before_action :verify_authenticity_token, only: [:process_payment]
 
+    rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+    rescue_from CanCan::AccessDenied, with: :access_denied
+
     # GET
     def checkout
       @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
+      raise ActiveRecord::RecordNotFound unless @payment.present?
 
-      return render_not_found unless @payment.present?
       return redirect_to @payment.processing_url, allow_other_host: true unless @payment.checkout?
 
       @order = @payment.order
@@ -18,19 +21,18 @@ module Spree
     # GET
     def processing
       @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
-      return render_not_found unless @payment.present?
+      raise ActiveRecord::RecordNotFound unless @payment.present?
 
       @order = @payment.order
-      return redirect_to @payment.success_url, allow_other_host: true if @payment.completed?
     end
 
     # GET
     def success
       @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
-      return render_not_found unless @payment.present?
+      raise ActiveRecord::RecordNotFound unless @payment.present?
 
       @order = @payment.order
-      return redirect_to @payment.processing_url, allow_other_host: true unless @payment.completed?
+      raise CanCan::AccessDenied unless @order.completed?
     end
 
     # POST
@@ -52,10 +54,17 @@ module Spree
       render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
 
-    def render_not_found
+    def record_not_found
       respond_to do |format|
         format.html { render file: Rails.public_path.join('404.html'), status: :not_found, layout: false }
         format.json { render json: { status: :not_found }, status: :not_found }
+      end
+    end
+
+    def access_denied
+      respond_to do |format|
+        format.html { render file: Rails.public_path.join('422.html'), status: :not_found, layout: false }
+        format.json { render json: { status: :unauthorized }, status: :unauthorized }
       end
     end
   end

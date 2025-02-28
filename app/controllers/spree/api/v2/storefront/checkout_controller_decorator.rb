@@ -9,7 +9,7 @@ module Spree
 
           # override
           def create_payment_service
-            Vpago::Payments::Create
+            Vpago::Payments::FindOrCreate
           end
 
           # This API are deprecated

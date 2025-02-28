@@ -1,8 +1,7 @@
-# Original `Vpago::Payments::Create` requires `Wallet::CreatePaymentSource`.
-# We override it to avoid that requirement.
+# Replacement for Spree::Payments::Create. To look for existing payment instead of always create new one.
 module Vpago
   module Payments
-    class Create
+    class FindOrCreate
       prepend Spree::ServiceModule::Base
 
       def call(order:, params: {}) # rubocop:disable Lint/UnusedMethodArgument
@@ -27,7 +26,19 @@ module Vpago
         )
 
         if payment_method&.source_required? && payment.source.blank?
-          payment.source = payment_method.payment_source_class.new(params[:source_attributes])
+          source_attributes = {
+            payment_option: params[:payment_option],
+            payment_method_id: payment_method.id,
+            user_id: order.user&.id,
+            gateway_payment_profile_id: params[:gateway_payment_profile_id],
+            gateway_customer_profile_id: params[:gateway_customer_profile_id],
+            last_digits: params[:last_digits],
+            month: params[:month],
+            year: params[:year],
+            name: params[:name]
+          }.compact
+
+          payment.source = payment_method.payment_source_class.new(source_attributes)
           payment.save!
         end
 
