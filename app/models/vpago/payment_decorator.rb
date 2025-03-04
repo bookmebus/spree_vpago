@@ -3,65 +3,27 @@ module Vpago
     def self.prepended(base)
       base.has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payment
       base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :should_generate_payouts?
-      base.after_update :capture_pre_auth, if: :state_changed_to_complete?
-      base.after_update :cancel_pre_auth, if: :state_changed_to_failed?
+
+      base.delegate :checkout_url,
+                    :processing_url,
+                    :success_url,
+                    :process_payment_url,
+                    to: :url_constructor
     end
 
-    def state_changed_to_complete?
-      saved_change_to_state? && state == 'completed'
+    def process!
+      # give payment another chance to re-process, even if it failed.
+      update!(state: :checkout) if processing? || send(:has_invalid_state?)
+
+      super
     end
 
-    def state_changed_to_failed?
-      saved_change_to_state? && state == 'failed'
+    def url_constructor
+      @url_constructor ||= Vpago::PaymentUrlConstructor.new(self)
     end
 
     def should_generate_payouts?
-      support_payout? && payouts.empty?
-    end
-
-    def support_payout?
-      payment_method.support_payout?
-    end
-
-    # On the first call, everything works. The order is transitioned to complete and one Spree::Payment,
-    # which redirect the payment. But, after making the same call again,
-    # for instance because the payment wasn't completed or failed,
-    # another Spree::Payment is created but without a payment_url. So, if a consumer,
-    # for whatever reason, failed to complete the first payment, it would not be possible try again.
-    # This also meant that any consecutive Spree::Payment would not have a payment_url. The consumer is stuck
-
-    def build_source
-      return unless new_record?
-
-      return unless source_attributes.present? && source.blank? && payment_method.try(:payment_source_class)
-
-      self.source = payment_method.payment_source_class.new(source_attributes)
-      source.payment_method_id = payment_method.id
-      source.user_id = order.user_id if order
-
-      # Spree will not process payments if order is completed.
-      # We should call process! for completed orders to create a the gateway payment.
-      process! if order.completed?
-    end
-
-    def request_update
-      updater = payment_method.payment_request_updater.new(self, { ignore_on_failed: true })
-      updater.call
-      updater
-    end
-
-    def authorized?
-      if source.is_a? Spree::VpagoPaymentSource
-        pending?
-      else
-        false
-      end
-    end
-
-    def payment_url
-      return unless payment_method.type_payway_v2?
-
-      "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/payway_v2_card_popups?payment_number=#{number}"
+      payment_method.enable_payout? && payouts.empty?
     end
 
     # COMPLETED, CANCELLED
@@ -75,26 +37,6 @@ module Vpago
 
     def pre_auth_cancelled?
       pre_auth_status == 'CANCELLED'
-    end
-
-    def capture_pre_auth
-      return if !enable_pre_auth? || pre_auth_completed?
-
-      pre_auth_service.capture_pre_auth(self)
-    end
-
-    def cancel_pre_auth
-      return if !enable_pre_auth? || pre_auth_cancelled?
-
-      pre_auth_service.cancel_pre_auth(self)
-    end
-
-    def pre_auth_service
-      payment_method.pre_auth_service
-    end
-
-    def enable_pre_auth?
-      payment_method.enable_pre_auth?
     end
   end
 end

@@ -59,48 +59,23 @@ module Vpago
       end
 
       def return_url
-        preferred_return_url = ENV.fetch('PAYWAY_RETURN_CALLBACK_URL', nil)
-        return nil if preferred_return_url.blank?
+        uri = URI.parse(@payment.process_payment_url)
+        uri.query = nil
 
-        Base64.encode64(preferred_return_url).delete("\n")
-      end
-
-      def app_checkout
-        app_checkout? ? 'yes' : 'no'
-      end
-
-      def app_checkout?
-        return false if @options[:app_checkout].blank?
-
-        @options[:app_checkout]
+        Base64.encode64(uri.to_s).delete("\n")
       end
 
       def continue_success_url
-        preferred_continue_url = ENV.fetch('PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL', nil)
-        return nil if preferred_continue_url.blank?
-
-        query_string = {
-          tran_id: transaction_id,
-          app_checkout: app_checkout,
-          order_number: @payment.order.number,
-          order_channel: @payment.order.channel,
-          order_jwt_token: order_jwt_token
-        }.to_query
-
-        preferred_continue_url.index('?').nil? ? "#{preferred_continue_url}?#{query_string}" : "#{preferred_continue_url}&#{query_string}"
+        @payment.processing_url
       end
 
       # null, hosted_view, checkout, qr
       def view_type
-        app_checkout? ? 'hosted_view' : nil
+        'hosted_view'
       end
 
       def payment_option
         card_option = @payment.payment_method.preferences[:payment_option]
-
-        return 'abapay_deeplink' if app_checkout? && card_option == 'abapay'
-        return 'abapay_khqr' if !app_checkout? && card_option == 'abapay_khqr_deeplink'
-
         Vpago::Payway::CARD_TYPES.index(card_option).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : card_option
       end
 
@@ -117,7 +92,9 @@ module Vpago
       end
 
       def return_params
-        { tran_id: transaction_id }.to_json
+        uri = URI.parse(@payment.process_payment_url)
+        query_params = Rack::Utils.parse_nested_query(uri.query)
+        query_params.to_json
       end
 
       def payout
@@ -127,16 +104,12 @@ module Vpago
         end
       end
 
+      # redirect to continue URL, let it handle redirecting to app.
+      # allowed override to specific app eg. from tg://t.me
       def return_deeplink_url
-        scheme = @payment.payment_method.preferences[:deeplink_scheme]
-
-        # let client pass override return deeplink eg. from tg://t.me
         return @options[:override_return_deeplink_url] if @options[:override_return_deeplink_url].present?
-        return nil unless continue_success_url.present?
 
-        uri = URI.parse(continue_success_url)
-        uri.scheme = scheme if app_checkout? && scheme.present?
-        uri.to_s
+        continue_success_url
       end
 
       def return_deeplink

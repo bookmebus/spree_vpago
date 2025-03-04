@@ -46,17 +46,11 @@ RSpec.describe Vpago::PaywayV2::Base do
   end
 
   describe "#continue_success_url" do
-    it "return continue_success_url with tran_id, app_checkout, order_number, ot (order_token)" do
-      ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL'] = "https://contigo.asia/webhook/payways/v2_continue"
-
+    it "return payment processing url" do
       payment = create(:payway_payment)
       subject = described_class.new(payment)
 
-      allow(payment).to receive(:number).and_return "PF2IM21Q"
-      allow(payment.order).to receive(:number).and_return "R226226575"
-      allow(subject).to receive(:order_jwt_token).and_return("mocked-jwt-token")
-
-      expect(subject.continue_success_url).to eq  'https://contigo.asia/webhook/payways/v2_continue?app_checkout=no&order_channel=spree&order_jwt_token=mocked-jwt-token&order_number=R226226575&tran_id=PF2IM21Q'
+      expect(subject.continue_success_url).to eq payment.processing_url
     end
   end
 
@@ -74,64 +68,12 @@ RSpec.describe Vpago::PaywayV2::Base do
       end
     end
 
-    context 'when continue_callback_url is not present' do
-      let(:method) { create(:payway_v2_gateway, preferred_deeplink_scheme: 'bookmeplus') }
+    context 'when override_return_deeplink_url is not present' do
+      let(:method) { create(:payway_v2_gateway) }
       let(:payment) { create(:payway_v2_payment, payment_method: method) }
 
-      it "return nil (because deeplink url base on continue_url)" do
-        ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL'] = nil
-
-        expect(subject.continue_success_url).to eq nil
-        expect(subject.return_deeplink_url).to eq nil
-      end
-    end
-
-    context 'when preferred_deeplink_scheme is not present' do
-      let(:method) { create(:payway_v2_gateway, preferred_deeplink_scheme: nil) }
-      let(:payment) { create(:payway_v2_payment, payment_method: method) }
-
-      it "return continue_callback_url" do
-        ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL'] = "https://contigo.asia/webhook/payways/v2_continue"
-
-        allow(payment).to receive(:number).and_return "PF2IM21Q"
-        allow(payment.order).to receive(:number).and_return "R226226575"
-        allow(subject).to receive(:order_jwt_token).and_return("mocked-jwt-token")
-
-        expect(subject.return_deeplink_url).to eq 'https://contigo.asia/webhook/payways/v2_continue?app_checkout=no&order_channel=spree&order_jwt_token=mocked-jwt-token&order_number=R226226575&tran_id=PF2IM21Q'
-      end
-    end
-
-    context 'when preferred_deeplink_scheme is present but is not app_checkout' do
-      let(:method) { create(:payway_v2_gateway, preferred_deeplink_scheme: nil) }
-      let(:payment) { create(:payway_v2_payment, payment_method: method) }
-
-      subject { described_class.new(payment, { app_checkout: false }) }
-
-      it "return continue_callback_url" do
-        ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL'] = "https://contigo.asia/webhook/payways/v2_continue"
-
-        allow(payment).to receive(:number).and_return "PF2IM21Q"
-        allow(payment.order).to receive(:number).and_return "R226226575"
-        allow(subject).to receive(:order_jwt_token).and_return("mocked-jwt-token")
-
-        expect(subject.return_deeplink_url).to eq 'https://contigo.asia/webhook/payways/v2_continue?app_checkout=no&order_channel=spree&order_jwt_token=mocked-jwt-token&order_number=R226226575&tran_id=PF2IM21Q'
-      end
-    end
-
-    context 'when continue_callback_url & preferred_deeplink_scheme is present & is app checkout' do
-      let(:method) { create(:payway_v2_gateway, preferred_deeplink_scheme: 'bookmeplus') }
-      let(:payment) { create(:payway_v2_payment, payment_method: method) }
-
-      subject { described_class.new(payment, { app_checkout: true }) }
-
-      it "return return_deeplink url" do
-        ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL'] = "https://contigo.asia/webhook/payways/v2_continue"
-
-        allow(payment).to receive(:number).and_return "PF2IM21Q"
-        allow(payment.order).to receive(:number).and_return "R226226575"
-        allow(subject).to receive(:order_jwt_token).and_return("mocked-jwt-token")
-
-        expect(subject.return_deeplink_url).to eq 'bookmeplus://contigo.asia/webhook/payways/v2_continue?app_checkout=yes&order_channel=spree&order_jwt_token=mocked-jwt-token&order_number=R226226575&tran_id=PF2IM21Q'
+      it "return payment" do
+        expect(subject.return_deeplink_url).to eq subject.continue_success_url
       end
     end
   end
@@ -165,41 +107,11 @@ RSpec.describe Vpago::PaywayV2::Base do
   end
 
   describe "#view_type" do
-    it "return view_type: hosted_view for app checkout" do
-      payment = create(:payway_payment)
-      subject = described_class.new(payment, { app_checkout: true })
-
-      expect(subject.view_type).to eq 'hosted_view'
-    end
-
-    it "return view_type: nil when not app checkout" do
+    it "return view_type: hosted_view" do
       payment = create(:payway_payment)
       subject = described_class.new(payment)
 
-      expect(subject.view_type).to eq nil
-    end
-  end
-
-  describe '#payment_option' do
-    context 'when payment_option is abapay_khqr_deeplink' do
-      let(:payment_method) { create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr_deeplink') }
-      let(:payment) { create(:payway_payment, payment_method: payment_method) }
-
-      context 'when is not app checkout' do
-        subject { described_class.new(payment, { app_checkout: false }) }
-
-        it 'return payment_option = :abapay_khqr instead of :abapay_khqr_deeplink' do
-          expect(subject.payment_option).to eq 'abapay_khqr'
-        end
-      end
-
-      context 'when is app checkout' do
-        subject { described_class.new(payment, { app_checkout: true }) }
-
-        it 'return payment_option = :abapay_khqr_deeplink' do
-          expect(subject.payment_option).to eq 'abapay_khqr_deeplink'
-        end
-      end
+      expect(subject.view_type).to eq 'hosted_view'
     end
   end
 

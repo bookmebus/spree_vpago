@@ -15,7 +15,7 @@ RSpec.describe Spree::Payment, type: :model do
         subject { build(:payway_v2_payment) }
 
         it 'calls Vpago::PayoutsGenerator' do
-          expect(subject.support_payout?).to be true
+          expect(subject.payment_method.enable_payout?).to be true
           expect(Vpago::PayoutsGenerator).to receive(:new).with(subject).and_return(generator)
           expect(generator).to receive(:call).and_call_original   
 
@@ -29,7 +29,7 @@ RSpec.describe Spree::Payment, type: :model do
         subject { build(:payway_payment) }
 
         it 'does not call Vpago::PayoutsGenerator' do
-          expect(subject.support_payout?).to be false
+          expect(subject.payment_method.enable_payout?).to be false
           expect(Vpago::PayoutsGenerator).to_not receive(:new).with(subject)
 
           subject.save!

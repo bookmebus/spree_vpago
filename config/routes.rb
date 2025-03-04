@@ -17,6 +17,16 @@ Spree::Core::Engine.add_routes do
     resources :transactions, only: [:show]
   end
 
+  resource :vpago_payments do
+    collection do
+      get :checkout
+      get :processing
+      get :success
+
+      match :process_payment, via: %i[get post]
+    end
+  end
+
   namespace :webhook do
     resource :payways, only: [] do
       match 'return', to: 'payways#return', via: %i[get post]

@@ -1,5 +1,6 @@
 # Configure Rails Environment
 ENV['RAILS_ENV'] = 'test'
+ENV['DEFAULT_URL_HOST'] = 'http://localhost:4000'
 
 require File.expand_path('../dummy/config/environment.rb', __FILE__)
 

@@ -1,3 +1,4 @@
+# Deprecated: No longer used anymore, should ask bank to put [json] by default. So we have unified return url for payment methods.
 module Vpago
   class PaywayReturnOptionsBuilder
     attr_reader :params

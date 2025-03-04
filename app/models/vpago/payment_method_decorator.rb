@@ -21,19 +21,19 @@ module Vpago
       end
     end
 
-    def support_payout?
-      return false unless type_payway_v2?
-      return false unless default_payout_profile.present? && default_payout_profile.receivable?
+    def enable_payout? = support_payout?
+    def enable_pre_auth? = support_pre_auth? && self[:enable_pre_auth]
+    def support_payout? = false
+    def support_pre_auth? = false
 
-      true
-    end
-
-    def support_pre_auth?
-      type_payway_v2?
+    # TODO: we have already implement purchase for payway_v2.
+    # make sure to implement this on other payment method as well.
+    def purchase(_amount, _source, _gateway_options = {})
+      ActiveMerchant::Billing::Response.new(true, 'Payway Gateway: Success')
     end
 
     def default_payout_profile
-      Spree::PayoutProfiles::PaywayV2.default
+      nil
     end
 
     def vpago_payment?
@@ -84,12 +84,6 @@ module Vpago
 
     def type_wingsdk?
       type == Spree::PaymentMethod::TYPE_WINGSDK
-    end
-
-    def pre_auth_service
-      raise NotImplementedError, 'Pre-auth is not supported for this gateway' unless type_payway_v2?
-
-      Vpago::PaywayV2::PreAuthHandler.new
     end
   end
 end

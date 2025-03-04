@@ -1,0 +1,52 @@
+require 'google/cloud/firestore'
+
+module Vpago
+  module UserInformers
+    class Firebase
+      attr_accessor :order
+
+      def initialize(order)
+        @order = order
+      end
+
+      def payment_is_processing(processing:, log_message: nil) = notify(:payment_is_processing, processing, log_message)
+      def order_is_processing(processing:, log_message: nil) = notify(:order_is_processing, processing, log_message)
+      def order_is_completed(processing:, log_message: nil) = notify(:order_is_completed, processing, log_message)
+      def order_process_failed(processing:, log_message: nil) = notify(:order_process_failed, processing, log_message)
+      def payment_is_refunded(processing:, log_message: nil) = notify(:payment_is_refunded, processing, log_message)
+      def payment_process_failed(processing:, log_message: nil) = notify(:payment_process_failed, processing, log_message)
+
+      def notify(message, processing, log_message = nil)
+        order.reload
+
+        data = {
+          processing: processing,
+          message_code: message,
+          log_message: log_message,
+          order_state: order.state,
+          payment_state: order.payment_state,
+          updated_at: Time.current
+        }.compact
+
+        firestore_reference.set(data, merge: true)
+        firestore_reference.col('histories').doc(message).set(data)
+      end
+
+      def firestore_reference
+        current_date = Time.current.strftime('%Y-%m-%d')
+        firestore.col('statuses')
+                 .doc('cart')
+                 .col(current_date)
+                 .doc(order.number)
+      end
+
+      def firestore
+        @firestore ||= Google::Cloud::Firestore.new(project_id: service_account[:project_id], credentials: service_account)
+      end
+
+      def service_account
+        @service_account ||= Rails.application.credentials.cloud_firestore_service_account
+      end
+    end
+  end
+end

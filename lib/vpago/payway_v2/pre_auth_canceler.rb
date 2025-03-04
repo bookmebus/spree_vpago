@@ -9,13 +9,16 @@ module Vpago
           faraday.request :url_encoded
         end
 
-        data = {
+        conn.post(cancel_url, request_data)
+      end
+
+      def request_data
+        {
           request_time: req_time,
           merchant_id: merchant_id,
           merchant_auth: merchant_auth_encryption,
           hash: hash_data
         }
-        conn.post(cancel_url, data)
       end
 
       # override
