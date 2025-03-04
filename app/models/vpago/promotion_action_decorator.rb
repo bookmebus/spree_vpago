@@ -6,6 +6,4 @@ module Vpago
   end
 end
 
-unless Spree::PromotionAction.included_modules.include?(Vpago::PromotionActionDecorator)
-  Spree::PromotionAction.prepend(Vpago::PromotionActionDecorator)
-end
+Spree::PromotionAction.prepend(Vpago::PromotionActionDecorator) unless Spree::PromotionAction.included_modules.include?(Vpago::PromotionActionDecorator)

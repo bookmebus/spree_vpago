@@ -22,6 +22,4 @@ module Vpago
   end
 end
 
-unless Spree::ShippingRate.included_modules.include?(Vpago::ShippingRateDecorator)
-  Spree::ShippingRate.prepend(Vpago::ShippingRateDecorator)
-end
+Spree::ShippingRate.prepend(Vpago::ShippingRateDecorator) unless Spree::ShippingRate.included_modules.include?(Vpago::ShippingRateDecorator)

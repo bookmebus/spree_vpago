@@ -9,5 +9,4 @@ class Spree::VpagoPaymentSource < Spree::Base
   has_one :payment, as: :source
 
   # validates :updated_reason, presence: true, on: :update
-
 end

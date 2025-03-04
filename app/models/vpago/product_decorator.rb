@@ -27,4 +27,4 @@ module Vpago
   end
 end
 
-Spree::Product.prepend(Vpago::ProductDecorator)
+Spree::Product.prepend(Vpago::ProductDecorator) unless Spree::Product.included_modules.include?(Vpago::ProductDecorator)

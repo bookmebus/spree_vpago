@@ -45,17 +45,17 @@ module Spree
       true
     end
 
-    def process(money, source, gateway_options)
-      Rails.logger.debug{"About to create payment for order #{gateway_options[:order_id]}"}
+    def process(_money, _source, gateway_options)
+      Rails.logger.debug { "About to create payment for order #{gateway_options[:order_id]}" }
       # First of all, invalidate all previous tranx orders to prevent multiple paid orders
       # source.save!
       ActiveMerchant::Billing::Response.new(true, 'Order created')
     end
 
-    def cancel(response_code)
+    def cancel(_response_code)
       # we can use this to send request to payment gateway api to cancel the payment ( void )
       # currently Payway does not support to cancel the gateway
-      
+
       # in our case don't do anything
       ActiveMerchant::Billing::Response.new(true, 'Acleda order has been cancelled.')
     end

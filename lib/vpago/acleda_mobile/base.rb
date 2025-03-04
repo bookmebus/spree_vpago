@@ -3,7 +3,7 @@ module Vpago
     class Base
       include Vpago::PaymentAmountCalculator
 
-      def initialize(payment, options={})
+      def initialize(payment, options = {})
         @options = options
         @payment = payment
       end

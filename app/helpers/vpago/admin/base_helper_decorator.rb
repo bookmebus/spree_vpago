@@ -26,7 +26,8 @@ module Vpago
         when 'preferred_acleda_type'
           return form.select(:preferred_acleda_type, form.object.class::TYPES, {}, class: 'fullwidth select2')
         when 'preferred_acleda_payment_card'
-          return form.select(:preferred_acleda_payment_card, acleda_payment_card_options, {}, class: 'fullwidth select2')
+          return form.select(:preferred_acleda_payment_card, acleda_payment_card_options, {},
+                             class: 'fullwidth select2')
         when 'preferred_icon_name'
           return form.select(:preferred_icon_name, available_payment_icons, {}, class: 'fullwidth select2')
         end

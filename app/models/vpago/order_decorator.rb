@@ -70,7 +70,7 @@ module Vpago
 
     def available_vendor_payment_methods
       if ticket_seller_user?
-        vendor_payment_methods
+        vendor_payment_methods \
       else
         vendor_payment_methods.reject { |pm| pm.type == 'Spree::PaymentMethod::Check' }
       end

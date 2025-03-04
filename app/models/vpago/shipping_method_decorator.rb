@@ -30,6 +30,4 @@ module Vpago
   end
 end
 
-unless Spree::ShippingMethod.included_modules.include?(Vpago::ShippingMethodDecorator)
-  Spree::ShippingMethod.prepend(Vpago::ShippingMethodDecorator)
-end
+Spree::ShippingMethod.prepend(Vpago::ShippingMethodDecorator) unless Spree::ShippingMethod.included_modules.include?(Vpago::ShippingMethodDecorator)

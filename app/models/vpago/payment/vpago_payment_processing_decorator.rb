@@ -2,7 +2,7 @@ module Vpago
   module Payment
     module VpagoPaymentProcessingDecorator
       def process!
-        if is_vpago_type?
+        if vpago_type?
           process_with_vpago_gateway
         else
           super
@@ -10,7 +10,7 @@ module Vpago
       end
 
       def cancel!
-        if is_vpago_type?
+        if vpago_type?
           cancel_with_vpago_gateway
         else
           super
@@ -18,9 +18,11 @@ module Vpago
       end
 
       # private
-      def is_vpago_type?
-        payment_method.is_a?(Spree::Gateway::Payway) || payment_method.is_a?(Spree::Gateway::WingSdk) || 
-        payment_method.is_a?(Spree::Gateway::Acleda) || payment_method.is_a?(Spree::Gateway::PaywayV2)
+      def vpago_type?
+        payment_method.is_a?(Spree::Gateway::Payway) ||
+          payment_method.is_a?(Spree::Gateway::WingSdk) ||
+          payment_method.is_a?(Spree::Gateway::Acleda) ||
+          payment_method.is_a?(Spree::Gateway::PaywayV2)
       end
 
       def cancel_with_vpago_gateway

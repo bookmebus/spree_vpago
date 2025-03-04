@@ -66,10 +66,10 @@ module Vpago
       end
 
       def app_checkout
-        is_app_checkout? ? 'yes' : 'no'
+        app_checkout? ? 'yes' : 'no'
       end
 
-      def is_app_checkout?
+      def app_checkout?
         return false if @options[:app_checkout].blank?
 
         @options[:app_checkout]
@@ -92,14 +92,14 @@ module Vpago
 
       # null, hosted_view, checkout, qr
       def view_type
-        is_app_checkout? ? 'hosted_view' : nil
+        app_checkout? ? 'hosted_view' : nil
       end
 
       def payment_option
         card_option = @payment.payment_method.preferences[:payment_option]
 
-        return 'abapay_deeplink' if is_app_checkout? && card_option == 'abapay'
-        return 'abapay_khqr' if !is_app_checkout? && card_option == 'abapay_khqr_deeplink'
+        return 'abapay_deeplink' if app_checkout? && card_option == 'abapay'
+        return 'abapay_khqr' if !app_checkout? && card_option == 'abapay_khqr_deeplink'
 
         Vpago::Payway::CARD_TYPES.index(card_option).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : card_option
       end
@@ -135,7 +135,7 @@ module Vpago
         return nil unless continue_success_url.present?
 
         uri = URI.parse(continue_success_url)
-        uri.scheme = scheme if is_app_checkout? && scheme.present?
+        uri.scheme = scheme if app_checkout? && scheme.present?
         uri.to_s
       end
 

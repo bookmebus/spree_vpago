@@ -3,7 +3,6 @@ require 'faraday'
 module Vpago
   module PaywayV2
     class PreAuthCanceler < PreAuthCompleter
-      
       # override
       def pre_auth_response
         conn = Faraday::Connection.new do |faraday|

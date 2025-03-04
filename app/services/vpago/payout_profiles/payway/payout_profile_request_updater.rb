@@ -4,7 +4,7 @@ module Vpago
       class PayoutProfileRequestUpdater < BasePayoutProfileRequest
         # override
         def request_path
-          "api/merchant-portal/merchant-access/whitelist-account/update-whitelist-status"
+          'api/merchant-portal/merchant-access/whitelist-account/update-whitelist-status'
         end
 
         def call
