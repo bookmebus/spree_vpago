@@ -33,11 +33,15 @@ module Vpago
       end
 
       def firestore_reference
-        current_date = Time.current.strftime('%Y-%m-%d')
-        firestore.col('statuses')
-                 .doc('cart')
-                 .col(current_date)
-                 .doc(order.number)
+        order_created_date = order.created_at.strftime('%Y-%m-%d')
+        @firestore_reference ||= firestore.col('statuses')
+                                          .doc('cart')
+                                          .col(order_created_date)
+                                          .doc(order.number)
+      end
+
+      def document_reference_path
+        firestore_reference.path.split('/documents').last
       end
 
       def firestore

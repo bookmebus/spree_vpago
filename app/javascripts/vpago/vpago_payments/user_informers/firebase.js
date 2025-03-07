@@ -3,7 +3,7 @@ import { getFirestore, doc, onSnapshot, setDoc } from "firebase/firestore";
 
 async function listenToProcessingState({
   firebaseConfigs,
-  orderNumber,
+  documentReferencePath,
   onPaymentIsProcessing,
   onOrderIsProcessing,
   onOrderIsCompleted,
@@ -15,9 +15,7 @@ async function listenToProcessingState({
   const app = initializeApp(firebaseConfigs);
   const db = getFirestore(app);
 
-  const currentDate = new Date().toISOString().split("T")[0];
-
-  const documentRef = doc(db, "statuses", "cart", currentDate, orderNumber);
+  const documentRef = doc(db, documentReferencePath);
   await setDoc(documentRef, { listening: true }, { merge: true });
 
   onSnapshot(documentRef, (doc) => {

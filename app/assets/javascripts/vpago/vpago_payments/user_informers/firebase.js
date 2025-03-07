@@ -1142,7 +1142,7 @@ var VpagoPayments = (() => {
     return (component === null || component === void 0 ? void 0 : component.type) === "VERSION";
   }
   var name$q = "@firebase/app";
-  var version$1 = "0.10.18";
+  var version$1 = "0.11.1";
   var logger = new Logger("@firebase/app");
   var name$p = "@firebase/app-compat";
   var name$o = "@firebase/analytics-compat";
@@ -1170,7 +1170,7 @@ var VpagoPayments = (() => {
   var name$2 = "@firebase/vertexai";
   var name$1 = "@firebase/firestore-compat";
   var name = "firebase";
-  var version = "11.2.0";
+  var version = "11.3.1";
   var DEFAULT_ENTRY_NAME2 = "[DEFAULT]";
   var PLATFORM_LOG_STRING = {
     [name$q]: "fire-core",
@@ -1234,6 +1234,12 @@ var VpagoPayments = (() => {
       void heartbeatController.triggerHeartbeat();
     }
     return app.container.getProvider(name3);
+  }
+  function _isFirebaseServerApp(obj) {
+    if (obj === null || obj === void 0) {
+      return false;
+    }
+    return obj.settings !== void 0;
   }
   var ERRORS = {
     [
@@ -1491,7 +1497,7 @@ var VpagoPayments = (() => {
     return `${app.name}!${app.options.appId}`;
   }
   var MAX_HEADER_BYTES = 1024;
-  var STORED_HEARTBEAT_RETENTION_MAX_MILLIS = 30 * 24 * 60 * 60 * 1e3;
+  var MAX_NUM_STORED_HEARTBEATS = 30;
   var HeartbeatServiceImpl = class {
     constructor(container) {
       this.container = container;
@@ -1526,12 +1532,11 @@ var VpagoPayments = (() => {
           return;
         } else {
           this._heartbeatsCache.heartbeats.push({ date, agent });
+          if (this._heartbeatsCache.heartbeats.length > MAX_NUM_STORED_HEARTBEATS) {
+            const earliestHeartbeatIdx = getEarliestHeartbeatIdx(this._heartbeatsCache.heartbeats);
+            this._heartbeatsCache.heartbeats.splice(earliestHeartbeatIdx, 1);
+          }
         }
-        this._heartbeatsCache.heartbeats = this._heartbeatsCache.heartbeats.filter((singleDateHeartbeat) => {
-          const hbTimestamp = new Date(singleDateHeartbeat.date).valueOf();
-          const now = Date.now();
-          return now - hbTimestamp <= STORED_HEARTBEAT_RETENTION_MAX_MILLIS;
-        });
         return this._storage.overwrite(this._heartbeatsCache);
       } catch (e) {
         logger.warn(e);
@@ -1669,6 +1674,20 @@ var VpagoPayments = (() => {
       JSON.stringify({ version: 2, heartbeats: heartbeatsCache })
     ).length;
   }
+  function getEarliestHeartbeatIdx(heartbeats) {
+    if (heartbeats.length === 0) {
+      return -1;
+    }
+    let earliestHeartbeatIdx = 0;
+    let earliestHeartbeatDate = heartbeats[0].date;
+    for (let i = 1; i < heartbeats.length; i++) {
+      if (heartbeats[i].date < earliestHeartbeatDate) {
+        earliestHeartbeatDate = heartbeats[i].date;
+        earliestHeartbeatIdx = i;
+      }
+    }
+    return earliestHeartbeatIdx;
+  }
   function registerCoreComponents(variant) {
     _registerComponent(new Component(
       "platform-logger",
@@ -1690,7 +1709,7 @@ var VpagoPayments = (() => {
 
   // node_modules/firebase/app/dist/esm/index.esm.js
   var name2 = "firebase";
-  var version2 = "11.2.0";
+  var version2 = "11.3.1";
   registerVersion(name2, version2, "app");
 
   // node_modules/@firebase/webchannel-wrapper/dist/bloom-blob/esm/bloom_blob_es2018.js
@@ -1922,8 +1941,8 @@ var VpagoPayments = (() => {
       }) : new t([f | 0], 0 > f ? -1 : 0);
     }
     function v2(f) {
-      if (isNaN(f) || !isFinite(f)) return w2;
-      if (0 > f) return x(v2(-f));
+      if (isNaN(f) || !isFinite(f)) return w;
+      if (0 > f) return x2(v2(-f));
       for (var a = [], c = 1, d = 0; f >= c; d++) a[d] = f / c | 0, c *= 4294967296;
       return new t(a, 0);
     }
@@ -1931,18 +1950,18 @@ var VpagoPayments = (() => {
       if (0 == f.length) throw Error("number format error: empty string");
       a = a || 10;
       if (2 > a || 36 < a) throw Error("radix out of range: " + a);
-      if ("-" == f.charAt(0)) return x(y(f.substring(1), a));
+      if ("-" == f.charAt(0)) return x2(y(f.substring(1), a));
       if (0 <= f.indexOf("-")) throw Error('number format error: interior "-" character');
-      for (var c = v2(Math.pow(a, 8)), d = w2, e = 0; e < f.length; e += 8) {
+      for (var c = v2(Math.pow(a, 8)), d = w, e = 0; e < f.length; e += 8) {
         var g = Math.min(8, f.length - e), b2 = parseInt(f.substring(e, e + g), a);
         8 > g ? (g = v2(Math.pow(a, g)), d = d.j(g).add(v2(b2))) : (d = d.j(c), d = d.add(v2(b2)));
       }
       return d;
     }
-    var w2 = u(0), z = u(1), A = u(16777216);
+    var w = u(0), z = u(1), A = u(16777216);
     h = t.prototype;
     h.m = function() {
-      if (B(this)) return -x(this).m();
+      if (B2(this)) return -x2(this).m();
       for (var f = 0, a = 1, c = 0; c < this.g.length; c++) {
         var d = this.i(c);
         f += (0 <= d ? d : 4294967296 + d) * a;
@@ -1954,10 +1973,10 @@ var VpagoPayments = (() => {
       f = f || 10;
       if (2 > f || 36 < f) throw Error("radix out of range: " + f);
       if (C2(this)) return "0";
-      if (B(this)) return "-" + x(this).toString(f);
+      if (B2(this)) return "-" + x2(this).toString(f);
       for (var a = v2(Math.pow(f, 6)), c = this, d = ""; ; ) {
         var e = D2(c, a).g;
-        c = F(c, e.j(a));
+        c = F2(c, e.j(a));
         var g = ((0 < c.g.length ? c.g[0] : c.h) >>> 0).toString(f);
         c = e;
         if (C2(c)) return g + d;
@@ -1973,19 +1992,19 @@ var VpagoPayments = (() => {
       for (var a = 0; a < f.g.length; a++) if (0 != f.g[a]) return false;
       return true;
     }
-    function B(f) {
+    function B2(f) {
       return -1 == f.h;
     }
     h.l = function(f) {
-      f = F(this, f);
-      return B(f) ? -1 : C2(f) ? 0 : 1;
+      f = F2(this, f);
+      return B2(f) ? -1 : C2(f) ? 0 : 1;
     };
-    function x(f) {
+    function x2(f) {
       for (var a = f.g.length, c = [], d = 0; d < a; d++) c[d] = ~f.g[d];
       return new t(c, ~f.h).add(z);
     }
     h.abs = function() {
-      return B(this) ? x(this) : this;
+      return B2(this) ? x2(this) : this;
     };
     h.add = function(f) {
       for (var a = Math.max(this.g.length, f.g.length), c = [], d = 0, e = 0; e <= a; e++) {
@@ -1997,67 +2016,67 @@ var VpagoPayments = (() => {
       }
       return new t(c, c[c.length - 1] & -2147483648 ? -1 : 0);
     };
-    function F(f, a) {
-      return f.add(x(a));
+    function F2(f, a) {
+      return f.add(x2(a));
     }
     h.j = function(f) {
-      if (C2(this) || C2(f)) return w2;
-      if (B(this)) return B(f) ? x(this).j(x(f)) : x(x(this).j(f));
-      if (B(f)) return x(this.j(x(f)));
+      if (C2(this) || C2(f)) return w;
+      if (B2(this)) return B2(f) ? x2(this).j(x2(f)) : x2(x2(this).j(f));
+      if (B2(f)) return x2(this.j(x2(f)));
       if (0 > this.l(A) && 0 > f.l(A)) return v2(this.m() * f.m());
       for (var a = this.g.length + f.g.length, c = [], d = 0; d < 2 * a; d++) c[d] = 0;
       for (d = 0; d < this.g.length; d++) for (var e = 0; e < f.g.length; e++) {
         var g = this.i(d) >>> 16, b2 = this.i(d) & 65535, r = f.i(e) >>> 16, E = f.i(e) & 65535;
         c[2 * d + 2 * e] += b2 * E;
-        G(c, 2 * d + 2 * e);
+        G2(c, 2 * d + 2 * e);
         c[2 * d + 2 * e + 1] += g * E;
-        G(c, 2 * d + 2 * e + 1);
+        G2(c, 2 * d + 2 * e + 1);
         c[2 * d + 2 * e + 1] += b2 * r;
-        G(c, 2 * d + 2 * e + 1);
+        G2(c, 2 * d + 2 * e + 1);
         c[2 * d + 2 * e + 2] += g * r;
-        G(c, 2 * d + 2 * e + 2);
+        G2(c, 2 * d + 2 * e + 2);
       }
       for (d = 0; d < a; d++) c[d] = c[2 * d + 1] << 16 | c[2 * d];
       for (d = a; d < 2 * a; d++) c[d] = 0;
       return new t(c, 0);
     };
-    function G(f, a) {
+    function G2(f, a) {
       for (; (f[a] & 65535) != f[a]; ) f[a + 1] += f[a] >>> 16, f[a] &= 65535, a++;
     }
-    function H2(f, a) {
+    function H(f, a) {
       this.g = f;
       this.h = a;
     }
     function D2(f, a) {
       if (C2(a)) throw Error("division by zero");
-      if (C2(f)) return new H2(w2, w2);
-      if (B(f)) return a = D2(x(f), a), new H2(x(a.g), x(a.h));
-      if (B(a)) return a = D2(f, x(a)), new H2(x(a.g), a.h);
+      if (C2(f)) return new H(w, w);
+      if (B2(f)) return a = D2(x2(f), a), new H(x2(a.g), x2(a.h));
+      if (B2(a)) return a = D2(f, x2(a)), new H(x2(a.g), a.h);
       if (30 < f.g.length) {
-        if (B(f) || B(a)) throw Error("slowDivide_ only works with positive integers.");
+        if (B2(f) || B2(a)) throw Error("slowDivide_ only works with positive integers.");
         for (var c = z, d = a; 0 >= d.l(f); ) c = I(c), d = I(d);
-        var e = J2(c, 1), g = J2(d, 1);
-        d = J2(d, 2);
-        for (c = J2(c, 2); !C2(d); ) {
+        var e = J(c, 1), g = J(d, 1);
+        d = J(d, 2);
+        for (c = J(c, 2); !C2(d); ) {
           var b2 = g.add(d);
           0 >= b2.l(f) && (e = e.add(c), g = b2);
-          d = J2(d, 1);
-          c = J2(c, 1);
+          d = J(d, 1);
+          c = J(c, 1);
         }
-        a = F(f, e.j(a));
-        return new H2(e, a);
+        a = F2(f, e.j(a));
+        return new H(e, a);
       }
-      for (e = w2; 0 <= f.l(a); ) {
+      for (e = w; 0 <= f.l(a); ) {
         c = Math.max(1, Math.floor(f.m() / a.m()));
         d = Math.ceil(Math.log(c) / Math.LN2);
         d = 48 >= d ? 1 : Math.pow(2, d - 48);
         g = v2(c);
-        for (b2 = g.j(a); B(b2) || 0 < b2.l(f); ) c -= d, g = v2(c), b2 = g.j(a);
+        for (b2 = g.j(a); B2(b2) || 0 < b2.l(f); ) c -= d, g = v2(c), b2 = g.j(a);
         C2(g) && (g = z);
         e = e.add(g);
-        f = F(f, b2);
+        f = F2(f, b2);
       }
-      return new H2(e, f);
+      return new H(e, f);
     }
     h.A = function(f) {
       return D2(this, f).h;
@@ -2078,7 +2097,7 @@ var VpagoPayments = (() => {
       for (var a = f.g.length + 1, c = [], d = 0; d < a; d++) c[d] = f.i(d) << 1 | f.i(d - 1) >>> 31;
       return new t(c, f.h);
     }
-    function J2(f, a) {
+    function J(f, a) {
       var c = a >> 5;
       a %= 32;
       for (var d = f.g.length - c, e = [], g = 0; g < d; g++) e[g] = 0 < a ? f.i(g + c) >>> a | f.i(g + c + 1) << 32 - a : f.i(g + c);
@@ -2325,9 +2344,9 @@ var VpagoPayments = (() => {
         this.next = this.g = this.h = null;
       }
     }
-    let x, y = false, za = new Aa(), Ea = () => {
+    let x2, y = false, za = new Aa(), Ea = () => {
       const a = k.Promise.resolve(void 0);
-      x = () => {
+      x2 = () => {
         a.then(Da);
       };
     };
@@ -2566,7 +2585,7 @@ var VpagoPayments = (() => {
     E.prototype.removeEventListener = function(a, b2, c, d) {
       Ya(this, a, b2, c, d);
     };
-    function F(a, b2) {
+    function F2(a, b2) {
       var c, d = a.F;
       if (d) for (c = []; d; d = d.F) c.push(d);
       a = a.M;
@@ -2653,12 +2672,12 @@ var VpagoPayments = (() => {
         this.g && (k.clearTimeout(this.g), this.g = null, this.i = false, this.h = null);
       }
     }
-    function G(a) {
+    function G2(a) {
       z.call(this);
       this.h = a;
       this.g = {};
     }
-    r(G, z);
+    r(G2, z);
     var fb = [];
     function gb(a) {
       qa(a.g, function(b2, c) {
@@ -2666,11 +2685,11 @@ var VpagoPayments = (() => {
       }, a);
       a.g = {};
     }
-    G.prototype.N = function() {
-      G.aa.N.call(this);
+    G2.prototype.N = function() {
+      G2.aa.N.call(this);
       gb(this);
     };
-    G.prototype.handleEvent = function() {
+    G2.prototype.handleEvent = function() {
       throw Error("EventHandler.handleEvent not implemented");
     };
     var hb = k.JSON.stringify;
@@ -2691,7 +2710,7 @@ var VpagoPayments = (() => {
     }
     function mb() {
     }
-    var H2 = { OPEN: "a", kb: "b", Ja: "c", wb: "d" };
+    var H = { OPEN: "a", kb: "b", Ja: "c", wb: "d" };
     function nb() {
       A.call(this, "d");
     }
@@ -2709,9 +2728,9 @@ var VpagoPayments = (() => {
       A.call(this, I.La, a);
     }
     r(rb, A);
-    function J2(a) {
+    function J(a) {
       const b2 = qb();
-      F(b2, new rb(b2));
+      F2(b2, new rb(b2));
     }
     I.STAT_EVENT = "statevent";
     function sb(a, b2) {
@@ -2719,9 +2738,9 @@ var VpagoPayments = (() => {
       this.stat = b2;
     }
     r(sb, A);
-    function K(a) {
+    function K2(a) {
       const b2 = qb();
-      F(b2, new sb(b2, a));
+      F2(b2, new sb(b2, a));
     }
     I.Ma = "timingevent";
     function tb(a, b2) {
@@ -2750,8 +2769,8 @@ var VpagoPayments = (() => {
             if (1 < l.length) {
               var v2 = l[0];
               l = l[1];
-              var w2 = v2.split("_");
-              g = 2 <= w2.length && "type" == w2[1] ? g + (v2 + "=" + l + "&") : g + (v2 + "=redacted&");
+              var w = v2.split("_");
+              g = 2 <= w.length && "type" == w[1] ? g + (v2 + "=" + l + "&") : g + (v2 + "=redacted&");
             }
           }
         } else g = null;
@@ -2811,12 +2830,12 @@ var VpagoPayments = (() => {
       return {};
     };
     Cb = new Db();
-    function M(a, b2, c, d) {
+    function M2(a, b2, c, d) {
       this.j = a;
       this.i = b2;
       this.l = c;
       this.R = d || 1;
-      this.U = new G(this);
+      this.U = new G2(this);
       this.I = 45e3;
       this.H = null;
       this.o = false;
@@ -2840,7 +2859,7 @@ var VpagoPayments = (() => {
     var Fb = {}, Gb = {};
     function Hb(a, b2, c) {
       a.L = 1;
-      a.v = Ib(N(b2));
+      a.v = Ib(N2(b2));
       a.m = c;
       a.P = true;
       Jb(a, null);
@@ -2848,7 +2867,7 @@ var VpagoPayments = (() => {
     function Jb(a, b2) {
       a.F = Date.now();
       Kb(a);
-      a.A = N(a.v);
+      a.A = N2(a.v);
       var c = a.A, d = a.R;
       Array.isArray(d) || (d = [String(d)]);
       Lb(c.i, "t", d);
@@ -2874,22 +2893,22 @@ var VpagoPayments = (() => {
         a.m,
         b2
       )) : (a.u = "GET", a.g.ea(a.A, a.u, null, b2));
-      J2();
+      J();
       wb(a.i, a.u, a.A, a.l, a.R, a.m);
     }
-    M.prototype.ca = function(a) {
+    M2.prototype.ca = function(a) {
       a = a.target;
       const b2 = this.M;
       b2 && 3 == P(a) ? b2.j() : this.Y(a);
     };
-    M.prototype.Y = function(a) {
+    M2.prototype.Y = function(a) {
       try {
         if (a == this.g) a: {
-          const w2 = P(this.g);
+          const w = P(this.g);
           var b2 = this.g.Ba();
-          const O = this.g.Z();
-          if (!(3 > w2) && (3 != w2 || this.g && (this.h.h || this.g.oa() || Nb(this.g)))) {
-            this.J || 4 != w2 || 7 == b2 || (8 == b2 || 0 >= O ? J2(3) : J2(2));
+          const O2 = this.g.Z();
+          if (!(3 > w) && (3 != w || this.g && (this.h.h || this.g.oa() || Nb(this.g)))) {
+            this.J || 4 != w || 7 == b2 || (8 == b2 || 0 >= O2 ? J(3) : J(2));
             Ob(this);
             var c = this.g.Z();
             this.X = c;
@@ -2899,7 +2918,7 @@ var VpagoPayments = (() => {
               var e = d.length, f = 4 == P(this.g);
               if (!this.h.i) {
                 if ("undefined" === typeof TextDecoder) {
-                  Q(this);
+                  Q2(this);
                   Qb(this);
                   var g = "";
                   break b;
@@ -2913,7 +2932,7 @@ var VpagoPayments = (() => {
               g = this.h.g;
             } else g = this.g.oa();
             this.o = 200 == c;
-            xb(this.i, this.u, this.A, this.l, this.R, w2, c);
+            xb(this.i, this.u, this.A, this.l, this.R, w, c);
             if (this.o) {
               if (this.T && !this.K) {
                 b: {
@@ -2930,42 +2949,42 @@ var VpagoPayments = (() => {
                 else {
                   this.o = false;
                   this.s = 3;
-                  K(12);
-                  Q(this);
+                  K2(12);
+                  Q2(this);
                   Qb(this);
                   break a;
                 }
               }
               if (this.P) {
                 c = true;
-                let B;
-                for (; !this.J && this.C < g.length; ) if (B = Sb(this, g), B == Gb) {
-                  4 == w2 && (this.s = 4, K(14), c = false);
+                let B2;
+                for (; !this.J && this.C < g.length; ) if (B2 = Sb(this, g), B2 == Gb) {
+                  4 == w && (this.s = 4, K2(14), c = false);
                   L(this.i, this.l, null, "[Incomplete Response]");
                   break;
-                } else if (B == Fb) {
+                } else if (B2 == Fb) {
                   this.s = 4;
-                  K(15);
+                  K2(15);
                   L(this.i, this.l, g, "[Invalid Chunk]");
                   c = false;
                   break;
-                } else L(this.i, this.l, B, null), Rb(this, B);
+                } else L(this.i, this.l, B2, null), Rb(this, B2);
                 Pb(this) && 0 != this.C && (this.h.g = this.h.g.slice(this.C), this.C = 0);
-                4 != w2 || 0 != g.length || this.h.h || (this.s = 1, K(16), c = false);
+                4 != w || 0 != g.length || this.h.h || (this.s = 1, K2(16), c = false);
                 this.o = this.o && c;
-                if (!c) L(this.i, this.l, g, "[Invalid Chunked Response]"), Q(this), Qb(this);
+                if (!c) L(this.i, this.l, g, "[Invalid Chunked Response]"), Q2(this), Qb(this);
                 else if (0 < g.length && !this.W) {
                   this.W = true;
                   var v2 = this.j;
-                  v2.g == this && v2.ba && !v2.M && (v2.j.info("Great, no buffering proxy detected. Bytes received: " + g.length), Tb(v2), v2.M = true, K(11));
+                  v2.g == this && v2.ba && !v2.M && (v2.j.info("Great, no buffering proxy detected. Bytes received: " + g.length), Tb(v2), v2.M = true, K2(11));
                 }
               } else L(this.i, this.l, g, null), Rb(this, g);
-              4 == w2 && Q(this);
-              this.o && !this.J && (4 == w2 ? Ub(this.j, this) : (this.o = false, Kb(this)));
-            } else Vb(this.g), 400 == c && 0 < g.indexOf("Unknown SID") ? (this.s = 3, K(12)) : (this.s = 0, K(13)), Q(this), Qb(this);
+              4 == w && Q2(this);
+              this.o && !this.J && (4 == w ? Ub(this.j, this) : (this.o = false, Kb(this)));
+            } else Vb(this.g), 400 == c && 0 < g.indexOf("Unknown SID") ? (this.s = 3, K2(12)) : (this.s = 0, K2(13)), Q2(this), Qb(this);
           }
         }
-      } catch (w2) {
+      } catch (w) {
       } finally {
       }
     };
@@ -2983,9 +3002,9 @@ var VpagoPayments = (() => {
       a.C = d + c;
       return b2;
     }
-    M.prototype.cancel = function() {
+    M2.prototype.cancel = function() {
       this.J = true;
-      Q(this);
+      Q2(this);
     };
     function Kb(a) {
       a.S = Date.now() + a.I;
@@ -2998,15 +3017,15 @@ var VpagoPayments = (() => {
     function Ob(a) {
       a.B && (k.clearTimeout(a.B), a.B = null);
     }
-    M.prototype.ba = function() {
+    M2.prototype.ba = function() {
       this.B = null;
       const a = Date.now();
-      0 <= a - this.S ? (zb(this.i, this.A), 2 != this.L && (J2(), K(17)), Q(this), this.s = 2, Qb(this)) : Wb(this, this.S - a);
+      0 <= a - this.S ? (zb(this.i, this.A), 2 != this.L && (J(), K2(17)), Q2(this), this.s = 2, Qb(this)) : Wb(this, this.S - a);
     };
     function Qb(a) {
       0 == a.j.G || a.J || Ub(a.j, a);
     }
-    function Q(a) {
+    function Q2(a) {
       Ob(a);
       var b2 = a.M;
       b2 && "function" == typeof b2.ma && b2.ma();
@@ -3031,7 +3050,7 @@ var VpagoPayments = (() => {
                   if (c.g) if (c.g.F + 3e3 < a.F) Yb(c), Zb(c);
                   else break a;
                   $b(c);
-                  K(18);
+                  K2(18);
                 }
               }
               else c.za = e[1], 0 < c.za - c.T && 37500 > e[2] && c.F && 0 == c.v && !c.C && (c.C = ub(p(c.Za, c), 6e3));
@@ -3052,20 +3071,20 @@ var VpagoPayments = (() => {
               c.ia = l[2];
               const v2 = l[3];
               null != v2 && (c.la = v2, c.j.info("VER=" + c.la));
-              const w2 = l[4];
-              null != w2 && (c.Aa = w2, c.j.info("SVER=" + c.Aa));
-              const O = l[5];
-              null != O && "number" === typeof O && 0 < O && (d = 1.5 * O, c.L = d, c.j.info("backChannelRequestTimeoutMs_=" + d));
+              const w = l[4];
+              null != w && (c.Aa = w, c.j.info("SVER=" + c.Aa));
+              const O2 = l[5];
+              null != O2 && "number" === typeof O2 && 0 < O2 && (d = 1.5 * O2, c.L = d, c.j.info("backChannelRequestTimeoutMs_=" + d));
               d = c;
-              const B = a.g;
-              if (B) {
-                const ya = B.g ? B.g.getResponseHeader("X-Client-Wire-Protocol") : null;
+              const B2 = a.g;
+              if (B2) {
+                const ya = B2.g ? B2.g.getResponseHeader("X-Client-Wire-Protocol") : null;
                 if (ya) {
                   var f = d.h;
                   f.g || -1 == ya.indexOf("spdy") && -1 == ya.indexOf("quic") && -1 == ya.indexOf("h2") || (f.j = f.l, f.g = /* @__PURE__ */ new Set(), f.h && (bc(f, f.h), f.h = null));
                 }
                 if (d.D) {
-                  const db = B.g ? B.g.getResponseHeader("X-HTTP-Session-Id") : null;
+                  const db = B2.g ? B2.g.getResponseHeader("X-HTTP-Session-Id") : null;
                   db && (d.ya = db, S2(d.I, d.D, db));
                 }
               }
@@ -3087,7 +3106,7 @@ var VpagoPayments = (() => {
             else 3 == c.G && ("stop" == l[0] || "close" == l[0] ? "stop" == l[0] ? R(c, 7) : gc(c) : "noop" != l[0] && c.l && c.l.ta(l), c.v = 0);
           }
         }
-        J2(4);
+        J(4);
       } catch (l) {
       }
     }
@@ -3218,7 +3237,7 @@ var VpagoPayments = (() => {
       (c = this.m) && a.push("#", vc(c, zc));
       return a.join("");
     };
-    function N(a) {
+    function N2(a) {
       return new T(a);
     }
     function qc(a, b2, c) {
@@ -3258,14 +3277,14 @@ var VpagoPayments = (() => {
       this.i = a || null;
       this.j = !!b2;
     }
-    function U(a) {
+    function U2(a) {
       a.g || (a.g = /* @__PURE__ */ new Map(), a.h = 0, a.i && pc(a.i, function(b2, c) {
         a.add(decodeURIComponent(b2.replace(/\+/g, " ")), c);
       }));
     }
     h = sc.prototype;
     h.add = function(a, b2) {
-      U(this);
+      U2(this);
       this.i = null;
       a = V(this, a);
       var c = this.g.get(a);
@@ -3275,17 +3294,17 @@ var VpagoPayments = (() => {
       return this;
     };
     function Dc(a, b2) {
-      U(a);
+      U2(a);
       b2 = V(a, b2);
       a.g.has(b2) && (a.i = null, a.h -= a.g.get(b2).length, a.g.delete(b2));
     }
     function Ec(a, b2) {
-      U(a);
+      U2(a);
       b2 = V(a, b2);
       return a.g.has(b2);
     }
     h.forEach = function(a, b2) {
-      U(this);
+      U2(this);
       this.g.forEach(function(c, d) {
         c.forEach(function(e) {
           a.call(b2, e, d, this);
@@ -3293,7 +3312,7 @@ var VpagoPayments = (() => {
       }, this);
     };
     h.na = function() {
-      U(this);
+      U2(this);
       const a = Array.from(this.g.values()), b2 = Array.from(this.g.keys()), c = [];
       for (let d = 0; d < b2.length; d++) {
         const e = a[d];
@@ -3302,7 +3321,7 @@ var VpagoPayments = (() => {
       return c;
     };
     h.V = function(a) {
-      U(this);
+      U2(this);
       let b2 = [];
       if ("string" === typeof a) Ec(this, a) && (b2 = b2.concat(this.g.get(V(this, a))));
       else {
@@ -3312,7 +3331,7 @@ var VpagoPayments = (() => {
       return b2;
     };
     h.set = function(a, b2) {
-      U(this);
+      U2(this);
       this.i = null;
       a = V(this, a);
       Ec(this, a) && (this.h -= this.g.get(a).length);
@@ -3350,7 +3369,7 @@ var VpagoPayments = (() => {
       return b2;
     }
     function Ac(a, b2) {
-      b2 && !a.j && (U(a), a.i = null, a.g.forEach(function(c, d) {
+      b2 && !a.j && (U2(a), a.i = null, a.g.forEach(function(c, d) {
         var e = d.toLowerCase();
         d != e && (Dc(this, d), Lb(this, e, c));
       }, a));
@@ -3601,10 +3620,10 @@ var VpagoPayments = (() => {
       Vc(a);
     }
     function Uc(a) {
-      a.A || (a.A = true, F(a, "complete"), F(a, "error"));
+      a.A || (a.A = true, F2(a, "complete"), F2(a, "error"));
     }
     h.abort = function(a) {
-      this.g && this.h && (this.h = false, this.j = true, this.g.abort(), this.j = false, this.m = a || 7, F(this, "complete"), F(this, "abort"), Vc(this));
+      this.g && this.h && (this.h = false, this.j = true, this.g.abort(), this.j = false, this.m = a || 7, F2(this, "complete"), F2(this, "abort"), Vc(this));
     };
     h.N = function() {
       this.g && (this.h && (this.h = false, this.j = true, this.g.abort(), this.j = false), Vc(this, true));
@@ -3619,7 +3638,7 @@ var VpagoPayments = (() => {
     function Wc(a) {
       if (a.h && "undefined" != typeof fa && (!a.v[1] || 4 != P(a) || 2 != a.Z())) {
         if (a.u && 4 == P(a)) bb(a.Ea, 0, a);
-        else if (F(a, "readystatechange"), 4 == P(a)) {
+        else if (F2(a, "readystatechange"), 4 == P(a)) {
           a.h = false;
           try {
             const g = a.Z();
@@ -3646,7 +3665,7 @@ var VpagoPayments = (() => {
               }
               c = d;
             }
-            if (c) F(a, "complete"), F(a, "success");
+            if (c) F2(a, "complete"), F2(a, "success");
             else {
               a.m = 6;
               try {
@@ -3670,7 +3689,7 @@ var VpagoPayments = (() => {
         } : null;
         a.g = null;
         a.v = null;
-        b2 || F(a, "ready");
+        b2 || F2(a, "ready");
         try {
           c.onreadystatechange = d;
         } catch (e) {
@@ -3791,7 +3810,7 @@ var VpagoPayments = (() => {
     h.la = 8;
     h.G = 1;
     h.connect = function(a, b2, c, d) {
-      K(0);
+      K2(0);
       this.W = a;
       this.H = b2 || {};
       c && void 0 !== d && (this.H.OSID = c, this.H.OAID = d);
@@ -3802,14 +3821,14 @@ var VpagoPayments = (() => {
     function gc(a) {
       Zc(a);
       if (3 == a.G) {
-        var b2 = a.U++, c = N(a.I);
+        var b2 = a.U++, c = N2(a.I);
         S2(c, "SID", a.K);
         S2(c, "RID", b2);
         S2(c, "TYPE", "terminate");
         $c(a, c);
-        b2 = new M(a, a.j, b2);
+        b2 = new M2(a, a.j, b2);
         b2.L = 2;
-        b2.v = Ib(N(c));
+        b2.v = Ib(N2(c));
         c = false;
         if (k.navigator && k.navigator.sendBeacon) try {
           c = k.navigator.sendBeacon(b2.v.toString(), "");
@@ -3836,8 +3855,8 @@ var VpagoPayments = (() => {
       if (!jc(a.h) && !a.s) {
         a.s = true;
         var b2 = a.Ga;
-        x || Ea();
-        y || (x(), y = true);
+        x2 || Ea();
+        y || (x2(), y = true);
         za.add(b2, a);
         a.B = 0;
       }
@@ -3855,7 +3874,7 @@ var VpagoPayments = (() => {
         if (!a) {
           this.U = Math.floor(1e5 * Math.random());
           a = this.U++;
-          const e = new M(this, this.j, a);
+          const e = new M2(this, this.j, a);
           let f = this.o;
           this.S && (f ? (f = sa(f), ua(f, this.S)) : f = this.S);
           null !== this.m || this.O || (e.H = f, f = null);
@@ -3885,7 +3904,7 @@ var VpagoPayments = (() => {
           }
           else b2 = 1e3;
           b2 = dd(this, e, b2);
-          c = N(this.I);
+          c = N2(this.I);
           S2(c, "RID", a);
           S2(c, "CVER", 22);
           this.D && S2(c, "X-HTTP-Session-Id", this.D);
@@ -3901,13 +3920,13 @@ var VpagoPayments = (() => {
     function ed(a, b2) {
       var c;
       b2 ? c = b2.l : c = a.U++;
-      const d = N(a.I);
+      const d = N2(a.I);
       S2(d, "SID", a.K);
       S2(d, "RID", c);
       S2(d, "AID", a.T);
       $c(a, d);
       a.m && a.o && Pc(d, a.m, a.o);
-      c = new M(a, a.j, c, a.B + 1);
+      c = new M2(a, a.j, c, a.B + 1);
       null === a.m && (c.H = a.o);
       b2 && (a.i = b2.D.concat(a.i));
       b2 = dd(a, c, 1e3);
@@ -3940,7 +3959,7 @@ var VpagoPayments = (() => {
             if (0 > l) f = Math.max(0, e[q].g - 100), m = false;
             else try {
               Ic(v2, g, "req" + l + "_");
-            } catch (w2) {
+            } catch (w) {
               d && d(v2);
             }
           }
@@ -3958,8 +3977,8 @@ var VpagoPayments = (() => {
       if (!a.g && !a.u) {
         a.Y = 1;
         var b2 = a.Fa;
-        x || Ea();
-        y || (x(), y = true);
+        x2 || Ea();
+        y || (x2(), y = true);
         za.add(b2, a);
         a.v = 0;
       }
@@ -3981,16 +4000,16 @@ var VpagoPayments = (() => {
       }
     };
     h.ab = function() {
-      this.A && (this.A = null, this.j.info("BP detection timeout reached."), this.j.info("Buffering proxy detected and switch to long-polling!"), this.F = false, this.M = true, K(10), Zb(this), fd(this));
+      this.A && (this.A = null, this.j.info("BP detection timeout reached."), this.j.info("Buffering proxy detected and switch to long-polling!"), this.F = false, this.M = true, K2(10), Zb(this), fd(this));
     };
     function Tb(a) {
       null != a.A && (k.clearTimeout(a.A), a.A = null);
     }
     function fd(a) {
-      a.g = new M(a, a.j, "rpc", a.Y);
+      a.g = new M2(a, a.j, "rpc", a.Y);
       null === a.m && (a.g.H = a.o);
       a.g.O = 0;
-      var b2 = N(a.qa);
+      var b2 = N2(a.qa);
       S2(b2, "RID", "rpc");
       S2(b2, "SID", a.K);
       S2(b2, "AID", a.T);
@@ -4003,13 +4022,13 @@ var VpagoPayments = (() => {
       var c = a.g;
       a = a.ia;
       c.L = 1;
-      c.v = Ib(N(b2));
+      c.v = Ib(N2(b2));
       c.m = null;
       c.P = true;
       Jb(c, a);
     }
     h.Za = function() {
-      null != this.C && (this.C = null, Zb(this), $b(this), K(19));
+      null != this.C && (this.C = null, Zb(this), $b(this), K2(19));
     };
     function Yb(a) {
       null != a.C && (k.clearTimeout(a.C), a.C = null);
@@ -4029,7 +4048,7 @@ var VpagoPayments = (() => {
           b2 = Date.now() - b2.F;
           var e = a.B;
           d = qb();
-          F(d, new tb(d, c));
+          F2(d, new tb(d, c));
           fc(a);
         } else ec(a);
         else if (e = b2.s, 3 == e || 0 == e && 0 < b2.X || !(1 == d && bd(a, b2) || 2 == d && $b(a))) switch (c && 0 < c.length && (b2 = a.h, b2.i = b2.i.concat(c)), e) {
@@ -4061,14 +4080,14 @@ var VpagoPayments = (() => {
         k.location && "http" == k.location.protocol || qc(d, "https");
         Ib(d);
         e ? Fc(d.toString(), c) : Gc(d.toString(), c);
-      } else K(2);
+      } else K2(2);
       a.G = 0;
       a.l && a.l.sa(b2);
       ad(a);
       Zc(a);
     }
     h.fb = function(a) {
-      a ? (this.j.info("Successfully pinged google.com"), K(2)) : (this.j.info("Failed to ping google.com"), K(1));
+      a ? (this.j.info("Successfully pinged google.com"), K2(2)) : (this.j.info("Failed to ping google.com"), K2(1));
     };
     function ad(a) {
       a.G = 0;
@@ -4080,7 +4099,7 @@ var VpagoPayments = (() => {
       }
     }
     function cc(a, b2, c) {
-      var d = c instanceof T ? N(c) : new T(c);
+      var d = c instanceof T ? N2(c) : new T(c);
       if ("" != d.g) b2 && (d.g = b2 + "." + d.g), rc(d, d.s);
       else {
         var e = k.location;
@@ -4129,9 +4148,9 @@ var VpagoPayments = (() => {
     function hd() {
     }
     hd.prototype.g = function(a, b2) {
-      return new Y2(a, b2);
+      return new Y(a, b2);
     };
-    function Y2(a, b2) {
+    function Y(a, b2) {
       E.call(this);
       this.g = new Yc(b2);
       this.l = a;
@@ -4147,18 +4166,18 @@ var VpagoPayments = (() => {
       this.v = b2 && b2.supportsCrossDomainXhr || false;
       this.u = b2 && b2.sendRawJson || false;
       (b2 = b2 && b2.httpSessionIdParam) && !t(b2) && (this.g.D = b2, a = this.h, null !== a && b2 in a && (a = this.h, b2 in a && delete a[b2]));
-      this.j = new Z2(this);
+      this.j = new Z(this);
     }
-    r(Y2, E);
-    Y2.prototype.m = function() {
+    r(Y, E);
+    Y.prototype.m = function() {
       this.g.l = this.j;
       this.v && (this.g.J = true);
       this.g.connect(this.l, this.h || void 0);
     };
-    Y2.prototype.close = function() {
+    Y.prototype.close = function() {
       gc(this.g);
     };
-    Y2.prototype.o = function(a) {
+    Y.prototype.o = function(a) {
       var b2 = this.g;
       if ("string" === typeof a) {
         var c = {};
@@ -4168,12 +4187,12 @@ var VpagoPayments = (() => {
       b2.i.push(new hc(b2.Ya++, a));
       3 == b2.G && fc(b2);
     };
-    Y2.prototype.N = function() {
+    Y.prototype.N = function() {
       this.g.l = null;
       delete this.j;
       gc(this.g);
       delete this.g;
-      Y2.aa.N.call(this);
+      Y.aa.N.call(this);
     };
     function id(a) {
       nb.call(this);
@@ -4197,26 +4216,26 @@ var VpagoPayments = (() => {
       this.status = 1;
     }
     r(jd, ob);
-    function Z2(a) {
+    function Z(a) {
       this.g = a;
     }
-    r(Z2, gd);
-    Z2.prototype.ua = function() {
-      F(this.g, "a");
+    r(Z, gd);
+    Z.prototype.ua = function() {
+      F2(this.g, "a");
     };
-    Z2.prototype.ta = function(a) {
-      F(this.g, new id(a));
+    Z.prototype.ta = function(a) {
+      F2(this.g, new id(a));
     };
-    Z2.prototype.sa = function(a) {
-      F(this.g, new jd());
+    Z.prototype.sa = function(a) {
+      F2(this.g, new jd());
     };
-    Z2.prototype.ra = function() {
-      F(this.g, "b");
+    Z.prototype.ra = function() {
+      F2(this.g, "b");
     };
     hd.prototype.createWebChannel = hd.prototype.g;
-    Y2.prototype.send = Y2.prototype.o;
-    Y2.prototype.open = Y2.prototype.m;
-    Y2.prototype.close = Y2.prototype.close;
+    Y.prototype.send = Y.prototype.o;
+    Y.prototype.open = Y.prototype.m;
+    Y.prototype.close = Y.prototype.close;
     createWebChannelTransport = webchannel_blob_es2018.createWebChannelTransport = function() {
       return new hd();
     };
@@ -4231,11 +4250,11 @@ var VpagoPayments = (() => {
     ErrorCode = webchannel_blob_es2018.ErrorCode = Ab;
     Bb.COMPLETE = "complete";
     EventType = webchannel_blob_es2018.EventType = Bb;
-    mb.EventType = H2;
-    H2.OPEN = "a";
-    H2.CLOSE = "b";
-    H2.ERROR = "c";
-    H2.MESSAGE = "d";
+    mb.EventType = H;
+    H.OPEN = "a";
+    H.CLOSE = "b";
+    H.ERROR = "c";
+    H.MESSAGE = "d";
     E.prototype.listen = E.prototype.K;
     WebChannel = webchannel_blob_es2018.WebChannel = mb;
     FetchXmlHttpFactory = webchannel_blob_es2018.FetchXmlHttpFactory = Jc;
@@ -4251,7 +4270,8 @@ var VpagoPayments = (() => {
   }).apply(typeof commonjsGlobal2 !== "undefined" ? commonjsGlobal2 : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
 
   // node_modules/@firebase/firestore/dist/index.esm2017.js
-  var w = "@firebase/firestore";
+  var S = "@firebase/firestore";
+  var b = "4.7.8";
   var User = class {
     constructor(e) {
       this.uid = e;
@@ -4273,27 +4293,27 @@ var VpagoPayments = (() => {
   User.UNAUTHENTICATED = new User(null), // TODO(mikelehen): Look into getting a proper uid-equivalent for
   // non-FirebaseAuth providers.
   User.GOOGLE_CREDENTIALS = new User("google-credentials-uid"), User.FIRST_PARTY = new User("first-party-uid"), User.MOCK_USER = new User("mock-user");
-  var S = "11.2.0";
-  var b = new Logger("@firebase/firestore");
+  var D = "11.3.1";
+  var v = new Logger("@firebase/firestore");
   function __PRIVATE_getLogLevel() {
-    return b.logLevel;
+    return v.logLevel;
   }
   function __PRIVATE_logDebug(e, ...t) {
-    if (b.logLevel <= LogLevel.DEBUG) {
+    if (v.logLevel <= LogLevel.DEBUG) {
       const n = t.map(__PRIVATE_argToString);
-      b.debug(`Firestore (${S}): ${e}`, ...n);
+      v.debug(`Firestore (${D}): ${e}`, ...n);
     }
   }
   function __PRIVATE_logError(e, ...t) {
-    if (b.logLevel <= LogLevel.ERROR) {
+    if (v.logLevel <= LogLevel.ERROR) {
       const n = t.map(__PRIVATE_argToString);
-      b.error(`Firestore (${S}): ${e}`, ...n);
+      v.error(`Firestore (${D}): ${e}`, ...n);
     }
   }
   function __PRIVATE_logWarn(e, ...t) {
-    if (b.logLevel <= LogLevel.WARN) {
+    if (v.logLevel <= LogLevel.WARN) {
       const n = t.map(__PRIVATE_argToString);
-      b.warn(`Firestore (${S}): ${e}`, ...n);
+      v.warn(`Firestore (${D}): ${e}`, ...n);
     }
   }
   function __PRIVATE_argToString(e) {
@@ -4307,7 +4327,7 @@ var VpagoPayments = (() => {
     }
   }
   function fail(e = "Unexpected state") {
-    const t = `FIRESTORE (${S}) INTERNAL ASSERTION FAILED: ` + e;
+    const t = `FIRESTORE (${D}) INTERNAL ASSERTION FAILED: ` + e;
     throw __PRIVATE_logError(t), new Error(t);
   }
   function __PRIVATE_hardAssert(e, t) {
@@ -4316,7 +4336,7 @@ var VpagoPayments = (() => {
   function __PRIVATE_debugCast(e, t) {
     return e;
   }
-  var D = {
+  var C = {
     // Causes are copied from:
     // https://github.com/grpc/grpc/blob/bceec94ea4fc5f0085d81235d8e1c06798dc341a/include/grpc%2B%2B/impl/codegen/status_code_enum.h
     /** Not an error; returned on success. */
@@ -4585,8 +4605,8 @@ var VpagoPayments = (() => {
     }
   };
   var __PRIVATE_FirebaseAppCheckTokenProvider = class {
-    constructor(e) {
-      this.A = e, this.forceRefresh = false, this.appCheck = null, this.R = null;
+    constructor(t, n) {
+      this.A = n, this.forceRefresh = false, this.appCheck = null, this.R = null, this.V = null, _isFirebaseServerApp(t) && t.settings.appCheckToken && (this.V = t.settings.appCheckToken);
     }
     start(e, t) {
       __PRIVATE_hardAssert(void 0 === this.o);
@@ -4616,6 +4636,7 @@ var VpagoPayments = (() => {
       }, 0);
     }
     getToken() {
+      if (this.V) return Promise.resolve(new AppCheckToken(this.V));
       const e = this.forceRefresh;
       return this.forceRefresh = false, this.appCheck ? this.appCheck.getToken(e).then((e2) => e2 ? (__PRIVATE_hardAssert("string" == typeof e2.token), this.R = e2.token, new AppCheckToken(e2.token)) : null) : Promise.resolve(null);
     }
@@ -4638,12 +4659,12 @@ var VpagoPayments = (() => {
   }
   var __PRIVATE_AutoId = class {
     static newId() {
-      const e = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", t = Math.floor(256 / e.length) * e.length;
+      const e = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", t = 62 * Math.floor(256 / 62);
       let n = "";
       for (; n.length < 20; ) {
         const r = __PRIVATE_randomBytes(40);
         for (let i = 0; i < r.length; ++i)
-          n.length < 20 && r[i] < t && (n += e.charAt(r[i] % e.length));
+          n.length < 20 && r[i] < t && (n += e.charAt(r[i] % 62));
       }
       return n;
     }
@@ -4654,6 +4675,8 @@ var VpagoPayments = (() => {
   function __PRIVATE_arrayEquals(e, t, n) {
     return e.length === t.length && e.every((e2, r) => n(e2, t[r]));
   }
+  var F = -62135596800;
+  var M = 1e6;
   var Timestamp = class _Timestamp {
     /**
      * Creates a new timestamp with the current date, with millisecond precision.
@@ -4682,7 +4705,7 @@ var VpagoPayments = (() => {
      *     number of milliseconds.
      */
     static fromMillis(e) {
-      const t = Math.floor(e / 1e3), n = Math.floor(1e6 * (e - 1e3 * t));
+      const t = Math.floor(e / 1e3), n = Math.floor((e - 1e3 * t) * M);
       return new _Timestamp(t, n);
     }
     /**
@@ -4697,10 +4720,10 @@ var VpagoPayments = (() => {
      *     from 0 to 999,999,999 inclusive.
      */
     constructor(e, t) {
-      if (this.seconds = e, this.nanoseconds = t, t < 0) throw new FirestoreError(D.INVALID_ARGUMENT, "Timestamp nanoseconds out of range: " + t);
-      if (t >= 1e9) throw new FirestoreError(D.INVALID_ARGUMENT, "Timestamp nanoseconds out of range: " + t);
-      if (e < -62135596800) throw new FirestoreError(D.INVALID_ARGUMENT, "Timestamp seconds out of range: " + e);
-      if (e >= 253402300800) throw new FirestoreError(D.INVALID_ARGUMENT, "Timestamp seconds out of range: " + e);
+      if (this.seconds = e, this.nanoseconds = t, t < 0) throw new FirestoreError(C.INVALID_ARGUMENT, "Timestamp nanoseconds out of range: " + t);
+      if (t >= 1e9) throw new FirestoreError(C.INVALID_ARGUMENT, "Timestamp nanoseconds out of range: " + t);
+      if (e < F) throw new FirestoreError(C.INVALID_ARGUMENT, "Timestamp seconds out of range: " + e);
+      if (e >= 253402300800) throw new FirestoreError(C.INVALID_ARGUMENT, "Timestamp seconds out of range: " + e);
     }
     /**
      * Converts a `Timestamp` to a JavaScript `Date` object. This conversion
@@ -4721,7 +4744,7 @@ var VpagoPayments = (() => {
      *     the number of milliseconds since Unix epoch 1970-01-01T00:00:00Z.
      */
     toMillis() {
-      return 1e3 * this.seconds + this.nanoseconds / 1e6;
+      return 1e3 * this.seconds + this.nanoseconds / M;
     }
     _compareTo(e) {
       return this.seconds === e.seconds ? __PRIVATE_primitiveComparator(this.nanoseconds, e.nanoseconds) : __PRIVATE_primitiveComparator(this.seconds, e.seconds);
@@ -4751,7 +4774,7 @@ var VpagoPayments = (() => {
      * to be compared using the `>`, `<=`, `>=` and `>` operators.
      */
     valueOf() {
-      const e = this.seconds - -62135596800;
+      const e = this.seconds - F;
       return String(e).padStart(12, "0") + "." + String(this.nanoseconds).padStart(9, "0");
     }
   };
@@ -4785,6 +4808,7 @@ var VpagoPayments = (() => {
       return this.timestamp;
     }
   };
+  var x = "__name__";
   var BasePath = class _BasePath {
     constructor(e, t, n) {
       void 0 === t ? t = 0 : t > e.length && fail(), void 0 === n ? n = e.length - t : n > e.length - t && fail(), this.segments = e, this.offset = t, this.len = n;
@@ -4893,7 +4917,7 @@ var VpagoPayments = (() => {
     static fromString(...e) {
       const t = [];
       for (const n of e) {
-        if (n.indexOf("//") >= 0) throw new FirestoreError(D.INVALID_ARGUMENT, `Invalid segment (${n}). Paths must not contain // in them.`);
+        if (n.indexOf("//") >= 0) throw new FirestoreError(C.INVALID_ARGUMENT, `Invalid segment (${n}). Paths must not contain // in them.`);
         t.push(...n.split("/").filter((e2) => e2.length > 0));
       }
       return new _ResourcePath(t);
@@ -4902,7 +4926,7 @@ var VpagoPayments = (() => {
       return new _ResourcePath([]);
     }
   };
-  var v = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
+  var O = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
   var FieldPath$1 = class _FieldPath$1 extends BasePath {
     construct(e, t, n) {
       return new _FieldPath$1(e, t, n);
@@ -4912,7 +4936,7 @@ var VpagoPayments = (() => {
      * without escaping.
      */
     static isValidIdentifier(e) {
-      return v.test(e);
+      return O.test(e);
     }
     canonicalString() {
       return this.toArray().map((e) => (e = e.replace(/\\/g, "\\\\").replace(/`/g, "\\`"), _FieldPath$1.isValidIdentifier(e) || (e = "`" + e + "`"), e)).join(".");
@@ -4924,13 +4948,13 @@ var VpagoPayments = (() => {
      * Returns true if this field references the key of a document.
      */
     isKeyField() {
-      return 1 === this.length && "__name__" === this.get(0);
+      return 1 === this.length && this.get(0) === x;
     }
     /**
      * The field designating the key of a document.
      */
     static keyField() {
-      return new _FieldPath$1(["__name__"]);
+      return new _FieldPath$1([x]);
     }
     /**
      * Parses a field string from the given server-formatted string.
@@ -4946,20 +4970,20 @@ var VpagoPayments = (() => {
       const t = [];
       let n = "", r = 0;
       const __PRIVATE_addCurrentSegment = () => {
-        if (0 === n.length) throw new FirestoreError(D.INVALID_ARGUMENT, `Invalid field path (${e}). Paths must not be empty, begin with '.', end with '.', or contain '..'`);
+        if (0 === n.length) throw new FirestoreError(C.INVALID_ARGUMENT, `Invalid field path (${e}). Paths must not be empty, begin with '.', end with '.', or contain '..'`);
         t.push(n), n = "";
       };
       let i = false;
       for (; r < e.length; ) {
         const t2 = e[r];
         if ("\\" === t2) {
-          if (r + 1 === e.length) throw new FirestoreError(D.INVALID_ARGUMENT, "Path has trailing escape character: " + e);
+          if (r + 1 === e.length) throw new FirestoreError(C.INVALID_ARGUMENT, "Path has trailing escape character: " + e);
           const t3 = e[r + 1];
-          if ("\\" !== t3 && "." !== t3 && "`" !== t3) throw new FirestoreError(D.INVALID_ARGUMENT, "Path has invalid escape sequence: " + e);
+          if ("\\" !== t3 && "." !== t3 && "`" !== t3) throw new FirestoreError(C.INVALID_ARGUMENT, "Path has invalid escape sequence: " + e);
           n += t3, r += 2;
         } else "`" === t2 ? (i = !i, r++) : "." !== t2 || i ? (n += t2, r++) : (__PRIVATE_addCurrentSegment(), r++);
       }
-      if (__PRIVATE_addCurrentSegment(), i) throw new FirestoreError(D.INVALID_ARGUMENT, "Unterminated ` in path: " + e);
+      if (__PRIVATE_addCurrentSegment(), i) throw new FirestoreError(C.INVALID_ARGUMENT, "Unterminated ` in path: " + e);
       return new _FieldPath$1(t);
     }
     static emptyPath() {
@@ -5016,6 +5040,7 @@ var VpagoPayments = (() => {
       return new _DocumentKey(new ResourcePath(e.slice()));
     }
   };
+  var N = -1;
   var FieldIndex = class {
     constructor(e, t, n, r) {
       this.indexId = e, this.collectionGroup = t, this.fields = n, this.indexState = r;
@@ -5027,7 +5052,7 @@ var VpagoPayments = (() => {
     return new IndexOffset(i, DocumentKey.empty(), t);
   }
   function __PRIVATE_newIndexOffsetFromDocument(e) {
-    return new IndexOffset(e.readTime, e.key, -1);
+    return new IndexOffset(e.readTime, e.key, N);
   }
   var IndexOffset = class _IndexOffset {
     constructor(e, t, n) {
@@ -5035,18 +5060,18 @@ var VpagoPayments = (() => {
     }
     /** Returns an offset that sorts before all regular offsets. */
     static min() {
-      return new _IndexOffset(SnapshotVersion.min(), DocumentKey.empty(), -1);
+      return new _IndexOffset(SnapshotVersion.min(), DocumentKey.empty(), N);
     }
     /** Returns an offset that sorts after all regular offsets. */
     static max() {
-      return new _IndexOffset(SnapshotVersion.max(), DocumentKey.empty(), -1);
+      return new _IndexOffset(SnapshotVersion.max(), DocumentKey.empty(), N);
     }
   };
   function __PRIVATE_indexOffsetComparator(e, t) {
     let n = e.readTime.compareTo(t.readTime);
     return 0 !== n ? n : (n = DocumentKey.comparator(e.documentKey, t.documentKey), 0 !== n ? n : __PRIVATE_primitiveComparator(e.largestBatchId, t.largestBatchId));
   }
-  var C = "The current tab is not in the required state to perform this operation. It might be necessary to refresh the browser tab.";
+  var B = "The current tab is not in the required state to perform this operation. It might be necessary to refresh the browser tab.";
   var PersistenceTransaction = class {
     constructor() {
       this.onCommittedListeners = [];
@@ -5059,7 +5084,7 @@ var VpagoPayments = (() => {
     }
   };
   async function __PRIVATE_ignoreIfPrimaryLeaseLoss(e) {
-    if (e.code !== D.FAILED_PRECONDITION || e.message !== C) throw e;
+    if (e.code !== C.FAILED_PRECONDITION || e.message !== B) throw e;
     __PRIVATE_logDebug("LocalStore", "Unexpectedly lost primary lease");
   }
   var PersistencePromise = class _PersistencePromise {
@@ -5184,17 +5209,18 @@ var VpagoPayments = (() => {
   }
   var __PRIVATE_ListenSequence = class {
     constructor(e, t) {
-      this.previousValue = e, t && (t.sequenceNumberHandler = (e2) => this.ie(e2), this.se = (e2) => t.writeSequenceNumber(e2));
+      this.previousValue = e, t && (t.sequenceNumberHandler = (e2) => this.oe(e2), this._e = (e2) => t.writeSequenceNumber(e2));
     }
-    ie(e) {
+    oe(e) {
       return this.previousValue = Math.max(e, this.previousValue), this.previousValue;
     }
     next() {
       const e = ++this.previousValue;
-      return this.se && this.se(e), e;
+      return this._e && this._e(e), e;
     }
   };
-  __PRIVATE_ListenSequence.oe = -1;
+  __PRIVATE_ListenSequence.ae = -1;
+  var Q = -1;
   function __PRIVATE_isNullOrUndefined(e) {
     return null == e;
   }
@@ -5204,6 +5230,7 @@ var VpagoPayments = (() => {
   function isSafeInteger(e) {
     return "number" == typeof e && Number.isInteger(e) && !__PRIVATE_isNegativeZero(e) && e <= Number.MAX_SAFE_INTEGER && e >= Number.MIN_SAFE_INTEGER;
   }
+  var $ = "";
   function __PRIVATE_encodeResourcePath(e) {
     let t = "";
     for (let n = 0; n < e.length; n++) t.length > 0 && (t = __PRIVATE_encodeSeparator(t)), t = __PRIVATE_encodeSegment(e.get(n), t);
@@ -5218,7 +5245,7 @@ var VpagoPayments = (() => {
         case "\0":
           n += "";
           break;
-        case "":
+        case $:
           n += "";
           break;
         default:
@@ -5228,14 +5255,33 @@ var VpagoPayments = (() => {
     return n;
   }
   function __PRIVATE_encodeSeparator(e) {
-    return e + "";
+    return e + $ + "";
   }
-  var H = [...[...[...[...["mutationQueues", "mutations", "documentMutations", "remoteDocuments", "targets", "owner", "targetGlobal", "targetDocuments"], "clientMetadata"], "remoteDocumentGlobal"], "collectionParents"], "bundles", "namedQueries"];
-  var J = [...H, "documentOverlays"];
-  var Y = ["mutationQueues", "mutations", "documentMutations", "remoteDocumentsV14", "targets", "owner", "targetGlobal", "targetDocuments", "clientMetadata", "remoteDocumentGlobal", "collectionParents", "bundles", "namedQueries", "documentOverlays"];
-  var Z = Y;
-  var X = [...Z, "indexConfiguration", "indexState", "indexEntries"];
-  var te = [...X, "globals"];
+  var K = "remoteDocuments";
+  var U = "owner";
+  var G = "mutationQueues";
+  var j = "mutations";
+  var X = "documentMutations";
+  var ee = "remoteDocumentsV14";
+  var oe = "remoteDocumentGlobal";
+  var ae = "targets";
+  var le = "targetDocuments";
+  var Ee = "targetGlobal";
+  var de = "collectionParents";
+  var Re = "clientMetadata";
+  var me = "bundles";
+  var ge = "namedQueries";
+  var ye = "indexConfiguration";
+  var De = "indexState";
+  var Me = "indexEntries";
+  var Be = "documentOverlays";
+  var Ke = "globals";
+  var We = [...[...[...[...[G, j, X, K, ae, U, Ee, le], Re], oe], de], me, ge];
+  var Ge = [...We, Be];
+  var ze = [G, j, X, ee, ae, U, Ee, le, Re, oe, de, me, ge, Be];
+  var je = ze;
+  var He = [...je, ye, De, Me];
+  var Ye = [...He, Ke];
   function __PRIVATE_objectSize(e) {
     let t = 0;
     for (const n in e) Object.prototype.hasOwnProperty.call(e, n) && t++;
@@ -5740,11 +5786,11 @@ var VpagoPayments = (() => {
     }
   };
   ByteString.EMPTY_BYTE_STRING = new ByteString("");
-  var ne = new RegExp(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.(\d+))?Z$/);
+  var Ze = new RegExp(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.(\d+))?Z$/);
   function __PRIVATE_normalizeTimestamp(e) {
     if (__PRIVATE_hardAssert(!!e), "string" == typeof e) {
       let t = 0;
-      const n = ne.exec(e);
+      const n = Ze.exec(e);
       if (__PRIVATE_hardAssert(!!n), n[1]) {
         let e2 = n[1];
         e2 = (e2 + "000000000").substr(0, 9), t = Number(e2);
@@ -5766,16 +5812,20 @@ var VpagoPayments = (() => {
   function __PRIVATE_normalizeByteString(e) {
     return "string" == typeof e ? ByteString.fromBase64String(e) : ByteString.fromUint8Array(e);
   }
+  var Xe = "server_timestamp";
+  var et = "__type__";
+  var tt = "__previous_value__";
+  var nt = "__local_write_time__";
   function __PRIVATE_isServerTimestamp(e) {
     var t, n;
-    return "server_timestamp" === (null === (n = ((null === (t = null == e ? void 0 : e.mapValue) || void 0 === t ? void 0 : t.fields) || {}).__type__) || void 0 === n ? void 0 : n.stringValue);
+    return (null === (n = ((null === (t = null == e ? void 0 : e.mapValue) || void 0 === t ? void 0 : t.fields) || {})[et]) || void 0 === n ? void 0 : n.stringValue) === Xe;
   }
   function __PRIVATE_getPreviousValue(e) {
-    const t = e.mapValue.fields.__previous_value__;
+    const t = e.mapValue.fields[tt];
     return __PRIVATE_isServerTimestamp(t) ? __PRIVATE_getPreviousValue(t) : t;
   }
   function __PRIVATE_getLocalWriteTime(e) {
-    const t = __PRIVATE_normalizeTimestamp(e.mapValue.fields.__local_write_time__.timestampValue);
+    const t = __PRIVATE_normalizeTimestamp(e.mapValue.fields[nt].timestampValue);
     return new Timestamp(t.seconds, t.nanos);
   }
   var DatabaseInfo = class {
@@ -5801,29 +5851,34 @@ var VpagoPayments = (() => {
       this.databaseId = e, this.appId = t, this.persistenceKey = n, this.host = r, this.ssl = i, this.forceLongPolling = s, this.autoDetectLongPolling = o, this.longPollingOptions = _, this.useFetchStreams = a;
     }
   };
+  var rt = "(default)";
   var DatabaseId = class _DatabaseId {
     constructor(e, t) {
-      this.projectId = e, this.database = t || "(default)";
+      this.projectId = e, this.database = t || rt;
     }
     static empty() {
       return new _DatabaseId("", "");
     }
     get isDefaultDatabase() {
-      return "(default)" === this.database;
+      return this.database === rt;
     }
     isEqual(e) {
       return e instanceof _DatabaseId && e.projectId === this.projectId && e.database === this.database;
     }
   };
-  var re = {
+  var it = "__type__";
+  var st = "__max__";
+  var ot = {
     mapValue: {
       fields: {
         __type__: {
-          stringValue: "__max__"
+          stringValue: st
         }
       }
     }
   };
+  var _t = "__vector__";
+  var at = "value";
   function __PRIVATE_typeOrder(e) {
     return "nullValue" in e ? 0 : "booleanValue" in e ? 1 : "integerValue" in e || "doubleValue" in e ? 2 : "timestampValue" in e ? 3 : "stringValue" in e ? 5 : "bytesValue" in e ? 6 : "referenceValue" in e ? 7 : "geoPointValue" in e ? 8 : "arrayValue" in e ? 9 : "mapValue" in e ? __PRIVATE_isServerTimestamp(e) ? 4 : __PRIVATE_isMaxValue(e) ? 9007199254740991 : __PRIVATE_isVectorValue(e) ? 10 : 11 : fail();
   }
@@ -5933,15 +5988,15 @@ var VpagoPayments = (() => {
       case 10:
         return function __PRIVATE_compareVectors(e2, t2) {
           var n2, r2, i, s;
-          const o = e2.fields || {}, _ = t2.fields || {}, a = null === (n2 = o.value) || void 0 === n2 ? void 0 : n2.arrayValue, u = null === (r2 = _.value) || void 0 === r2 ? void 0 : r2.arrayValue, c = __PRIVATE_primitiveComparator((null === (i = null == a ? void 0 : a.values) || void 0 === i ? void 0 : i.length) || 0, (null === (s = null == u ? void 0 : u.values) || void 0 === s ? void 0 : s.length) || 0);
+          const o = e2.fields || {}, _ = t2.fields || {}, a = null === (n2 = o[at]) || void 0 === n2 ? void 0 : n2.arrayValue, u = null === (r2 = _[at]) || void 0 === r2 ? void 0 : r2.arrayValue, c = __PRIVATE_primitiveComparator((null === (i = null == a ? void 0 : a.values) || void 0 === i ? void 0 : i.length) || 0, (null === (s = null == u ? void 0 : u.values) || void 0 === s ? void 0 : s.length) || 0);
           if (0 !== c) return c;
           return __PRIVATE_compareArrays(a, u);
         }(e.mapValue, t.mapValue);
       case 11:
         return function __PRIVATE_compareMaps(e2, t2) {
-          if (e2 === re.mapValue && t2 === re.mapValue) return 0;
-          if (e2 === re.mapValue) return 1;
-          if (t2 === re.mapValue) return -1;
+          if (e2 === ot.mapValue && t2 === ot.mapValue) return 0;
+          if (e2 === ot.mapValue) return 1;
+          if (t2 === ot.mapValue) return -1;
           const n2 = e2.fields || {}, r2 = Object.keys(n2), i = t2.fields || {}, s = Object.keys(i);
           r2.sort(), s.sort();
           for (let e3 = 0; e3 < r2.length && e3 < s.length; ++e3) {
@@ -6045,7 +6100,7 @@ var VpagoPayments = (() => {
   }
   function __PRIVATE_isVectorValue(e) {
     var t, n;
-    return "__vector__" === (null === (n = ((null === (t = null == e ? void 0 : e.mapValue) || void 0 === t ? void 0 : t.fields) || {}).__type__) || void 0 === n ? void 0 : n.stringValue);
+    return (null === (n = ((null === (t = null == e ? void 0 : e.mapValue) || void 0 === t ? void 0 : t.fields) || {})[it]) || void 0 === n ? void 0 : n.stringValue) === _t;
   }
   function __PRIVATE_deepClone(e) {
     if (e.geoPointValue) return {
@@ -6074,8 +6129,20 @@ var VpagoPayments = (() => {
     return Object.assign({}, e);
   }
   function __PRIVATE_isMaxValue(e) {
-    return "__max__" === (((e.mapValue || {}).fields || {}).__type__ || {}).stringValue;
+    return (((e.mapValue || {}).fields || {}).__type__ || {}).stringValue === st;
   }
+  var ct = {
+    mapValue: {
+      fields: {
+        [it]: {
+          stringValue: _t
+        },
+        [at]: {
+          arrayValue: {}
+        }
+      }
+    }
+  };
   var ObjectValue = class _ObjectValue {
     constructor(e) {
       this.value = e;
@@ -6414,7 +6481,7 @@ var VpagoPayments = (() => {
   };
   var CompositeFilter = class _CompositeFilter extends Filter {
     constructor(e, t) {
-      super(), this.filters = e, this.op = t, this.ae = null;
+      super(), this.filters = e, this.op = t, this.ce = null;
     }
     /**
      * Creates a filter based on the provided arguments.
@@ -6426,7 +6493,7 @@ var VpagoPayments = (() => {
       return __PRIVATE_compositeFilterIsConjunction(this) ? void 0 === this.filters.find((t) => !t.matches(e)) : void 0 !== this.filters.find((t) => t.matches(e));
     }
     getFlattenedFilters() {
-      return null !== this.ae || (this.ae = this.filters.reduce((e, t) => e.concat(t.getFlattenedFilters()), [])), this.ae;
+      return null !== this.ce || (this.ce = this.filters.reduce((e, t) => e.concat(t.getFlattenedFilters()), [])), this.ce;
     }
     // Returns a mutable copy of `this.filters`
     getFilters() {
@@ -6540,7 +6607,7 @@ var VpagoPayments = (() => {
   };
   var __PRIVATE_TargetImpl = class {
     constructor(e, t = null, n = [], r = [], i = null, s = null, o = null) {
-      this.path = e, this.collectionGroup = t, this.orderBy = n, this.filters = r, this.limit = i, this.startAt = s, this.endAt = o, this.ue = null;
+      this.path = e, this.collectionGroup = t, this.orderBy = n, this.filters = r, this.limit = i, this.startAt = s, this.endAt = o, this.le = null;
     }
   };
   function __PRIVATE_newTarget(e, t = null, n = [], r = [], i = null, s = null, o = null) {
@@ -6548,13 +6615,13 @@ var VpagoPayments = (() => {
   }
   function __PRIVATE_canonifyTarget(e) {
     const t = __PRIVATE_debugCast(e);
-    if (null === t.ue) {
+    if (null === t.le) {
       let e2 = t.path.canonicalString();
       null !== t.collectionGroup && (e2 += "|cg:" + t.collectionGroup), e2 += "|f:", e2 += t.filters.map((e3) => __PRIVATE_canonifyFilter(e3)).join(","), e2 += "|ob:", e2 += t.orderBy.map((e3) => function __PRIVATE_canonifyOrderBy(e4) {
         return e4.field.canonicalString() + e4.dir;
-      }(e3)).join(","), __PRIVATE_isNullOrUndefined(t.limit) || (e2 += "|l:", e2 += t.limit), t.startAt && (e2 += "|lb:", e2 += t.startAt.inclusive ? "b:" : "a:", e2 += t.startAt.position.map((e3) => canonicalId(e3)).join(",")), t.endAt && (e2 += "|ub:", e2 += t.endAt.inclusive ? "a:" : "b:", e2 += t.endAt.position.map((e3) => canonicalId(e3)).join(",")), t.ue = e2;
+      }(e3)).join(","), __PRIVATE_isNullOrUndefined(t.limit) || (e2 += "|l:", e2 += t.limit), t.startAt && (e2 += "|lb:", e2 += t.startAt.inclusive ? "b:" : "a:", e2 += t.startAt.position.map((e3) => canonicalId(e3)).join(",")), t.endAt && (e2 += "|ub:", e2 += t.endAt.inclusive ? "a:" : "b:", e2 += t.endAt.position.map((e3) => canonicalId(e3)).join(",")), t.le = e2;
     }
-    return t.ue;
+    return t.le;
   }
   function __PRIVATE_targetEquals(e, t) {
     if (e.limit !== t.limit) return false;
@@ -6573,13 +6640,13 @@ var VpagoPayments = (() => {
      * Path must currently be empty if this is a collection group query.
      */
     constructor(e, t = null, n = [], r = [], i = null, s = "F", o = null, _ = null) {
-      this.path = e, this.collectionGroup = t, this.explicitOrderBy = n, this.filters = r, this.limit = i, this.limitType = s, this.startAt = o, this.endAt = _, this.ce = null, // The corresponding `Target` of this `Query` instance, for use with
+      this.path = e, this.collectionGroup = t, this.explicitOrderBy = n, this.filters = r, this.limit = i, this.limitType = s, this.startAt = o, this.endAt = _, this.he = null, // The corresponding `Target` of this `Query` instance, for use with
       // non-aggregate queries.
-      this.le = null, // The corresponding `Target` of this `Query` instance, for use with
+      this.Pe = null, // The corresponding `Target` of this `Query` instance, for use with
       // aggregate queries. Unlike targets for non-aggregate queries,
       // aggregate query targets do not contain normalized order-bys, they only
       // contain explicit order-bys.
-      this.he = null, this.startAt, this.endAt;
+      this.Te = null, this.startAt, this.endAt;
     }
   };
   function __PRIVATE_newQuery(e, t, n, r, i, s, o, _) {
@@ -6596,10 +6663,10 @@ var VpagoPayments = (() => {
   }
   function __PRIVATE_queryNormalizedOrderBy(e) {
     const t = __PRIVATE_debugCast(e);
-    if (null === t.ce) {
-      t.ce = [];
+    if (null === t.he) {
+      t.he = [];
       const e2 = /* @__PURE__ */ new Set();
-      for (const n2 of t.explicitOrderBy) t.ce.push(n2), e2.add(n2.field.canonicalString());
+      for (const n2 of t.explicitOrderBy) t.he.push(n2), e2.add(n2.field.canonicalString());
       const n = t.explicitOrderBy.length > 0 ? t.explicitOrderBy[t.explicitOrderBy.length - 1].dir : "asc", r = function __PRIVATE_getInequalityFilterFields(e3) {
         let t2 = new SortedSet(FieldPath$1.comparator);
         return e3.filters.forEach((e4) => {
@@ -6609,15 +6676,15 @@ var VpagoPayments = (() => {
         }), t2;
       }(t);
       r.forEach((r2) => {
-        e2.has(r2.canonicalString()) || r2.isKeyField() || t.ce.push(new OrderBy(r2, n));
+        e2.has(r2.canonicalString()) || r2.isKeyField() || t.he.push(new OrderBy(r2, n));
       }), // Add the document key field to the last if it is not explicitly ordered.
-      e2.has(FieldPath$1.keyField().canonicalString()) || t.ce.push(new OrderBy(FieldPath$1.keyField(), n));
+      e2.has(FieldPath$1.keyField().canonicalString()) || t.he.push(new OrderBy(FieldPath$1.keyField(), n));
     }
-    return t.ce;
+    return t.he;
   }
   function __PRIVATE_queryToTarget(e) {
     const t = __PRIVATE_debugCast(e);
-    return t.le || (t.le = __PRIVATE__queryToTarget(t, __PRIVATE_queryNormalizedOrderBy(e))), t.le;
+    return t.Pe || (t.Pe = __PRIVATE__queryToTarget(t, __PRIVATE_queryNormalizedOrderBy(e))), t.Pe;
   }
   function __PRIVATE__queryToTarget(e, t) {
     if ("F" === e.limitType) return __PRIVATE_newTarget(e.path, e.collectionGroup, t, e.filters, e.limit, e.startAt, e.endAt);
@@ -6752,18 +6819,18 @@ var VpagoPayments = (() => {
       return this.innerSize;
     }
   };
-  var oe = new SortedMap(DocumentKey.comparator);
+  var lt = new SortedMap(DocumentKey.comparator);
   function __PRIVATE_mutableDocumentMap() {
-    return oe;
+    return lt;
   }
-  var _e = new SortedMap(DocumentKey.comparator);
+  var ht = new SortedMap(DocumentKey.comparator);
   function documentMap(...e) {
-    let t = _e;
+    let t = ht;
     for (const n of e) t = t.insert(n.key, n);
     return t;
   }
   function __PRIVATE_convertOverlayedDocumentMapToDocumentMap(e) {
-    let t = _e;
+    let t = ht;
     return e.forEach((e2, n) => t = t.insert(e2, n.overlayedDocument)), t;
   }
   function __PRIVATE_newOverlayMap() {
@@ -6775,16 +6842,16 @@ var VpagoPayments = (() => {
   function __PRIVATE_newDocumentKeyMap() {
     return new ObjectMap((e) => e.toString(), (e, t) => e.isEqual(t));
   }
-  var ae = new SortedMap(DocumentKey.comparator);
-  var ue = new SortedSet(DocumentKey.comparator);
+  var Pt = new SortedMap(DocumentKey.comparator);
+  var Tt = new SortedSet(DocumentKey.comparator);
   function __PRIVATE_documentKeySet(...e) {
-    let t = ue;
+    let t = Tt;
     for (const n of e) t = t.add(n);
     return t;
   }
-  var ce = new SortedSet(__PRIVATE_primitiveComparator);
+  var It = new SortedSet(__PRIVATE_primitiveComparator);
   function __PRIVATE_targetIdSet() {
-    return ce;
+    return It;
   }
   function __PRIVATE_toDouble(e, t) {
     if (e.useProto3Json) {
@@ -6819,10 +6886,10 @@ var VpagoPayments = (() => {
     return e instanceof __PRIVATE_ServerTimestampTransform ? function serverTimestamp$1(e2, t2) {
       const n2 = {
         fields: {
-          __type__: {
-            stringValue: "server_timestamp"
+          [et]: {
+            stringValue: Xe
           },
-          __local_write_time__: {
+          [nt]: {
             timestampValue: {
               seconds: e2.seconds,
               nanos: e2.nanoseconds
@@ -6830,12 +6897,12 @@ var VpagoPayments = (() => {
           }
         }
       };
-      return t2 && __PRIVATE_isServerTimestamp(t2) && (t2 = __PRIVATE_getPreviousValue(t2)), t2 && (n2.fields.__previous_value__ = t2), {
+      return t2 && __PRIVATE_isServerTimestamp(t2) && (t2 = __PRIVATE_getPreviousValue(t2)), t2 && (n2.fields[tt] = t2), {
         mapValue: n2
       };
     }(n, t) : e instanceof __PRIVATE_ArrayUnionTransformOperation ? __PRIVATE_applyArrayUnionTransformOperation(e, t) : e instanceof __PRIVATE_ArrayRemoveTransformOperation ? __PRIVATE_applyArrayRemoveTransformOperation(e, t) : function __PRIVATE_applyNumericIncrementTransformOperationToLocalView(e2, t2) {
-      const n2 = __PRIVATE_computeTransformOperationBaseValue(e2, t2), r = asNumber(n2) + asNumber(e2.Pe);
-      return isInteger(n2) && isInteger(e2.Pe) ? __PRIVATE_toInteger(r) : __PRIVATE_toDouble(e2.serializer, r);
+      const n2 = __PRIVATE_computeTransformOperationBaseValue(e2, t2), r = asNumber(n2) + asNumber(e2.Ie);
+      return isInteger(n2) && isInteger(e2.Ie) ? __PRIVATE_toInteger(r) : __PRIVATE_toDouble(e2.serializer, r);
     }(e, t);
   }
   function __PRIVATE_applyTransformOperationToRemoteDocument(e, t, n) {
@@ -6885,7 +6952,7 @@ var VpagoPayments = (() => {
   }
   var __PRIVATE_NumericIncrementTransformOperation = class extends TransformOperation {
     constructor(e, t) {
-      super(), this.serializer = e, this.Pe = t;
+      super(), this.serializer = e, this.Ie = t;
     }
   };
   function asNumber(e) {
@@ -6896,7 +6963,7 @@ var VpagoPayments = (() => {
   }
   function __PRIVATE_fieldTransformEquals(e, t) {
     return e.field.isEqual(t.field) && function __PRIVATE_transformOperationEquals(e2, t2) {
-      return e2 instanceof __PRIVATE_ArrayUnionTransformOperation && t2 instanceof __PRIVATE_ArrayUnionTransformOperation || e2 instanceof __PRIVATE_ArrayRemoveTransformOperation && t2 instanceof __PRIVATE_ArrayRemoveTransformOperation ? __PRIVATE_arrayEquals(e2.elements, t2.elements, __PRIVATE_valueEquals) : e2 instanceof __PRIVATE_NumericIncrementTransformOperation && t2 instanceof __PRIVATE_NumericIncrementTransformOperation ? __PRIVATE_valueEquals(e2.Pe, t2.Pe) : e2 instanceof __PRIVATE_ServerTimestampTransform && t2 instanceof __PRIVATE_ServerTimestampTransform;
+      return e2 instanceof __PRIVATE_ArrayUnionTransformOperation && t2 instanceof __PRIVATE_ArrayUnionTransformOperation || e2 instanceof __PRIVATE_ArrayRemoveTransformOperation && t2 instanceof __PRIVATE_ArrayRemoveTransformOperation ? __PRIVATE_arrayEquals(e2.elements, t2.elements, __PRIVATE_valueEquals) : e2 instanceof __PRIVATE_NumericIncrementTransformOperation && t2 instanceof __PRIVATE_NumericIncrementTransformOperation ? __PRIVATE_valueEquals(e2.Ie, t2.Ie) : e2 instanceof __PRIVATE_ServerTimestampTransform && t2 instanceof __PRIVATE_ServerTimestampTransform;
     }(e.transform, t.transform);
   }
   var MutationResult = class {
@@ -7125,7 +7192,7 @@ var VpagoPayments = (() => {
     static from(e, t, n) {
       __PRIVATE_hardAssert(e.mutations.length === n.length);
       let r = /* @__PURE__ */ function __PRIVATE_documentVersionMap() {
-        return ae;
+        return Pt;
       }();
       const i = e.mutations;
       for (let e2 = 0; e2 < i.length; e2++) r = r.insert(i[e2].key, n[e2].version);
@@ -7154,85 +7221,87 @@ var VpagoPayments = (() => {
       this.count = e, this.unchangedNames = t;
     }
   };
-  var le;
-  var he;
+  var Et;
+  var dt;
   function __PRIVATE_isPermanentError(e) {
     switch (e) {
-      default:
+      case C.OK:
         return fail();
-      case D.CANCELLED:
-      case D.UNKNOWN:
-      case D.DEADLINE_EXCEEDED:
-      case D.RESOURCE_EXHAUSTED:
-      case D.INTERNAL:
-      case D.UNAVAILABLE:
+      case C.CANCELLED:
+      case C.UNKNOWN:
+      case C.DEADLINE_EXCEEDED:
+      case C.RESOURCE_EXHAUSTED:
+      case C.INTERNAL:
+      case C.UNAVAILABLE:
       // Unauthenticated means something went wrong with our token and we need
       // to retry with new credentials which will happen automatically.
-      case D.UNAUTHENTICATED:
+      case C.UNAUTHENTICATED:
         return false;
-      case D.INVALID_ARGUMENT:
-      case D.NOT_FOUND:
-      case D.ALREADY_EXISTS:
-      case D.PERMISSION_DENIED:
-      case D.FAILED_PRECONDITION:
+      case C.INVALID_ARGUMENT:
+      case C.NOT_FOUND:
+      case C.ALREADY_EXISTS:
+      case C.PERMISSION_DENIED:
+      case C.FAILED_PRECONDITION:
       // Aborted might be retried in some scenarios, but that is dependent on
       // the context and should handled individually by the calling code.
       // See https://cloud.google.com/apis/design/errors.
-      case D.ABORTED:
-      case D.OUT_OF_RANGE:
-      case D.UNIMPLEMENTED:
-      case D.DATA_LOSS:
+      case C.ABORTED:
+      case C.OUT_OF_RANGE:
+      case C.UNIMPLEMENTED:
+      case C.DATA_LOSS:
         return true;
+      default:
+        return fail();
     }
   }
   function __PRIVATE_mapCodeFromRpcCode(e) {
     if (void 0 === e)
-      return __PRIVATE_logError("GRPC error has no .code"), D.UNKNOWN;
+      return __PRIVATE_logError("GRPC error has no .code"), C.UNKNOWN;
     switch (e) {
-      case le.OK:
-        return D.OK;
-      case le.CANCELLED:
-        return D.CANCELLED;
-      case le.UNKNOWN:
-        return D.UNKNOWN;
-      case le.DEADLINE_EXCEEDED:
-        return D.DEADLINE_EXCEEDED;
-      case le.RESOURCE_EXHAUSTED:
-        return D.RESOURCE_EXHAUSTED;
-      case le.INTERNAL:
-        return D.INTERNAL;
-      case le.UNAVAILABLE:
-        return D.UNAVAILABLE;
-      case le.UNAUTHENTICATED:
-        return D.UNAUTHENTICATED;
-      case le.INVALID_ARGUMENT:
-        return D.INVALID_ARGUMENT;
-      case le.NOT_FOUND:
-        return D.NOT_FOUND;
-      case le.ALREADY_EXISTS:
-        return D.ALREADY_EXISTS;
-      case le.PERMISSION_DENIED:
-        return D.PERMISSION_DENIED;
-      case le.FAILED_PRECONDITION:
-        return D.FAILED_PRECONDITION;
-      case le.ABORTED:
-        return D.ABORTED;
-      case le.OUT_OF_RANGE:
-        return D.OUT_OF_RANGE;
-      case le.UNIMPLEMENTED:
-        return D.UNIMPLEMENTED;
-      case le.DATA_LOSS:
-        return D.DATA_LOSS;
+      case Et.OK:
+        return C.OK;
+      case Et.CANCELLED:
+        return C.CANCELLED;
+      case Et.UNKNOWN:
+        return C.UNKNOWN;
+      case Et.DEADLINE_EXCEEDED:
+        return C.DEADLINE_EXCEEDED;
+      case Et.RESOURCE_EXHAUSTED:
+        return C.RESOURCE_EXHAUSTED;
+      case Et.INTERNAL:
+        return C.INTERNAL;
+      case Et.UNAVAILABLE:
+        return C.UNAVAILABLE;
+      case Et.UNAUTHENTICATED:
+        return C.UNAUTHENTICATED;
+      case Et.INVALID_ARGUMENT:
+        return C.INVALID_ARGUMENT;
+      case Et.NOT_FOUND:
+        return C.NOT_FOUND;
+      case Et.ALREADY_EXISTS:
+        return C.ALREADY_EXISTS;
+      case Et.PERMISSION_DENIED:
+        return C.PERMISSION_DENIED;
+      case Et.FAILED_PRECONDITION:
+        return C.FAILED_PRECONDITION;
+      case Et.ABORTED:
+        return C.ABORTED;
+      case Et.OUT_OF_RANGE:
+        return C.OUT_OF_RANGE;
+      case Et.UNIMPLEMENTED:
+        return C.UNIMPLEMENTED;
+      case Et.DATA_LOSS:
+        return C.DATA_LOSS;
       default:
         return fail();
     }
   }
-  (he = le || (le = {}))[he.OK = 0] = "OK", he[he.CANCELLED = 1] = "CANCELLED", he[he.UNKNOWN = 2] = "UNKNOWN", he[he.INVALID_ARGUMENT = 3] = "INVALID_ARGUMENT", he[he.DEADLINE_EXCEEDED = 4] = "DEADLINE_EXCEEDED", he[he.NOT_FOUND = 5] = "NOT_FOUND", he[he.ALREADY_EXISTS = 6] = "ALREADY_EXISTS", he[he.PERMISSION_DENIED = 7] = "PERMISSION_DENIED", he[he.UNAUTHENTICATED = 16] = "UNAUTHENTICATED", he[he.RESOURCE_EXHAUSTED = 8] = "RESOURCE_EXHAUSTED", he[he.FAILED_PRECONDITION = 9] = "FAILED_PRECONDITION", he[he.ABORTED = 10] = "ABORTED", he[he.OUT_OF_RANGE = 11] = "OUT_OF_RANGE", he[he.UNIMPLEMENTED = 12] = "UNIMPLEMENTED", he[he.INTERNAL = 13] = "INTERNAL", he[he.UNAVAILABLE = 14] = "UNAVAILABLE", he[he.DATA_LOSS = 15] = "DATA_LOSS";
-  var Pe = null;
+  (dt = Et || (Et = {}))[dt.OK = 0] = "OK", dt[dt.CANCELLED = 1] = "CANCELLED", dt[dt.UNKNOWN = 2] = "UNKNOWN", dt[dt.INVALID_ARGUMENT = 3] = "INVALID_ARGUMENT", dt[dt.DEADLINE_EXCEEDED = 4] = "DEADLINE_EXCEEDED", dt[dt.NOT_FOUND = 5] = "NOT_FOUND", dt[dt.ALREADY_EXISTS = 6] = "ALREADY_EXISTS", dt[dt.PERMISSION_DENIED = 7] = "PERMISSION_DENIED", dt[dt.UNAUTHENTICATED = 16] = "UNAUTHENTICATED", dt[dt.RESOURCE_EXHAUSTED = 8] = "RESOURCE_EXHAUSTED", dt[dt.FAILED_PRECONDITION = 9] = "FAILED_PRECONDITION", dt[dt.ABORTED = 10] = "ABORTED", dt[dt.OUT_OF_RANGE = 11] = "OUT_OF_RANGE", dt[dt.UNIMPLEMENTED = 12] = "UNIMPLEMENTED", dt[dt.INTERNAL = 13] = "INTERNAL", dt[dt.UNAVAILABLE = 14] = "UNAVAILABLE", dt[dt.DATA_LOSS = 15] = "DATA_LOSS";
+  var At = null;
   function __PRIVATE_newTextEncoder() {
     return new TextEncoder();
   }
-  var Te = new Integer([4294967295, 4294967295], 0);
+  var Rt = new Integer([4294967295, 4294967295], 0);
   function __PRIVATE_getMd5HashValue(e) {
     const t = __PRIVATE_newTextEncoder().encode(e), n = new Md5();
     return n.update(t), new Uint8Array(n.digest());
@@ -7265,25 +7334,25 @@ var VpagoPayments = (() => {
         throw new __PRIVATE_BloomFilterError(`Invalid hash count: ${n}`);
       if (0 === e.length && 0 !== t)
         throw new __PRIVATE_BloomFilterError(`Invalid padding when bitmap length is 0: ${t}`);
-      this.Te = 8 * e.length - t, // Set the bit count in Integer to avoid repetition in mightContain().
-      this.Ie = Integer.fromNumber(this.Te);
+      this.Ee = 8 * e.length - t, // Set the bit count in Integer to avoid repetition in mightContain().
+      this.de = Integer.fromNumber(this.Ee);
     }
     // Calculate the ith hash value based on the hashed 64bit integers,
     // and calculate its corresponding bit index in the bitmap to be checked.
-    de(e, t, n) {
+    Ae(e, t, n) {
       let r = e.add(t.multiply(Integer.fromNumber(n)));
-      return 1 === r.compare(Te) && (r = new Integer([r.getBits(0), r.getBits(1)], 0)), r.modulo(this.Ie).toNumber();
+      return 1 === r.compare(Rt) && (r = new Integer([r.getBits(0), r.getBits(1)], 0)), r.modulo(this.de).toNumber();
     }
     // Return whether the bit on the given index in the bitmap is set to 1.
-    Ee(e) {
-      return 0 != (this.bitmap[Math.floor(e / 8)] & 1 << e % 8);
+    Re(e) {
+      return !!(this.bitmap[Math.floor(e / 8)] & 1 << e % 8);
     }
     mightContain(e) {
-      if (0 === this.Te) return false;
+      if (0 === this.Ee) return false;
       const t = __PRIVATE_getMd5HashValue(e), [n, r] = __PRIVATE_get64BitUints(t);
       for (let e2 = 0; e2 < this.hashCount; e2++) {
-        const t2 = this.de(n, r, e2);
-        if (!this.Ee(t2)) return false;
+        const t2 = this.Ae(n, r, e2);
+        if (!this.Re(t2)) return false;
       }
       return true;
     }
@@ -7293,14 +7362,14 @@ var VpagoPayments = (() => {
       return n.forEach((e2) => s.insert(e2)), s;
     }
     insert(e) {
-      if (0 === this.Te) return;
+      if (0 === this.Ee) return;
       const t = __PRIVATE_getMd5HashValue(e), [n, r] = __PRIVATE_get64BitUints(t);
       for (let e2 = 0; e2 < this.hashCount; e2++) {
-        const t2 = this.de(n, r, e2);
-        this.Ae(t2);
+        const t2 = this.Ae(n, r, e2);
+        this.Ve(t2);
       }
     }
-    Ae(e) {
+    Ve(e) {
       const t = Math.floor(e / 8), n = e % 8;
       this.bitmap[t] |= 1 << n;
     }
@@ -7341,12 +7410,12 @@ var VpagoPayments = (() => {
   };
   var __PRIVATE_DocumentWatchChange = class {
     constructor(e, t, n, r) {
-      this.Re = e, this.removedTargetIds = t, this.key = n, this.Ve = r;
+      this.me = e, this.removedTargetIds = t, this.key = n, this.fe = r;
     }
   };
   var __PRIVATE_ExistenceFilterChange = class {
     constructor(e, t) {
-      this.targetId = e, this.me = t;
+      this.targetId = e, this.ge = t;
     }
   };
   var __PRIVATE_WatchTargetChange = class {
@@ -7356,19 +7425,19 @@ var VpagoPayments = (() => {
   };
   var __PRIVATE_TargetState = class {
     constructor() {
-      this.fe = 0, /**
+      this.pe = 0, /**
        * Keeps track of the document changes since the last raised snapshot.
        *
        * These changes are continuously updated as we receive document updates and
        * always reflect the current set of changes against the last issued snapshot.
        */
-      this.ge = __PRIVATE_snapshotChangesMap(), /** See public getters for explanations of these fields. */
-      this.pe = ByteString.EMPTY_BYTE_STRING, this.ye = false, /**
+      this.ye = __PRIVATE_snapshotChangesMap(), /** See public getters for explanations of these fields. */
+      this.we = ByteString.EMPTY_BYTE_STRING, this.Se = false, /**
        * Whether this target state should be included in the next snapshot. We
        * initialize to true so that newly-added targets are included in the next
        * RemoteEvent.
        */
-      this.we = true;
+      this.be = true;
     }
     /**
      * Whether this target has been marked 'current'.
@@ -7379,26 +7448,26 @@ var VpagoPayments = (() => {
      * stream.
      */
     get current() {
-      return this.ye;
+      return this.Se;
     }
     /** The last resume token sent to us for this target. */
     get resumeToken() {
-      return this.pe;
+      return this.we;
     }
     /** Whether this target has pending target adds or target removes. */
-    get Se() {
-      return 0 !== this.fe;
+    get De() {
+      return 0 !== this.pe;
     }
     /** Whether we have modified any state that should trigger a snapshot. */
-    get be() {
-      return this.we;
+    get ve() {
+      return this.be;
     }
     /**
      * Applies the resume token to the TargetChange, but only when it has a new
      * value. Empty resumeTokens are discarded.
      */
-    De(e) {
-      e.approximateByteSize() > 0 && (this.we = true, this.pe = e);
+    Ce(e) {
+      e.approximateByteSize() > 0 && (this.be = true, this.we = e);
     }
     /**
      * Creates a target change from the current set of changes.
@@ -7406,9 +7475,9 @@ var VpagoPayments = (() => {
      * To reset the document changes after raising this snapshot, call
      * `clearPendingChanges()`.
      */
-    ve() {
+    Fe() {
       let e = __PRIVATE_documentKeySet(), t = __PRIVATE_documentKeySet(), n = __PRIVATE_documentKeySet();
-      return this.ge.forEach((r, i) => {
+      return this.ye.forEach((r, i) => {
         switch (i) {
           case 0:
             e = e.add(r);
@@ -7422,74 +7491,74 @@ var VpagoPayments = (() => {
           default:
             fail();
         }
-      }), new TargetChange(this.pe, this.ye, e, t, n);
+      }), new TargetChange(this.we, this.Se, e, t, n);
     }
     /**
      * Resets the document changes and sets `hasPendingChanges` to false.
      */
-    Ce() {
-      this.we = false, this.ge = __PRIVATE_snapshotChangesMap();
+    Me() {
+      this.be = false, this.ye = __PRIVATE_snapshotChangesMap();
     }
-    Fe(e, t) {
-      this.we = true, this.ge = this.ge.insert(e, t);
+    xe(e, t) {
+      this.be = true, this.ye = this.ye.insert(e, t);
     }
-    Me(e) {
-      this.we = true, this.ge = this.ge.remove(e);
-    }
-    xe() {
-      this.fe += 1;
-    }
-    Oe() {
-      this.fe -= 1, __PRIVATE_hardAssert(this.fe >= 0);
+    Oe(e) {
+      this.be = true, this.ye = this.ye.remove(e);
     }
     Ne() {
-      this.we = true, this.ye = true;
+      this.pe += 1;
+    }
+    Be() {
+      this.pe -= 1, __PRIVATE_hardAssert(this.pe >= 0);
+    }
+    Le() {
+      this.be = true, this.Se = true;
     }
   };
   var __PRIVATE_WatchChangeAggregator = class {
     constructor(e) {
-      this.Be = e, /** The internal state of all tracked targets. */
-      this.Le = /* @__PURE__ */ new Map(), /** Keeps track of the documents to update since the last raised snapshot. */
-      this.ke = __PRIVATE_mutableDocumentMap(), this.qe = __PRIVATE_documentTargetMap(), /** A mapping of document keys to their set of target IDs. */
-      this.Qe = __PRIVATE_documentTargetMap(), /**
+      this.ke = e, /** The internal state of all tracked targets. */
+      this.qe = /* @__PURE__ */ new Map(), /** Keeps track of the documents to update since the last raised snapshot. */
+      this.Qe = __PRIVATE_mutableDocumentMap(), this.$e = __PRIVATE_documentTargetMap(), /** A mapping of document keys to their set of target IDs. */
+      this.Ke = __PRIVATE_documentTargetMap(), /**
        * A map of targets with existence filter mismatches. These targets are
        * known to be inconsistent and their listens needs to be re-established by
        * RemoteStore.
        */
-      this.Ke = new SortedMap(__PRIVATE_primitiveComparator);
+      this.Ue = new SortedMap(__PRIVATE_primitiveComparator);
     }
     /**
      * Processes and adds the DocumentWatchChange to the current set of changes.
      */
-    $e(e) {
-      for (const t of e.Re) e.Ve && e.Ve.isFoundDocument() ? this.Ue(t, e.Ve) : this.We(t, e.key, e.Ve);
-      for (const t of e.removedTargetIds) this.We(t, e.key, e.Ve);
+    We(e) {
+      for (const t of e.me) e.fe && e.fe.isFoundDocument() ? this.Ge(t, e.fe) : this.ze(t, e.key, e.fe);
+      for (const t of e.removedTargetIds) this.ze(t, e.key, e.fe);
     }
     /** Processes and adds the WatchTargetChange to the current set of changes. */
-    Ge(e) {
+    je(e) {
       this.forEachTarget(e, (t) => {
-        const n = this.ze(t);
+        const n = this.He(t);
         switch (e.state) {
           case 0:
-            this.je(t) && n.De(e.resumeToken);
+            this.Je(t) && n.Ce(e.resumeToken);
             break;
           case 1:
-            n.Oe(), n.Se || // We have a freshly added target, so we need to reset any state
+            n.Be(), n.De || // We have a freshly added target, so we need to reset any state
             // that we had previously. This can happen e.g. when remove and add
             // back a target for existence filter mismatches.
-            n.Ce(), n.De(e.resumeToken);
+            n.Me(), n.Ce(e.resumeToken);
             break;
           case 2:
-            n.Oe(), n.Se || this.removeTarget(t);
+            n.Be(), n.De || this.removeTarget(t);
             break;
           case 3:
-            this.je(t) && (n.Ne(), n.De(e.resumeToken));
+            this.Je(t) && (n.Le(), n.Ce(e.resumeToken));
             break;
           case 4:
-            this.je(t) && // Reset the target and synthesizes removes for all existing
+            this.Je(t) && // Reset the target and synthesizes removes for all existing
             // documents. The backend will re-add any documents that still
             // match the target before it sends the next global snapshot.
-            (this.He(t), n.De(e.resumeToken));
+            (this.Ye(t), n.Ce(e.resumeToken));
             break;
           default:
             fail();
@@ -7502,8 +7571,8 @@ var VpagoPayments = (() => {
      * active targets.
      */
     forEachTarget(e, t) {
-      e.targetIds.length > 0 ? e.targetIds.forEach(t) : this.Le.forEach((e2, n) => {
-        this.je(n) && t(n);
+      e.targetIds.length > 0 ? e.targetIds.forEach(t) : this.qe.forEach((e2, n) => {
+        this.Je(n) && t(n);
       });
     }
     /**
@@ -7511,24 +7580,24 @@ var VpagoPayments = (() => {
      * Targets that are invalidated by filter mismatches are added to
      * `pendingTargetResets`.
      */
-    Je(e) {
-      const t = e.targetId, n = e.me.count, r = this.Ye(t);
+    Ze(e) {
+      const t = e.targetId, n = e.ge.count, r = this.Xe(t);
       if (r) {
         const i = r.target;
         if (__PRIVATE_targetIsDocumentTarget(i)) if (0 === n) {
           const e2 = new DocumentKey(i.path);
-          this.We(t, e2, MutableDocument.newNoDocument(e2, SnapshotVersion.min()));
+          this.ze(t, e2, MutableDocument.newNoDocument(e2, SnapshotVersion.min()));
         } else __PRIVATE_hardAssert(1 === n);
         else {
-          const r2 = this.Ze(t);
+          const r2 = this.et(t);
           if (r2 !== n) {
-            const n2 = this.Xe(e), i2 = n2 ? this.et(n2, e, r2) : 1;
+            const n2 = this.tt(e), i2 = n2 ? this.nt(n2, e, r2) : 1;
             if (0 !== i2) {
-              this.He(t);
+              this.Ye(t);
               const e2 = 2 === i2 ? "TargetPurposeExistenceFilterMismatchBloom" : "TargetPurposeExistenceFilterMismatch";
-              this.Ke = this.Ke.insert(t, e2);
+              this.Ue = this.Ue.insert(t, e2);
             }
-            null == Pe || Pe.tt(function __PRIVATE_createExistenceFilterMismatchInfoForTestingHooks(e2, t2, n3, r3, i3) {
+            null == At || At.rt(function __PRIVATE_createExistenceFilterMismatchInfoForTestingHooks(e2, t2, n3, r3, i3) {
               var s, o, _, a, u, c;
               const l = {
                 localCacheCount: e2,
@@ -7547,7 +7616,7 @@ var VpagoPayments = (() => {
                 }
               });
               return l;
-            }(r2, e.me, this.Be.nt(), n2, i2));
+            }(r2, e.ge, this.ke.it(), n2, i2));
           }
         }
       }
@@ -7556,8 +7625,8 @@ var VpagoPayments = (() => {
      * Parse the bloom filter from the "unchanged_names" field of an existence
      * filter.
      */
-    Xe(e) {
-      const t = e.me.unchangedNames;
+    tt(e) {
+      const t = e.ge.unchangedNames;
       if (!t || !t.bits) return null;
       const { bits: { bitmap: n = "", padding: r = 0 }, hashCount: i = 0 } = t;
       let s, o;
@@ -7572,25 +7641,25 @@ var VpagoPayments = (() => {
       } catch (e2) {
         return __PRIVATE_logWarn(e2 instanceof __PRIVATE_BloomFilterError ? "BloomFilter error: " : "Applying bloom filter failed: ", e2), null;
       }
-      return 0 === o.Te ? null : o;
+      return 0 === o.Ee ? null : o;
     }
     /**
      * Apply bloom filter to remove the deleted documents, and return the
      * application status.
      */
-    et(e, t, n) {
-      return t.me.count === n - this.rt(e, t.targetId) ? 0 : 2;
+    nt(e, t, n) {
+      return t.ge.count === n - this.st(e, t.targetId) ? 0 : 2;
     }
     /**
      * Filter out removed documents based on bloom filter membership result and
      * return number of documents removed.
      */
-    rt(e, t) {
-      const n = this.Be.getRemoteKeysForTarget(t);
+    st(e, t) {
+      const n = this.ke.getRemoteKeysForTarget(t);
       let r = 0;
       return n.forEach((n2) => {
-        const i = this.Be.nt(), s = `projects/${i.projectId}/databases/${i.database}/documents/${n2.path.canonicalString()}`;
-        e.mightContain(s) || (this.We(
+        const i = this.ke.it(), s = `projects/${i.projectId}/databases/${i.database}/documents/${n2.path.canonicalString()}`;
+        e.mightContain(s) || (this.ze(
           t,
           n2,
           /*updatedDocument=*/
@@ -7602,38 +7671,38 @@ var VpagoPayments = (() => {
      * Converts the currently accumulated state into a remote event at the
      * provided snapshot version. Resets the accumulated changes before returning.
      */
-    it(e) {
+    ot(e) {
       const t = /* @__PURE__ */ new Map();
-      this.Le.forEach((n2, r2) => {
-        const i = this.Ye(r2);
+      this.qe.forEach((n2, r2) => {
+        const i = this.Xe(r2);
         if (i) {
           if (n2.current && __PRIVATE_targetIsDocumentTarget(i.target)) {
             const t2 = new DocumentKey(i.target.path);
-            this.st(t2).has(r2) || this.ot(r2, t2) || this.We(r2, t2, MutableDocument.newNoDocument(t2, e));
+            this._t(t2).has(r2) || this.ut(r2, t2) || this.ze(r2, t2, MutableDocument.newNoDocument(t2, e));
           }
-          n2.be && (t.set(r2, n2.ve()), n2.Ce());
+          n2.ve && (t.set(r2, n2.Fe()), n2.Me());
         }
       });
       let n = __PRIVATE_documentKeySet();
-      this.Qe.forEach((e2, t2) => {
+      this.Ke.forEach((e2, t2) => {
         let r2 = true;
         t2.forEachWhile((e3) => {
-          const t3 = this.Ye(e3);
+          const t3 = this.Xe(e3);
           return !t3 || "TargetPurposeLimboResolution" === t3.purpose || (r2 = false, false);
         }), r2 && (n = n.add(e2));
-      }), this.ke.forEach((t2, n2) => n2.setReadTime(e));
-      const r = new RemoteEvent(e, t, this.Ke, this.ke, n);
-      return this.ke = __PRIVATE_mutableDocumentMap(), this.qe = __PRIVATE_documentTargetMap(), this.Qe = __PRIVATE_documentTargetMap(), this.Ke = new SortedMap(__PRIVATE_primitiveComparator), r;
+      }), this.Qe.forEach((t2, n2) => n2.setReadTime(e));
+      const r = new RemoteEvent(e, t, this.Ue, this.Qe, n);
+      return this.Qe = __PRIVATE_mutableDocumentMap(), this.$e = __PRIVATE_documentTargetMap(), this.Ke = __PRIVATE_documentTargetMap(), this.Ue = new SortedMap(__PRIVATE_primitiveComparator), r;
     }
     /**
      * Adds the provided document to the internal list of document updates and
      * its document key to the given target's mapping.
      */
     // Visible for testing.
-    Ue(e, t) {
-      if (!this.je(e)) return;
-      const n = this.ot(e, t.key) ? 2 : 0;
-      this.ze(e).Fe(t.key, n), this.ke = this.ke.insert(t.key, t), this.qe = this.qe.insert(t.key, this.st(t.key).add(e)), this.Qe = this.Qe.insert(t.key, this._t(t.key).add(e));
+    Ge(e, t) {
+      if (!this.Je(e)) return;
+      const n = this.ut(e, t.key) ? 2 : 0;
+      this.He(e).xe(t.key, n), this.Qe = this.Qe.insert(t.key, t), this.$e = this.$e.insert(t.key, this._t(t.key).add(e)), this.Ke = this.Ke.insert(t.key, this.ct(t.key).add(e));
     }
     /**
      * Removes the provided document from the target mapping. If the
@@ -7643,76 +7712,76 @@ var VpagoPayments = (() => {
      * to update the remote document cache.
      */
     // Visible for testing.
-    We(e, t, n) {
-      if (!this.je(e)) return;
-      const r = this.ze(e);
-      this.ot(e, t) ? r.Fe(
+    ze(e, t, n) {
+      if (!this.Je(e)) return;
+      const r = this.He(e);
+      this.ut(e, t) ? r.xe(
         t,
         1
         /* ChangeType.Removed */
       ) : (
         // The document may have entered and left the target before we raised a
         // snapshot, so we can just ignore the change.
-        r.Me(t)
-      ), this.Qe = this.Qe.insert(t, this._t(t).delete(e)), this.Qe = this.Qe.insert(t, this._t(t).add(e)), n && (this.ke = this.ke.insert(t, n));
+        r.Oe(t)
+      ), this.Ke = this.Ke.insert(t, this.ct(t).delete(e)), this.Ke = this.Ke.insert(t, this.ct(t).add(e)), n && (this.Qe = this.Qe.insert(t, n));
     }
     removeTarget(e) {
-      this.Le.delete(e);
+      this.qe.delete(e);
     }
     /**
      * Returns the current count of documents in the target. This includes both
      * the number of documents that the LocalStore considers to be part of the
      * target as well as any accumulated changes.
      */
-    Ze(e) {
-      const t = this.ze(e).ve();
-      return this.Be.getRemoteKeysForTarget(e).size + t.addedDocuments.size - t.removedDocuments.size;
+    et(e) {
+      const t = this.He(e).Fe();
+      return this.ke.getRemoteKeysForTarget(e).size + t.addedDocuments.size - t.removedDocuments.size;
     }
     /**
      * Increment the number of acks needed from watch before we can consider the
      * server to be 'in-sync' with the client's active targets.
      */
-    xe(e) {
-      this.ze(e).xe();
+    Ne(e) {
+      this.He(e).Ne();
     }
-    ze(e) {
-      let t = this.Le.get(e);
-      return t || (t = new __PRIVATE_TargetState(), this.Le.set(e, t)), t;
+    He(e) {
+      let t = this.qe.get(e);
+      return t || (t = new __PRIVATE_TargetState(), this.qe.set(e, t)), t;
+    }
+    ct(e) {
+      let t = this.Ke.get(e);
+      return t || (t = new SortedSet(__PRIVATE_primitiveComparator), this.Ke = this.Ke.insert(e, t)), t;
     }
     _t(e) {
-      let t = this.Qe.get(e);
-      return t || (t = new SortedSet(__PRIVATE_primitiveComparator), this.Qe = this.Qe.insert(e, t)), t;
-    }
-    st(e) {
-      let t = this.qe.get(e);
-      return t || (t = new SortedSet(__PRIVATE_primitiveComparator), this.qe = this.qe.insert(e, t)), t;
+      let t = this.$e.get(e);
+      return t || (t = new SortedSet(__PRIVATE_primitiveComparator), this.$e = this.$e.insert(e, t)), t;
     }
     /**
      * Verifies that the user is still interested in this target (by calling
      * `getTargetDataForTarget()`) and that we are not waiting for pending ADDs
      * from watch.
      */
-    je(e) {
-      const t = null !== this.Ye(e);
+    Je(e) {
+      const t = null !== this.Xe(e);
       return t || __PRIVATE_logDebug("WatchChangeAggregator", "Detected inactive target", e), t;
     }
     /**
      * Returns the TargetData for an active target (i.e. a target that the user
      * is still interested in that has no outstanding target change requests).
      */
-    Ye(e) {
-      const t = this.Le.get(e);
-      return t && t.Se ? null : this.Be.ut(e);
+    Xe(e) {
+      const t = this.qe.get(e);
+      return t && t.De ? null : this.ke.lt(e);
     }
     /**
      * Resets the state of a Watch target to its initial state (e.g. sets
      * 'current' to false, clears the resume token and removes its target mapping
      * from all documents).
      */
-    He(e) {
-      this.Le.set(e, new __PRIVATE_TargetState());
-      this.Be.getRemoteKeysForTarget(e).forEach((t) => {
-        this.We(
+    Ye(e) {
+      this.qe.set(e, new __PRIVATE_TargetState());
+      this.ke.getRemoteKeysForTarget(e).forEach((t) => {
+        this.ze(
           e,
           t,
           /*updatedDocument=*/
@@ -7724,8 +7793,8 @@ var VpagoPayments = (() => {
      * Returns whether the LocalStore considers the document to be part of the
      * specified target.
      */
-    ot(e, t) {
-      return this.Be.getRemoteKeysForTarget(e).has(t);
+    ut(e, t) {
+      return this.ke.getRemoteKeysForTarget(e).has(t);
     }
   };
   function __PRIVATE_documentTargetMap() {
@@ -7734,14 +7803,14 @@ var VpagoPayments = (() => {
   function __PRIVATE_snapshotChangesMap() {
     return new SortedMap(DocumentKey.comparator);
   }
-  var Ie = /* @__PURE__ */ (() => {
+  var Vt = /* @__PURE__ */ (() => {
     const e = {
       asc: "ASCENDING",
       desc: "DESCENDING"
     };
     return e;
   })();
-  var de = /* @__PURE__ */ (() => {
+  var mt = /* @__PURE__ */ (() => {
     const e = {
       "<": "LESS_THAN",
       "<=": "LESS_THAN_OR_EQUAL",
@@ -7756,7 +7825,7 @@ var VpagoPayments = (() => {
     };
     return e;
   })();
-  var Ee = /* @__PURE__ */ (() => {
+  var ft = /* @__PURE__ */ (() => {
     const e = {
       and: "AND",
       or: "OR"
@@ -7812,8 +7881,8 @@ var VpagoPayments = (() => {
   }
   function fromName(e, t) {
     const n = __PRIVATE_fromResourceName(t);
-    if (n.get(1) !== e.databaseId.projectId) throw new FirestoreError(D.INVALID_ARGUMENT, "Tried to deserialize key from different project: " + n.get(1) + " vs " + e.databaseId.projectId);
-    if (n.get(3) !== e.databaseId.database) throw new FirestoreError(D.INVALID_ARGUMENT, "Tried to deserialize key from different database: " + n.get(3) + " vs " + e.databaseId.database);
+    if (n.get(1) !== e.databaseId.projectId) throw new FirestoreError(C.INVALID_ARGUMENT, "Tried to deserialize key from different project: " + n.get(1) + " vs " + e.databaseId.projectId);
+    if (n.get(3) !== e.databaseId.database) throw new FirestoreError(C.INVALID_ARGUMENT, "Tried to deserialize key from different database: " + n.get(3) + " vs " + e.databaseId.database);
     return new DocumentKey(__PRIVATE_extractLocalPathFromResourceName(n));
   }
   function __PRIVATE_toQueryPath(e, t) {
@@ -7848,7 +7917,7 @@ var VpagoPayments = (() => {
         // does not indicate that it extends Uint8Array.
         t2 instanceof Buffer || t2 instanceof Uint8Array), ByteString.fromUint8Array(t2 || new Uint8Array()));
       }(e, t.targetChange.resumeToken), o = t.targetChange.cause, _ = o && function __PRIVATE_fromRpcStatus(e2) {
-        const t2 = void 0 === e2.code ? D.UNKNOWN : __PRIVATE_mapCodeFromRpcCode(e2.code);
+        const t2 = void 0 === e2.code ? C.UNKNOWN : __PRIVATE_mapCodeFromRpcCode(e2.code);
         return new FirestoreError(t2, e2.message || "");
       }(o);
       n = new __PRIVATE_WatchTargetChange(r, i, s, _ || null);
@@ -7924,7 +7993,7 @@ var VpagoPayments = (() => {
       };
       if (n2 instanceof __PRIVATE_NumericIncrementTransformOperation) return {
         fieldPath: t2.field.canonicalString(),
-        increment: n2.Pe
+        increment: n2.Ie
       };
       throw fail();
     }(0, e2))), t.precondition.isNone || (n.currentDocument = function __PRIVATE_toPrecondition(e2, t2) {
@@ -7996,7 +8065,7 @@ var VpagoPayments = (() => {
         values: e2.position
       };
     }(t.endAt)), {
-      ct: n,
+      ht: n,
       parent: i
     };
   }
@@ -8136,13 +8205,13 @@ var VpagoPayments = (() => {
     }(e) : fail();
   }
   function __PRIVATE_toDirection(e) {
-    return Ie[e];
+    return Vt[e];
   }
   function __PRIVATE_toOperatorName(e) {
-    return de[e];
+    return mt[e];
   }
   function __PRIVATE_toCompositeOperatorName(e) {
-    return Ee[e];
+    return ft[e];
   }
   function __PRIVATE_toFieldPathReference(e) {
     return {
@@ -8249,7 +8318,7 @@ var VpagoPayments = (() => {
   };
   var __PRIVATE_LocalSerializer = class {
     constructor(e) {
-      this.ht = e;
+      this.Tt = e;
     }
   };
   function __PRIVATE_fromBundledQuery(e) {
@@ -8274,79 +8343,79 @@ var VpagoPayments = (() => {
     // ["bar", [2, truncated("foo")]] -> (STRING, "bar", TERM, ARRAY, NUMBER, 2, STRING, "foo", TRUNC)
     // ["bar", truncated(["foo"])] -> (STRING, "bar", TERM, ARRAY. STRING, "foo", TERM, TRUNC)
     /** Writes an index value.  */
-    dt(e, t) {
-      this.Et(e, t), // Write separator to split index values
+    At(e, t) {
+      this.Rt(e, t), // Write separator to split index values
       // (see go/firestore-storage-format#encodings).
-      t.At();
-    }
-    Et(e, t) {
-      if ("nullValue" in e) this.Rt(t, 5);
-      else if ("booleanValue" in e) this.Rt(t, 10), t.Vt(e.booleanValue ? 1 : 0);
-      else if ("integerValue" in e) this.Rt(t, 15), t.Vt(__PRIVATE_normalizeNumber(e.integerValue));
-      else if ("doubleValue" in e) {
-        const n = __PRIVATE_normalizeNumber(e.doubleValue);
-        isNaN(n) ? this.Rt(t, 13) : (this.Rt(t, 15), __PRIVATE_isNegativeZero(n) ? (
-          // -0.0, 0 and 0.0 are all considered the same
-          t.Vt(0)
-        ) : t.Vt(n));
-      } else if ("timestampValue" in e) {
-        let n = e.timestampValue;
-        this.Rt(t, 20), "string" == typeof n && (n = __PRIVATE_normalizeTimestamp(n)), t.ft(`${n.seconds || ""}`), t.Vt(n.nanos || 0);
-      } else if ("stringValue" in e) this.gt(e.stringValue, t), this.yt(t);
-      else if ("bytesValue" in e) this.Rt(t, 30), t.wt(__PRIVATE_normalizeByteString(e.bytesValue)), this.yt(t);
-      else if ("referenceValue" in e) this.St(e.referenceValue, t);
-      else if ("geoPointValue" in e) {
-        const n = e.geoPointValue;
-        this.Rt(t, 45), t.Vt(n.latitude || 0), t.Vt(n.longitude || 0);
-      } else "mapValue" in e ? __PRIVATE_isMaxValue(e) ? this.Rt(t, Number.MAX_SAFE_INTEGER) : __PRIVATE_isVectorValue(e) ? this.bt(e.mapValue, t) : (this.Dt(e.mapValue, t), this.yt(t)) : "arrayValue" in e ? (this.vt(e.arrayValue, t), this.yt(t)) : fail();
-    }
-    gt(e, t) {
-      this.Rt(t, 25), this.Ct(e, t);
-    }
-    Ct(e, t) {
-      t.ft(e);
-    }
-    Dt(e, t) {
-      const n = e.fields || {};
-      this.Rt(t, 55);
-      for (const e2 of Object.keys(n)) this.gt(e2, t), this.Et(n[e2], t);
-    }
-    bt(e, t) {
-      var n, r;
-      const i = e.fields || {};
-      this.Rt(t, 53);
-      const s = "value", o = (null === (r = null === (n = i[s].arrayValue) || void 0 === n ? void 0 : n.values) || void 0 === r ? void 0 : r.length) || 0;
-      this.Rt(t, 15), t.Vt(__PRIVATE_normalizeNumber(o)), // Vectors then sort by position value
-      this.gt(s, t), this.Et(i[s], t);
-    }
-    vt(e, t) {
-      const n = e.values || [];
-      this.Rt(t, 50);
-      for (const e2 of n) this.Et(e2, t);
-    }
-    St(e, t) {
-      this.Rt(t, 37);
-      DocumentKey.fromName(e).path.forEach((e2) => {
-        this.Rt(t, 60), this.Ct(e2, t);
-      });
+      t.Vt();
     }
     Rt(e, t) {
-      e.Vt(t);
+      if ("nullValue" in e) this.ft(t, 5);
+      else if ("booleanValue" in e) this.ft(t, 10), t.gt(e.booleanValue ? 1 : 0);
+      else if ("integerValue" in e) this.ft(t, 15), t.gt(__PRIVATE_normalizeNumber(e.integerValue));
+      else if ("doubleValue" in e) {
+        const n = __PRIVATE_normalizeNumber(e.doubleValue);
+        isNaN(n) ? this.ft(t, 13) : (this.ft(t, 15), __PRIVATE_isNegativeZero(n) ? (
+          // -0.0, 0 and 0.0 are all considered the same
+          t.gt(0)
+        ) : t.gt(n));
+      } else if ("timestampValue" in e) {
+        let n = e.timestampValue;
+        this.ft(t, 20), "string" == typeof n && (n = __PRIVATE_normalizeTimestamp(n)), t.yt(`${n.seconds || ""}`), t.gt(n.nanos || 0);
+      } else if ("stringValue" in e) this.wt(e.stringValue, t), this.St(t);
+      else if ("bytesValue" in e) this.ft(t, 30), t.bt(__PRIVATE_normalizeByteString(e.bytesValue)), this.St(t);
+      else if ("referenceValue" in e) this.Dt(e.referenceValue, t);
+      else if ("geoPointValue" in e) {
+        const n = e.geoPointValue;
+        this.ft(t, 45), t.gt(n.latitude || 0), t.gt(n.longitude || 0);
+      } else "mapValue" in e ? __PRIVATE_isMaxValue(e) ? this.ft(t, Number.MAX_SAFE_INTEGER) : __PRIVATE_isVectorValue(e) ? this.vt(e.mapValue, t) : (this.Ct(e.mapValue, t), this.St(t)) : "arrayValue" in e ? (this.Ft(e.arrayValue, t), this.St(t)) : fail();
     }
-    yt(e) {
-      e.Vt(2);
+    wt(e, t) {
+      this.ft(t, 25), this.Mt(e, t);
+    }
+    Mt(e, t) {
+      t.yt(e);
+    }
+    Ct(e, t) {
+      const n = e.fields || {};
+      this.ft(t, 55);
+      for (const e2 of Object.keys(n)) this.wt(e2, t), this.Rt(n[e2], t);
+    }
+    vt(e, t) {
+      var n, r;
+      const i = e.fields || {};
+      this.ft(t, 53);
+      const s = at, o = (null === (r = null === (n = i[s].arrayValue) || void 0 === n ? void 0 : n.values) || void 0 === r ? void 0 : r.length) || 0;
+      this.ft(t, 15), t.gt(__PRIVATE_normalizeNumber(o)), // Vectors then sort by position value
+      this.wt(s, t), this.Rt(i[s], t);
+    }
+    Ft(e, t) {
+      const n = e.values || [];
+      this.ft(t, 50);
+      for (const e2 of n) this.Rt(e2, t);
+    }
+    Dt(e, t) {
+      this.ft(t, 37);
+      DocumentKey.fromName(e).path.forEach((e2) => {
+        this.ft(t, 60), this.Mt(e2, t);
+      });
+    }
+    ft(e, t) {
+      e.gt(t);
+    }
+    St(e) {
+      e.gt(2);
     }
   };
-  __PRIVATE_FirestoreIndexValueWriter.Ft = new __PRIVATE_FirestoreIndexValueWriter();
+  __PRIVATE_FirestoreIndexValueWriter.xt = new __PRIVATE_FirestoreIndexValueWriter();
   var __PRIVATE_MemoryIndexManager = class {
     constructor() {
-      this.ln = new __PRIVATE_MemoryCollectionParentIndex();
+      this.Tn = new __PRIVATE_MemoryCollectionParentIndex();
     }
     addToCollectionParentIndex(e, t) {
-      return this.ln.add(t), PersistencePromise.resolve();
+      return this.Tn.add(t), PersistencePromise.resolve();
     }
     getCollectionParents(e, t) {
-      return PersistencePromise.resolve(this.ln.getEntries(t));
+      return PersistencePromise.resolve(this.Tn.getEntries(t));
     }
     addFieldIndex(e, t) {
       return PersistencePromise.resolve();
@@ -8405,13 +8474,14 @@ var VpagoPayments = (() => {
       return (this.index[e] || new SortedSet(ResourcePath.comparator)).toArray();
     }
   };
-  var Ae = new Uint8Array(0);
-  var Re = {
+  var yt = new Uint8Array(0);
+  var wt = {
     didRun: false,
     sequenceNumbersCollected: 0,
     targetsRemoved: 0,
     documentsRemoved: 0
   };
+  var St = 41943040;
   var LruParams = class _LruParams {
     static withCacheSize(e) {
       return new _LruParams(e, _LruParams.DEFAULT_COLLECTION_PERCENTILE, _LruParams.DEFAULT_MAX_SEQUENCE_NUMBERS_TO_COLLECT);
@@ -8420,35 +8490,37 @@ var VpagoPayments = (() => {
       this.cacheSizeCollectionThreshold = e, this.percentileToCollect = t, this.maximumSequenceNumbersToCollect = n;
     }
   };
-  LruParams.DEFAULT_COLLECTION_PERCENTILE = 10, LruParams.DEFAULT_MAX_SEQUENCE_NUMBERS_TO_COLLECT = 1e3, LruParams.DEFAULT = new LruParams(41943040, LruParams.DEFAULT_COLLECTION_PERCENTILE, LruParams.DEFAULT_MAX_SEQUENCE_NUMBERS_TO_COLLECT), LruParams.DISABLED = new LruParams(-1, 0, 0);
+  LruParams.DEFAULT_COLLECTION_PERCENTILE = 10, LruParams.DEFAULT_MAX_SEQUENCE_NUMBERS_TO_COLLECT = 1e3, LruParams.DEFAULT = new LruParams(St, LruParams.DEFAULT_COLLECTION_PERCENTILE, LruParams.DEFAULT_MAX_SEQUENCE_NUMBERS_TO_COLLECT), LruParams.DISABLED = new LruParams(-1, 0, 0);
   var __PRIVATE_TargetIdGenerator = class ___PRIVATE_TargetIdGenerator {
     constructor(e) {
-      this.kn = e;
+      this.$n = e;
     }
     next() {
-      return this.kn += 2, this.kn;
+      return this.$n += 2, this.$n;
     }
-    static qn() {
+    static Kn() {
       return new ___PRIVATE_TargetIdGenerator(0);
     }
-    static Qn() {
+    static Un() {
       return new ___PRIVATE_TargetIdGenerator(-1);
     }
   };
+  var bt = "LruGarbageCollector";
+  var Dt = 1048576;
   function __PRIVATE_bufferEntryComparator([e, t], [n, r]) {
     const i = __PRIVATE_primitiveComparator(e, n);
     return 0 === i ? __PRIVATE_primitiveComparator(t, r) : i;
   }
   var __PRIVATE_RollingSequenceNumberBuffer = class {
     constructor(e) {
-      this.Gn = e, this.buffer = new SortedSet(__PRIVATE_bufferEntryComparator), this.zn = 0;
+      this.Hn = e, this.buffer = new SortedSet(__PRIVATE_bufferEntryComparator), this.Jn = 0;
     }
-    jn() {
-      return ++this.zn;
+    Yn() {
+      return ++this.Jn;
     }
-    Hn(e) {
-      const t = [e, this.jn()];
-      if (this.buffer.size < this.Gn) this.buffer = this.buffer.add(t);
+    Zn(e) {
+      const t = [e, this.Yn()];
+      if (this.buffer.size < this.Hn) this.buffer = this.buffer.add(t);
       else {
         const e2 = this.buffer.last();
         __PRIVATE_bufferEntryComparator(t, e2) < 0 && (this.buffer = this.buffer.delete(e2).add(t));
@@ -8460,66 +8532,66 @@ var VpagoPayments = (() => {
   };
   var __PRIVATE_LruScheduler = class {
     constructor(e, t, n) {
-      this.garbageCollector = e, this.asyncQueue = t, this.localStore = n, this.Jn = null;
+      this.garbageCollector = e, this.asyncQueue = t, this.localStore = n, this.Xn = null;
     }
     start() {
-      -1 !== this.garbageCollector.params.cacheSizeCollectionThreshold && this.Yn(6e4);
+      -1 !== this.garbageCollector.params.cacheSizeCollectionThreshold && this.er(6e4);
     }
     stop() {
-      this.Jn && (this.Jn.cancel(), this.Jn = null);
+      this.Xn && (this.Xn.cancel(), this.Xn = null);
     }
     get started() {
-      return null !== this.Jn;
+      return null !== this.Xn;
     }
-    Yn(e) {
-      __PRIVATE_logDebug("LruGarbageCollector", `Garbage collection scheduled in ${e}ms`), this.Jn = this.asyncQueue.enqueueAfterDelay("lru_garbage_collection", e, async () => {
-        this.Jn = null;
+    er(e) {
+      __PRIVATE_logDebug(bt, `Garbage collection scheduled in ${e}ms`), this.Xn = this.asyncQueue.enqueueAfterDelay("lru_garbage_collection", e, async () => {
+        this.Xn = null;
         try {
           await this.localStore.collectGarbage(this.garbageCollector);
         } catch (e2) {
-          __PRIVATE_isIndexedDbTransactionError(e2) ? __PRIVATE_logDebug("LruGarbageCollector", "Ignoring IndexedDB error during garbage collection: ", e2) : await __PRIVATE_ignoreIfPrimaryLeaseLoss(e2);
+          __PRIVATE_isIndexedDbTransactionError(e2) ? __PRIVATE_logDebug(bt, "Ignoring IndexedDB error during garbage collection: ", e2) : await __PRIVATE_ignoreIfPrimaryLeaseLoss(e2);
         }
-        await this.Yn(3e5);
+        await this.er(3e5);
       });
     }
   };
   var __PRIVATE_LruGarbageCollectorImpl = class {
     constructor(e, t) {
-      this.Zn = e, this.params = t;
+      this.tr = e, this.params = t;
     }
     calculateTargetCount(e, t) {
-      return this.Zn.Xn(e).next((e2) => Math.floor(t / 100 * e2));
+      return this.tr.nr(e).next((e2) => Math.floor(t / 100 * e2));
     }
     nthSequenceNumber(e, t) {
-      if (0 === t) return PersistencePromise.resolve(__PRIVATE_ListenSequence.oe);
+      if (0 === t) return PersistencePromise.resolve(__PRIVATE_ListenSequence.ae);
       const n = new __PRIVATE_RollingSequenceNumberBuffer(t);
-      return this.Zn.forEachTarget(e, (e2) => n.Hn(e2.sequenceNumber)).next(() => this.Zn.er(e, (e2) => n.Hn(e2))).next(() => n.maxValue);
+      return this.tr.forEachTarget(e, (e2) => n.Zn(e2.sequenceNumber)).next(() => this.tr.rr(e, (e2) => n.Zn(e2))).next(() => n.maxValue);
     }
     removeTargets(e, t, n) {
-      return this.Zn.removeTargets(e, t, n);
+      return this.tr.removeTargets(e, t, n);
     }
     removeOrphanedDocuments(e, t) {
-      return this.Zn.removeOrphanedDocuments(e, t);
+      return this.tr.removeOrphanedDocuments(e, t);
     }
     collect(e, t) {
-      return -1 === this.params.cacheSizeCollectionThreshold ? (__PRIVATE_logDebug("LruGarbageCollector", "Garbage collection skipped; disabled"), PersistencePromise.resolve(Re)) : this.getCacheSize(e).next((n) => n < this.params.cacheSizeCollectionThreshold ? (__PRIVATE_logDebug("LruGarbageCollector", `Garbage collection skipped; Cache size ${n} is lower than threshold ${this.params.cacheSizeCollectionThreshold}`), Re) : this.tr(e, t));
+      return -1 === this.params.cacheSizeCollectionThreshold ? (__PRIVATE_logDebug("LruGarbageCollector", "Garbage collection skipped; disabled"), PersistencePromise.resolve(wt)) : this.getCacheSize(e).next((n) => n < this.params.cacheSizeCollectionThreshold ? (__PRIVATE_logDebug("LruGarbageCollector", `Garbage collection skipped; Cache size ${n} is lower than threshold ${this.params.cacheSizeCollectionThreshold}`), wt) : this.ir(e, t));
     }
     getCacheSize(e) {
-      return this.Zn.getCacheSize(e);
+      return this.tr.getCacheSize(e);
     }
-    tr(e, t) {
-      let n, r, i, s, o, a, u;
+    ir(e, t) {
+      let n, r, i, s, o, _, u;
       const c = Date.now();
       return this.calculateTargetCount(e, this.params.percentileToCollect).next((t2) => (
         // Cap at the configured max
         (t2 > this.params.maximumSequenceNumbersToCollect ? (__PRIVATE_logDebug("LruGarbageCollector", `Capping sequence numbers to collect down to the maximum of ${this.params.maximumSequenceNumbersToCollect} from ${t2}`), r = this.params.maximumSequenceNumbersToCollect) : r = t2, s = Date.now(), this.nthSequenceNumber(e, r))
-      )).next((r2) => (n = r2, o = Date.now(), this.removeTargets(e, n, t))).next((t2) => (i = t2, a = Date.now(), this.removeOrphanedDocuments(e, n))).next((e2) => {
+      )).next((r2) => (n = r2, o = Date.now(), this.removeTargets(e, n, t))).next((t2) => (i = t2, _ = Date.now(), this.removeOrphanedDocuments(e, n))).next((e2) => {
         if (u = Date.now(), __PRIVATE_getLogLevel() <= LogLevel.DEBUG) {
           __PRIVATE_logDebug("LruGarbageCollector", `LRU Garbage Collection
 	Counted targets in ${s - c}ms
 	Determined least recently used ${r} in ` + (o - s) + `ms
-	Removed ${i} targets in ` + (a - o) + `ms
-	Removed ${e2} documents in ` + (u - a) + `ms
+	Removed ${i} targets in ` + (_ - o) + `ms
+	Removed ${e2} documents in ` + (u - _) + `ms
 Total Duration: ${u - c}ms`);
         }
         return PersistencePromise.resolve({
@@ -8760,7 +8832,7 @@ Total Duration: ${u - c}ms`);
     getNextDocuments(e, t, n, r) {
       return this.remoteDocumentCache.getAllFromCollectionGroup(e, t, n, r).next((i) => {
         const s = r - i.size > 0 ? this.documentOverlayCache.getOverlaysForCollectionGroup(e, t, n.largestBatchId, r - i.size) : PersistencePromise.resolve(__PRIVATE_newOverlayMap());
-        let o = -1, _ = i;
+        let o = N, _ = i;
         return s.next((t2) => PersistencePromise.forEach(t2, (t3, n2) => (o < n2.largestBatchId && (o = n2.largestBatchId), i.get(t3) ? PersistencePromise.resolve() : this.remoteDocumentCache.getEntry(e, t3).next((e2) => {
           _ = _.insert(t3, e2);
         }))).next(() => this.populateOverlays(e, t2, i)).next(() => this.computeViews(e, _, t2, __PRIVATE_documentKeySet())).next((e2) => ({
@@ -8817,13 +8889,13 @@ Total Duration: ${u - c}ms`);
   };
   var __PRIVATE_MemoryBundleCache = class {
     constructor(e) {
-      this.serializer = e, this.Tr = /* @__PURE__ */ new Map(), this.Ir = /* @__PURE__ */ new Map();
+      this.serializer = e, this.dr = /* @__PURE__ */ new Map(), this.Ar = /* @__PURE__ */ new Map();
     }
     getBundleMetadata(e, t) {
-      return PersistencePromise.resolve(this.Tr.get(t));
+      return PersistencePromise.resolve(this.dr.get(t));
     }
     saveBundleMetadata(e, t) {
-      return this.Tr.set(
+      return this.dr.set(
         t.id,
         /** Decodes a BundleMetadata proto into a BundleMetadata object. */
         function __PRIVATE_fromBundleMetadata(e2) {
@@ -8836,10 +8908,10 @@ Total Duration: ${u - c}ms`);
       ), PersistencePromise.resolve();
     }
     getNamedQuery(e, t) {
-      return PersistencePromise.resolve(this.Ir.get(t));
+      return PersistencePromise.resolve(this.Ar.get(t));
     }
     saveNamedQuery(e, t) {
-      return this.Ir.set(t.name, function __PRIVATE_fromProtoNamedQuery(e2) {
+      return this.Ar.set(t.name, function __PRIVATE_fromProtoNamedQuery(e2) {
         return {
           name: e2.name,
           query: __PRIVATE_fromBundledQuery(e2.bundledQuery),
@@ -8850,7 +8922,7 @@ Total Duration: ${u - c}ms`);
   };
   var __PRIVATE_MemoryDocumentOverlayCache = class {
     constructor() {
-      this.overlays = new SortedMap(DocumentKey.comparator), this.dr = /* @__PURE__ */ new Map();
+      this.overlays = new SortedMap(DocumentKey.comparator), this.Rr = /* @__PURE__ */ new Map();
     }
     getOverlay(e, t) {
       return PersistencePromise.resolve(this.overlays.get(t));
@@ -8863,12 +8935,12 @@ Total Duration: ${u - c}ms`);
     }
     saveOverlays(e, t, n) {
       return n.forEach((n2, r) => {
-        this.Tt(e, t, r);
+        this.Et(e, t, r);
       }), PersistencePromise.resolve();
     }
     removeOverlaysForBatchId(e, t, n) {
-      const r = this.dr.get(n);
-      return void 0 !== r && (r.forEach((e2) => this.overlays = this.overlays.remove(e2)), this.dr.delete(n)), PersistencePromise.resolve();
+      const r = this.Rr.get(n);
+      return void 0 !== r && (r.forEach((e2) => this.overlays = this.overlays.remove(e2)), this.Rr.delete(n)), PersistencePromise.resolve();
     }
     getOverlaysForCollection(e, t, n) {
       const r = __PRIVATE_newOverlayMap(), i = t.length + 1, s = new DocumentKey(t.child("")), o = this.overlays.getIteratorFrom(s);
@@ -8895,15 +8967,15 @@ Total Duration: ${u - c}ms`);
       }
       return PersistencePromise.resolve(o);
     }
-    Tt(e, t, n) {
+    Et(e, t, n) {
       const r = this.overlays.get(n.key);
       if (null !== r) {
-        const e2 = this.dr.get(r.largestBatchId).delete(n.key);
-        this.dr.set(r.largestBatchId, e2);
+        const e2 = this.Rr.get(r.largestBatchId).delete(n.key);
+        this.Rr.set(r.largestBatchId, e2);
       }
       this.overlays = this.overlays.insert(n.key, new Overlay(t, n));
-      let i = this.dr.get(t);
-      void 0 === i && (i = __PRIVATE_documentKeySet(), this.dr.set(t, i)), this.dr.set(t, i.add(n.key));
+      let i = this.Rr.get(t);
+      void 0 === i && (i = __PRIVATE_documentKeySet(), this.Rr.set(t, i)), this.Rr.set(t, i.add(n.key));
     }
   };
   var __PRIVATE_MemoryGlobalsCache = class {
@@ -8919,20 +8991,20 @@ Total Duration: ${u - c}ms`);
   };
   var __PRIVATE_ReferenceSet = class {
     constructor() {
-      this.Er = new SortedSet(__PRIVATE_DocReference.Ar), // A set of outstanding references to a document sorted by target id.
-      this.Rr = new SortedSet(__PRIVATE_DocReference.Vr);
+      this.Vr = new SortedSet(__PRIVATE_DocReference.mr), // A set of outstanding references to a document sorted by target id.
+      this.gr = new SortedSet(__PRIVATE_DocReference.pr);
     }
     /** Returns true if the reference set contains no references. */
     isEmpty() {
-      return this.Er.isEmpty();
+      return this.Vr.isEmpty();
     }
     /** Adds a reference to the given document key for the given ID. */
     addReference(e, t) {
       const n = new __PRIVATE_DocReference(e, t);
-      this.Er = this.Er.add(n), this.Rr = this.Rr.add(n);
+      this.Vr = this.Vr.add(n), this.gr = this.gr.add(n);
     }
     /** Add references to the given document keys for the given ID. */
-    mr(e, t) {
+    yr(e, t) {
       e.forEach((e2) => this.addReference(e2, t));
     }
     /**
@@ -8940,50 +9012,50 @@ Total Duration: ${u - c}ms`);
      * ID.
      */
     removeReference(e, t) {
-      this.gr(new __PRIVATE_DocReference(e, t));
+      this.wr(new __PRIVATE_DocReference(e, t));
     }
-    pr(e, t) {
+    Sr(e, t) {
       e.forEach((e2) => this.removeReference(e2, t));
     }
     /**
      * Clears all references with a given ID. Calls removeRef() for each key
      * removed.
      */
-    yr(e) {
+    br(e) {
       const t = new DocumentKey(new ResourcePath([])), n = new __PRIVATE_DocReference(t, e), r = new __PRIVATE_DocReference(t, e + 1), i = [];
-      return this.Rr.forEachInRange([n, r], (e2) => {
-        this.gr(e2), i.push(e2.key);
+      return this.gr.forEachInRange([n, r], (e2) => {
+        this.wr(e2), i.push(e2.key);
       }), i;
     }
-    wr() {
-      this.Er.forEach((e) => this.gr(e));
+    Dr() {
+      this.Vr.forEach((e) => this.wr(e));
     }
-    gr(e) {
-      this.Er = this.Er.delete(e), this.Rr = this.Rr.delete(e);
+    wr(e) {
+      this.Vr = this.Vr.delete(e), this.gr = this.gr.delete(e);
     }
-    Sr(e) {
+    vr(e) {
       const t = new DocumentKey(new ResourcePath([])), n = new __PRIVATE_DocReference(t, e), r = new __PRIVATE_DocReference(t, e + 1);
       let i = __PRIVATE_documentKeySet();
-      return this.Rr.forEachInRange([n, r], (e2) => {
+      return this.gr.forEachInRange([n, r], (e2) => {
         i = i.add(e2.key);
       }), i;
     }
     containsKey(e) {
-      const t = new __PRIVATE_DocReference(e, 0), n = this.Er.firstAfterOrEqual(t);
+      const t = new __PRIVATE_DocReference(e, 0), n = this.Vr.firstAfterOrEqual(t);
       return null !== n && e.isEqual(n.key);
     }
   };
   var __PRIVATE_DocReference = class {
     constructor(e, t) {
-      this.key = e, this.br = t;
+      this.key = e, this.Cr = t;
     }
     /** Compare by key then by ID */
-    static Ar(e, t) {
-      return DocumentKey.comparator(e.key, t.key) || __PRIVATE_primitiveComparator(e.br, t.br);
+    static mr(e, t) {
+      return DocumentKey.comparator(e.key, t.key) || __PRIVATE_primitiveComparator(e.Cr, t.Cr);
     }
     /** Compare by ID then by key */
-    static Vr(e, t) {
-      return __PRIVATE_primitiveComparator(e.br, t.br) || DocumentKey.comparator(e.key, t.key);
+    static pr(e, t) {
+      return __PRIVATE_primitiveComparator(e.Cr, t.Cr) || DocumentKey.comparator(e.key, t.key);
     }
   };
   var __PRIVATE_MemoryMutationQueue = class {
@@ -8993,37 +9065,37 @@ Total Duration: ${u - c}ms`);
        * the backend.
        */
       this.mutationQueue = [], /** Next value to use when assigning sequential IDs to each mutation batch. */
-      this.Dr = 1, /** An ordered mapping between documents and the mutations batch IDs. */
-      this.vr = new SortedSet(__PRIVATE_DocReference.Ar);
+      this.Fr = 1, /** An ordered mapping between documents and the mutations batch IDs. */
+      this.Mr = new SortedSet(__PRIVATE_DocReference.mr);
     }
     checkEmpty(e) {
       return PersistencePromise.resolve(0 === this.mutationQueue.length);
     }
     addMutationBatch(e, t, n, r) {
-      const i = this.Dr;
-      this.Dr++, this.mutationQueue.length > 0 && this.mutationQueue[this.mutationQueue.length - 1];
+      const i = this.Fr;
+      this.Fr++, this.mutationQueue.length > 0 && this.mutationQueue[this.mutationQueue.length - 1];
       const s = new MutationBatch(i, t, n, r);
       this.mutationQueue.push(s);
-      for (const t2 of r) this.vr = this.vr.add(new __PRIVATE_DocReference(t2.key, i)), this.indexManager.addToCollectionParentIndex(e, t2.key.path.popLast());
+      for (const t2 of r) this.Mr = this.Mr.add(new __PRIVATE_DocReference(t2.key, i)), this.indexManager.addToCollectionParentIndex(e, t2.key.path.popLast());
       return PersistencePromise.resolve(s);
     }
     lookupMutationBatch(e, t) {
-      return PersistencePromise.resolve(this.Cr(t));
+      return PersistencePromise.resolve(this.Or(t));
     }
     getNextMutationBatchAfterBatchId(e, t) {
-      const n = t + 1, r = this.Fr(n), i = r < 0 ? 0 : r;
+      const n = t + 1, r = this.Nr(n), i = r < 0 ? 0 : r;
       return PersistencePromise.resolve(this.mutationQueue.length > i ? this.mutationQueue[i] : null);
     }
     getHighestUnacknowledgedBatchId() {
-      return PersistencePromise.resolve(0 === this.mutationQueue.length ? -1 : this.Dr - 1);
+      return PersistencePromise.resolve(0 === this.mutationQueue.length ? Q : this.Fr - 1);
     }
     getAllMutationBatches(e) {
       return PersistencePromise.resolve(this.mutationQueue.slice());
     }
     getAllMutationBatchesAffectingDocumentKey(e, t) {
       const n = new __PRIVATE_DocReference(t, 0), r = new __PRIVATE_DocReference(t, Number.POSITIVE_INFINITY), i = [];
-      return this.vr.forEachInRange([n, r], (e2) => {
-        const t2 = this.Cr(e2.br);
+      return this.Mr.forEachInRange([n, r], (e2) => {
+        const t2 = this.Or(e2.Cr);
         i.push(t2);
       }), PersistencePromise.resolve(i);
     }
@@ -9031,10 +9103,10 @@ Total Duration: ${u - c}ms`);
       let n = new SortedSet(__PRIVATE_primitiveComparator);
       return t.forEach((e2) => {
         const t2 = new __PRIVATE_DocReference(e2, 0), r = new __PRIVATE_DocReference(e2, Number.POSITIVE_INFINITY);
-        this.vr.forEachInRange([t2, r], (e3) => {
-          n = n.add(e3.br);
+        this.Mr.forEachInRange([t2, r], (e3) => {
+          n = n.add(e3.Cr);
         });
-      }), PersistencePromise.resolve(this.Mr(n));
+      }), PersistencePromise.resolve(this.Br(n));
     }
     getAllMutationBatchesAffectingQuery(e, t) {
       const n = t.path, r = n.length + 1;
@@ -9042,37 +9114,37 @@ Total Duration: ${u - c}ms`);
       DocumentKey.isDocumentKey(i) || (i = i.child(""));
       const s = new __PRIVATE_DocReference(new DocumentKey(i), 0);
       let o = new SortedSet(__PRIVATE_primitiveComparator);
-      return this.vr.forEachWhile((e2) => {
+      return this.Mr.forEachWhile((e2) => {
         const t2 = e2.key.path;
         return !!n.isPrefixOf(t2) && // Rows with document keys more than one segment longer than the query
         // path can't be matches. For example, a query on 'rooms' can't match
         // the document /rooms/abc/messages/xyx.
         // TODO(mcg): we'll need a different scanner when we implement
         // ancestor queries.
-        (t2.length === r && (o = o.add(e2.br)), true);
-      }, s), PersistencePromise.resolve(this.Mr(o));
+        (t2.length === r && (o = o.add(e2.Cr)), true);
+      }, s), PersistencePromise.resolve(this.Br(o));
     }
-    Mr(e) {
+    Br(e) {
       const t = [];
       return e.forEach((e2) => {
-        const n = this.Cr(e2);
+        const n = this.Or(e2);
         null !== n && t.push(n);
       }), t;
     }
     removeMutationBatch(e, t) {
-      __PRIVATE_hardAssert(0 === this.Or(t.batchId, "removed")), this.mutationQueue.shift();
-      let n = this.vr;
+      __PRIVATE_hardAssert(0 === this.Lr(t.batchId, "removed")), this.mutationQueue.shift();
+      let n = this.Mr;
       return PersistencePromise.forEach(t.mutations, (r) => {
         const i = new __PRIVATE_DocReference(r.key, t.batchId);
         return n = n.delete(i), this.referenceDelegate.markPotentiallyOrphaned(e, r.key);
       }).next(() => {
-        this.vr = n;
+        this.Mr = n;
       });
     }
-    Bn(e) {
+    qn(e) {
     }
     containsKey(e, t) {
-      const n = new __PRIVATE_DocReference(t, 0), r = this.vr.firstAfterOrEqual(n);
+      const n = new __PRIVATE_DocReference(t, 0), r = this.Mr.firstAfterOrEqual(n);
       return PersistencePromise.resolve(t.isEqual(r && r.key));
     }
     performConsistencyCheck(e) {
@@ -9086,8 +9158,8 @@ Total Duration: ${u - c}ms`);
      * @param action - A description of what the caller is doing, phrased in passive
      * form (e.g. "acknowledged" in a routine that acknowledges batches).
      */
-    Or(e, t) {
-      return this.Fr(e);
+    Lr(e, t) {
+      return this.Nr(e);
     }
     /**
      * Finds the index of the given batchId in the mutation queue. This operation
@@ -9098,7 +9170,7 @@ Total Duration: ${u - c}ms`);
      * batchId has already been removed from the queue or past the end of the
      * queue if the batchId is larger than the last added batch.
      */
-    Fr(e) {
+    Nr(e) {
       if (0 === this.mutationQueue.length)
         return 0;
       return e - this.mutationQueue[0].batchId;
@@ -9107,8 +9179,8 @@ Total Duration: ${u - c}ms`);
      * A version of lookupMutationBatch that doesn't return a promise, this makes
      * other functions that uses this code easier to read and more efficient.
      */
-    Cr(e) {
-      const t = this.Fr(e);
+    Or(e) {
+      const t = this.Nr(e);
       if (t < 0 || t >= this.mutationQueue.length) return null;
       return this.mutationQueue[t];
     }
@@ -9120,7 +9192,7 @@ Total Duration: ${u - c}ms`);
      * calculating the size.
      */
     constructor(e) {
-      this.Nr = e, /** Underlying cache of documents and their read times. */
+      this.kr = e, /** Underlying cache of documents and their read times. */
       this.docs = function __PRIVATE_documentEntryMap() {
         return new SortedMap(DocumentKey.comparator);
       }(), /** Size of all cached documents. */
@@ -9136,7 +9208,7 @@ Total Duration: ${u - c}ms`);
      * returned by `newChangeBuffer()`.
      */
     addEntry(e, t) {
-      const n = t.key, r = this.docs.get(n), i = r ? r.size : 0, s = this.Nr(t);
+      const n = t.key, r = this.docs.get(n), i = r ? r.size : 0, s = this.kr(t);
       return this.docs = this.docs.insert(n, {
         document: t.mutableCopy(),
         size: s
@@ -9176,7 +9248,7 @@ Total Duration: ${u - c}ms`);
     getAllFromCollectionGroup(e, t, n, r) {
       fail();
     }
-    Br(e, t) {
+    qr(e, t) {
       return PersistencePromise.forEach(this.docs, (e2) => t(e2));
     }
     newChangeBuffer(e) {
@@ -9188,19 +9260,19 @@ Total Duration: ${u - c}ms`);
   };
   var __PRIVATE_MemoryRemoteDocumentChangeBuffer = class extends RemoteDocumentChangeBuffer {
     constructor(e) {
-      super(), this.hr = e;
+      super(), this.Ir = e;
     }
     applyChanges(e) {
       const t = [];
       return this.changes.forEach((n, r) => {
-        r.isValidDocument() ? t.push(this.hr.addEntry(e, r)) : this.hr.removeEntry(n);
+        r.isValidDocument() ? t.push(this.Ir.addEntry(e, r)) : this.Ir.removeEntry(n);
       }), PersistencePromise.waitFor(t);
     }
     getFromCache(e, t) {
-      return this.hr.getEntry(e, t);
+      return this.Ir.getEntry(e, t);
     }
     getAllFromCache(e, t) {
-      return this.hr.getEntries(e, t);
+      return this.Ir.getEntries(e, t);
     }
   };
   var __PRIVATE_MemoryTargetCache = class {
@@ -9208,77 +9280,77 @@ Total Duration: ${u - c}ms`);
       this.persistence = e, /**
        * Maps a target to the data about that target
        */
-      this.Lr = new ObjectMap((e2) => __PRIVATE_canonifyTarget(e2), __PRIVATE_targetEquals), /** The last received snapshot version. */
+      this.Qr = new ObjectMap((e2) => __PRIVATE_canonifyTarget(e2), __PRIVATE_targetEquals), /** The last received snapshot version. */
       this.lastRemoteSnapshotVersion = SnapshotVersion.min(), /** The highest numbered target ID encountered. */
       this.highestTargetId = 0, /** The highest sequence number encountered. */
-      this.kr = 0, /**
+      this.$r = 0, /**
        * A ordered bidirectional mapping between documents and the remote target
        * IDs.
        */
-      this.qr = new __PRIVATE_ReferenceSet(), this.targetCount = 0, this.Qr = __PRIVATE_TargetIdGenerator.qn();
+      this.Kr = new __PRIVATE_ReferenceSet(), this.targetCount = 0, this.Ur = __PRIVATE_TargetIdGenerator.Kn();
     }
     forEachTarget(e, t) {
-      return this.Lr.forEach((e2, n) => t(n)), PersistencePromise.resolve();
+      return this.Qr.forEach((e2, n) => t(n)), PersistencePromise.resolve();
     }
     getLastRemoteSnapshotVersion(e) {
       return PersistencePromise.resolve(this.lastRemoteSnapshotVersion);
     }
     getHighestSequenceNumber(e) {
-      return PersistencePromise.resolve(this.kr);
+      return PersistencePromise.resolve(this.$r);
     }
     allocateTargetId(e) {
-      return this.highestTargetId = this.Qr.next(), PersistencePromise.resolve(this.highestTargetId);
+      return this.highestTargetId = this.Ur.next(), PersistencePromise.resolve(this.highestTargetId);
     }
     setTargetsMetadata(e, t, n) {
-      return n && (this.lastRemoteSnapshotVersion = n), t > this.kr && (this.kr = t), PersistencePromise.resolve();
+      return n && (this.lastRemoteSnapshotVersion = n), t > this.$r && (this.$r = t), PersistencePromise.resolve();
     }
-    Un(e) {
-      this.Lr.set(e.target, e);
+    zn(e) {
+      this.Qr.set(e.target, e);
       const t = e.targetId;
-      t > this.highestTargetId && (this.Qr = new __PRIVATE_TargetIdGenerator(t), this.highestTargetId = t), e.sequenceNumber > this.kr && (this.kr = e.sequenceNumber);
+      t > this.highestTargetId && (this.Ur = new __PRIVATE_TargetIdGenerator(t), this.highestTargetId = t), e.sequenceNumber > this.$r && (this.$r = e.sequenceNumber);
     }
     addTargetData(e, t) {
-      return this.Un(t), this.targetCount += 1, PersistencePromise.resolve();
+      return this.zn(t), this.targetCount += 1, PersistencePromise.resolve();
     }
     updateTargetData(e, t) {
-      return this.Un(t), PersistencePromise.resolve();
+      return this.zn(t), PersistencePromise.resolve();
     }
     removeTargetData(e, t) {
-      return this.Lr.delete(t.target), this.qr.yr(t.targetId), this.targetCount -= 1, PersistencePromise.resolve();
+      return this.Qr.delete(t.target), this.Kr.br(t.targetId), this.targetCount -= 1, PersistencePromise.resolve();
     }
     removeTargets(e, t, n) {
       let r = 0;
       const i = [];
-      return this.Lr.forEach((s, o) => {
-        o.sequenceNumber <= t && null === n.get(o.targetId) && (this.Lr.delete(s), i.push(this.removeMatchingKeysForTargetId(e, o.targetId)), r++);
+      return this.Qr.forEach((s, o) => {
+        o.sequenceNumber <= t && null === n.get(o.targetId) && (this.Qr.delete(s), i.push(this.removeMatchingKeysForTargetId(e, o.targetId)), r++);
       }), PersistencePromise.waitFor(i).next(() => r);
     }
     getTargetCount(e) {
       return PersistencePromise.resolve(this.targetCount);
     }
     getTargetData(e, t) {
-      const n = this.Lr.get(t) || null;
+      const n = this.Qr.get(t) || null;
       return PersistencePromise.resolve(n);
     }
     addMatchingKeys(e, t, n) {
-      return this.qr.mr(t, n), PersistencePromise.resolve();
+      return this.Kr.yr(t, n), PersistencePromise.resolve();
     }
     removeMatchingKeys(e, t, n) {
-      this.qr.pr(t, n);
+      this.Kr.Sr(t, n);
       const r = this.persistence.referenceDelegate, i = [];
       return r && t.forEach((t2) => {
         i.push(r.markPotentiallyOrphaned(e, t2));
       }), PersistencePromise.waitFor(i);
     }
     removeMatchingKeysForTargetId(e, t) {
-      return this.qr.yr(t), PersistencePromise.resolve();
+      return this.Kr.br(t), PersistencePromise.resolve();
     }
     getMatchingKeysForTargetId(e, t) {
-      const n = this.qr.Sr(t);
+      const n = this.Kr.vr(t);
       return PersistencePromise.resolve(n);
     }
     containsKey(e, t) {
-      return PersistencePromise.resolve(this.qr.containsKey(t));
+      return PersistencePromise.resolve(this.Kr.containsKey(t));
     }
   };
   var __PRIVATE_MemoryPersistence = class {
@@ -9289,19 +9361,19 @@ Total Duration: ${u - c}ms`);
      * checked or asserted on every access.
      */
     constructor(e, t) {
-      this.Kr = {}, this.overlays = {}, this.$r = new __PRIVATE_ListenSequence(0), this.Ur = false, this.Ur = true, this.Wr = new __PRIVATE_MemoryGlobalsCache(), this.referenceDelegate = e(this), this.Gr = new __PRIVATE_MemoryTargetCache(this);
+      this.Wr = {}, this.overlays = {}, this.Gr = new __PRIVATE_ListenSequence(0), this.zr = false, this.zr = true, this.jr = new __PRIVATE_MemoryGlobalsCache(), this.referenceDelegate = e(this), this.Hr = new __PRIVATE_MemoryTargetCache(this);
       this.indexManager = new __PRIVATE_MemoryIndexManager(), this.remoteDocumentCache = function __PRIVATE_newMemoryRemoteDocumentCache(e2) {
         return new __PRIVATE_MemoryRemoteDocumentCacheImpl(e2);
-      }((e2) => this.referenceDelegate.zr(e2)), this.serializer = new __PRIVATE_LocalSerializer(t), this.jr = new __PRIVATE_MemoryBundleCache(this.serializer);
+      }((e2) => this.referenceDelegate.Jr(e2)), this.serializer = new __PRIVATE_LocalSerializer(t), this.Yr = new __PRIVATE_MemoryBundleCache(this.serializer);
     }
     start() {
       return Promise.resolve();
     }
     shutdown() {
-      return this.Ur = false, Promise.resolve();
+      return this.zr = false, Promise.resolve();
     }
     get started() {
-      return this.Ur;
+      return this.zr;
     }
     setDatabaseDeletedListener() {
     }
@@ -9315,28 +9387,28 @@ Total Duration: ${u - c}ms`);
       return t || (t = new __PRIVATE_MemoryDocumentOverlayCache(), this.overlays[e.toKey()] = t), t;
     }
     getMutationQueue(e, t) {
-      let n = this.Kr[e.toKey()];
-      return n || (n = new __PRIVATE_MemoryMutationQueue(t, this.referenceDelegate), this.Kr[e.toKey()] = n), n;
+      let n = this.Wr[e.toKey()];
+      return n || (n = new __PRIVATE_MemoryMutationQueue(t, this.referenceDelegate), this.Wr[e.toKey()] = n), n;
     }
     getGlobalsCache() {
-      return this.Wr;
+      return this.jr;
     }
     getTargetCache() {
-      return this.Gr;
+      return this.Hr;
     }
     getRemoteDocumentCache() {
       return this.remoteDocumentCache;
     }
     getBundleCache() {
-      return this.jr;
+      return this.Yr;
     }
     runTransaction(e, t, n) {
       __PRIVATE_logDebug("MemoryPersistence", "Starting transaction:", e);
-      const r = new __PRIVATE_MemoryTransaction(this.$r.next());
-      return this.referenceDelegate.Hr(), n(r).next((e2) => this.referenceDelegate.Jr(r).next(() => e2)).toPromise().then((e2) => (r.raiseOnCommittedEvent(), e2));
+      const r = new __PRIVATE_MemoryTransaction(this.Gr.next());
+      return this.referenceDelegate.Zr(), n(r).next((e2) => this.referenceDelegate.Xr(r).next(() => e2)).toPromise().then((e2) => (r.raiseOnCommittedEvent(), e2));
     }
-    Yr(e, t) {
-      return PersistencePromise.or(Object.values(this.Kr).map((n) => () => n.containsKey(e, t)));
+    ei(e, t) {
+      return PersistencePromise.or(Object.values(this.Wr).map((n) => () => n.containsKey(e, t)));
     }
   };
   var __PRIVATE_MemoryTransaction = class extends PersistenceTransaction {
@@ -9347,85 +9419,85 @@ Total Duration: ${u - c}ms`);
   var __PRIVATE_MemoryEagerDelegate = class ___PRIVATE_MemoryEagerDelegate {
     constructor(e) {
       this.persistence = e, /** Tracks all documents that are active in Query views. */
-      this.Zr = new __PRIVATE_ReferenceSet(), /** The list of documents that are potentially GCed after each transaction. */
-      this.Xr = null;
+      this.ti = new __PRIVATE_ReferenceSet(), /** The list of documents that are potentially GCed after each transaction. */
+      this.ni = null;
     }
-    static ei(e) {
+    static ri(e) {
       return new ___PRIVATE_MemoryEagerDelegate(e);
     }
-    get ti() {
-      if (this.Xr) return this.Xr;
+    get ii() {
+      if (this.ni) return this.ni;
       throw fail();
     }
     addReference(e, t, n) {
-      return this.Zr.addReference(n, t), this.ti.delete(n.toString()), PersistencePromise.resolve();
+      return this.ti.addReference(n, t), this.ii.delete(n.toString()), PersistencePromise.resolve();
     }
     removeReference(e, t, n) {
-      return this.Zr.removeReference(n, t), this.ti.add(n.toString()), PersistencePromise.resolve();
+      return this.ti.removeReference(n, t), this.ii.add(n.toString()), PersistencePromise.resolve();
     }
     markPotentiallyOrphaned(e, t) {
-      return this.ti.add(t.toString()), PersistencePromise.resolve();
+      return this.ii.add(t.toString()), PersistencePromise.resolve();
     }
     removeTarget(e, t) {
-      this.Zr.yr(t.targetId).forEach((e2) => this.ti.add(e2.toString()));
+      this.ti.br(t.targetId).forEach((e2) => this.ii.add(e2.toString()));
       const n = this.persistence.getTargetCache();
       return n.getMatchingKeysForTargetId(e, t.targetId).next((e2) => {
-        e2.forEach((e3) => this.ti.add(e3.toString()));
+        e2.forEach((e3) => this.ii.add(e3.toString()));
       }).next(() => n.removeTargetData(e, t));
     }
-    Hr() {
-      this.Xr = /* @__PURE__ */ new Set();
+    Zr() {
+      this.ni = /* @__PURE__ */ new Set();
     }
-    Jr(e) {
+    Xr(e) {
       const t = this.persistence.getRemoteDocumentCache().newChangeBuffer();
-      return PersistencePromise.forEach(this.ti, (n) => {
+      return PersistencePromise.forEach(this.ii, (n) => {
         const r = DocumentKey.fromPath(n);
-        return this.ni(e, r).next((e2) => {
+        return this.si(e, r).next((e2) => {
           e2 || t.removeEntry(r, SnapshotVersion.min());
         });
-      }).next(() => (this.Xr = null, t.apply(e)));
+      }).next(() => (this.ni = null, t.apply(e)));
     }
     updateLimboDocument(e, t) {
-      return this.ni(e, t).next((e2) => {
-        e2 ? this.ti.delete(t.toString()) : this.ti.add(t.toString());
+      return this.si(e, t).next((e2) => {
+        e2 ? this.ii.delete(t.toString()) : this.ii.add(t.toString());
       });
     }
-    zr(e) {
+    Jr(e) {
       return 0;
     }
-    ni(e, t) {
-      return PersistencePromise.or([() => PersistencePromise.resolve(this.Zr.containsKey(t)), () => this.persistence.getTargetCache().containsKey(e, t), () => this.persistence.Yr(e, t)]);
+    si(e, t) {
+      return PersistencePromise.or([() => PersistencePromise.resolve(this.ti.containsKey(t)), () => this.persistence.getTargetCache().containsKey(e, t), () => this.persistence.ei(e, t)]);
     }
   };
   var __PRIVATE_MemoryLruDelegate = class ___PRIVATE_MemoryLruDelegate {
     constructor(e, t) {
-      this.persistence = e, this.ri = new ObjectMap((e2) => __PRIVATE_encodeResourcePath(e2.path), (e2, t2) => e2.isEqual(t2)), this.garbageCollector = __PRIVATE_newLruGarbageCollector(this, t);
+      this.persistence = e, this.oi = new ObjectMap((e2) => __PRIVATE_encodeResourcePath(e2.path), (e2, t2) => e2.isEqual(t2)), this.garbageCollector = __PRIVATE_newLruGarbageCollector(this, t);
     }
-    static ei(e, t) {
+    static ri(e, t) {
       return new ___PRIVATE_MemoryLruDelegate(e, t);
     }
     // No-ops, present so memory persistence doesn't have to care which delegate
     // it has.
-    Hr() {
+    Zr() {
     }
-    Jr(e) {
+    Xr(e) {
       return PersistencePromise.resolve();
     }
     forEachTarget(e, t) {
       return this.persistence.getTargetCache().forEachTarget(e, t);
     }
-    Xn(e) {
-      const t = this.nr(e);
+    nr(e) {
+      const t = this.sr(e);
       return this.persistence.getTargetCache().getTargetCount(e).next((e2) => t.next((t2) => e2 + t2));
     }
-    nr(e) {
+    sr(e) {
       let t = 0;
-      return this.er(e, (e2) => {
+      return this.rr(e, (e2) => {
         t++;
       }).next(() => t);
     }
-    er(e, t) {
-      return PersistencePromise.forEach(this.ri, (n, r) => this.ir(e, n, r).next((e2) => e2 ? PersistencePromise.resolve() : t(r)));
+    rr(e, t) {
+      return PersistencePromise.forEach(this.oi, (n, r) => this.ar(e, n, r).next((e2) => e2 ? PersistencePromise.resolve() : t(r)));
     }
     removeTargets(e, t, n) {
       return this.persistence.getTargetCache().removeTargets(e, t, n);
@@ -9433,33 +9505,33 @@ Total Duration: ${u - c}ms`);
     removeOrphanedDocuments(e, t) {
       let n = 0;
       const r = this.persistence.getRemoteDocumentCache(), i = r.newChangeBuffer();
-      return r.Br(e, (r2) => this.ir(e, r2, t).next((e2) => {
+      return r.qr(e, (r2) => this.ar(e, r2, t).next((e2) => {
         e2 || (n++, i.removeEntry(r2, SnapshotVersion.min()));
       })).next(() => i.apply(e)).next(() => n);
     }
     markPotentiallyOrphaned(e, t) {
-      return this.ri.set(t, e.currentSequenceNumber), PersistencePromise.resolve();
+      return this.oi.set(t, e.currentSequenceNumber), PersistencePromise.resolve();
     }
     removeTarget(e, t) {
       const n = t.withSequenceNumber(e.currentSequenceNumber);
       return this.persistence.getTargetCache().updateTargetData(e, n);
     }
     addReference(e, t, n) {
-      return this.ri.set(n, e.currentSequenceNumber), PersistencePromise.resolve();
+      return this.oi.set(n, e.currentSequenceNumber), PersistencePromise.resolve();
     }
     removeReference(e, t, n) {
-      return this.ri.set(n, e.currentSequenceNumber), PersistencePromise.resolve();
+      return this.oi.set(n, e.currentSequenceNumber), PersistencePromise.resolve();
     }
     updateLimboDocument(e, t) {
-      return this.ri.set(t, e.currentSequenceNumber), PersistencePromise.resolve();
+      return this.oi.set(t, e.currentSequenceNumber), PersistencePromise.resolve();
     }
-    zr(e) {
+    Jr(e) {
       let t = e.key.toString().length;
       return e.isFoundDocument() && (t += __PRIVATE_estimateByteSize(e.data.value)), t;
     }
-    ir(e, t, n) {
-      return PersistencePromise.or([() => this.persistence.Yr(e, t), () => this.persistence.getTargetCache().containsKey(e, t), () => {
-        const e2 = this.ri.get(t);
+    ar(e, t, n) {
+      return PersistencePromise.or([() => this.persistence.ei(e, t), () => this.persistence.getTargetCache().containsKey(e, t), () => {
+        const e2 = this.oi.get(t);
         return PersistencePromise.resolve(void 0 !== e2 && e2 > n);
       }]);
     }
@@ -9469,9 +9541,9 @@ Total Duration: ${u - c}ms`);
   };
   var __PRIVATE_LocalViewChanges = class ___PRIVATE_LocalViewChanges {
     constructor(e, t, n, r) {
-      this.targetId = e, this.fromCache = t, this.Wi = n, this.Gi = r;
+      this.targetId = e, this.fromCache = t, this.Hi = n, this.Ji = r;
     }
-    static zi(e, t) {
+    static Yi(e, t) {
       let n = __PRIVATE_documentKeySet(), r = __PRIVATE_documentKeySet();
       for (const e2 of t.docChanges) switch (e2.type) {
         case 0:
@@ -9496,11 +9568,11 @@ Total Duration: ${u - c}ms`);
   };
   var __PRIVATE_QueryEngine = class {
     constructor() {
-      this.ji = false, this.Hi = false, /**
+      this.Zi = false, this.Xi = false, /**
        * SDK only decides whether it should create index when collection size is
        * larger than this.
        */
-      this.Ji = 100, this.Yi = /**
+      this.es = 100, this.ts = /**
       * This cost represents the evaluation result of
       * (([index, docKey] + [docKey, docContent]) per document in the result set)
       * / ([docKey, docContent] per documents in full collection scan) coming from
@@ -9512,35 +9584,35 @@ Total Duration: ${u - c}ms`);
     }
     /** Sets the document view to query against. */
     initialize(e, t) {
-      this.Zi = e, this.indexManager = t, this.ji = true;
+      this.ns = e, this.indexManager = t, this.Zi = true;
     }
     /** Returns all local documents matching the specified query. */
     getDocumentsMatchingQuery(e, t, n, r) {
       const i = {
         result: null
       };
-      return this.Xi(e, t).next((e2) => {
+      return this.rs(e, t).next((e2) => {
         i.result = e2;
       }).next(() => {
-        if (!i.result) return this.es(e, t, r, n).next((e2) => {
+        if (!i.result) return this.ss(e, t, r, n).next((e2) => {
           i.result = e2;
         });
       }).next(() => {
         if (i.result) return;
         const n2 = new QueryContext();
-        return this.ts(e, t, n2).next((r2) => {
-          if (i.result = r2, this.Hi) return this.ns(e, t, n2, r2.size);
+        return this._s(e, t, n2).next((r2) => {
+          if (i.result = r2, this.Xi) return this.us(e, t, n2, r2.size);
         });
       }).next(() => i.result);
     }
-    ns(e, t, n, r) {
-      return n.documentReadCount < this.Ji ? (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "SDK will not create cache indexes for query:", __PRIVATE_stringifyQuery(t), "since it only creates cache indexes for collection contains", "more than or equal to", this.Ji, "documents"), PersistencePromise.resolve()) : (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Query:", __PRIVATE_stringifyQuery(t), "scans", n.documentReadCount, "local documents and returns", r, "documents as results."), n.documentReadCount > this.Yi * r ? (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "The SDK decides to create cache indexes for query:", __PRIVATE_stringifyQuery(t), "as using cache indexes may help improve performance."), this.indexManager.createTargetIndexes(e, __PRIVATE_queryToTarget(t))) : PersistencePromise.resolve());
+    us(e, t, n, r) {
+      return n.documentReadCount < this.es ? (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "SDK will not create cache indexes for query:", __PRIVATE_stringifyQuery(t), "since it only creates cache indexes for collection contains", "more than or equal to", this.es, "documents"), PersistencePromise.resolve()) : (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Query:", __PRIVATE_stringifyQuery(t), "scans", n.documentReadCount, "local documents and returns", r, "documents as results."), n.documentReadCount > this.ts * r ? (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "The SDK decides to create cache indexes for query:", __PRIVATE_stringifyQuery(t), "as using cache indexes may help improve performance."), this.indexManager.createTargetIndexes(e, __PRIVATE_queryToTarget(t))) : PersistencePromise.resolve());
     }
     /**
      * Performs an indexed query that evaluates the query based on a collection's
      * persisted index values. Returns `null` if an index is not available.
      */
-    Xi(e, t) {
+    rs(e, t) {
       if (__PRIVATE_queryMatchesAllDocuments(t))
         return PersistencePromise.resolve(null);
       let n = __PRIVATE_queryToTarget(t);
@@ -9558,14 +9630,14 @@ Total Duration: ${u - c}ms`);
         /* LimitType.First */
       ), n = __PRIVATE_queryToTarget(t)), this.indexManager.getDocumentsMatchingTarget(e, n).next((r2) => {
         const i = __PRIVATE_documentKeySet(...r2);
-        return this.Zi.getDocuments(e, i).next((r3) => this.indexManager.getMinOffset(e, n).next((n2) => {
-          const s = this.rs(t, r3);
-          return this.ss(t, s, i, n2.readTime) ? this.Xi(e, __PRIVATE_queryWithLimit(
+        return this.ns.getDocuments(e, i).next((r3) => this.indexManager.getMinOffset(e, n).next((n2) => {
+          const s = this.cs(t, r3);
+          return this.ls(t, s, i, n2.readTime) ? this.rs(e, __PRIVATE_queryWithLimit(
             t,
             null,
             "F"
             /* LimitType.First */
-          )) : this.os(e, s, t, n2);
+          )) : this.hs(e, s, t, n2);
         }));
       })));
     }
@@ -9573,14 +9645,14 @@ Total Duration: ${u - c}ms`);
      * Performs a query based on the target's persisted query mapping. Returns
      * `null` if the mapping is not available or cannot be used.
      */
-    es(e, t, n, r) {
-      return __PRIVATE_queryMatchesAllDocuments(t) || r.isEqual(SnapshotVersion.min()) ? PersistencePromise.resolve(null) : this.Zi.getDocuments(e, n).next((i) => {
-        const s = this.rs(t, i);
-        return this.ss(t, s, n, r) ? PersistencePromise.resolve(null) : (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Re-using previous result from %s to execute query: %s", r.toString(), __PRIVATE_stringifyQuery(t)), this.os(e, s, t, __PRIVATE_newIndexOffsetSuccessorFromReadTime(r, -1)).next((e2) => e2));
+    ss(e, t, n, r) {
+      return __PRIVATE_queryMatchesAllDocuments(t) || r.isEqual(SnapshotVersion.min()) ? PersistencePromise.resolve(null) : this.ns.getDocuments(e, n).next((i) => {
+        const s = this.cs(t, i);
+        return this.ls(t, s, n, r) ? PersistencePromise.resolve(null) : (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Re-using previous result from %s to execute query: %s", r.toString(), __PRIVATE_stringifyQuery(t)), this.hs(e, s, t, __PRIVATE_newIndexOffsetSuccessorFromReadTime(r, N)).next((e2) => e2));
       });
     }
     /** Applies the query filter and sorting to the provided documents.  */
-    rs(e, t) {
+    cs(e, t) {
       let n = new SortedSet(__PRIVATE_newQueryComparator(e));
       return t.forEach((t2, r) => {
         __PRIVATE_queryMatches(e, r) && (n = n.add(r));
@@ -9598,7 +9670,7 @@ Total Duration: ${u - c}ms`);
      * @param limboFreeSnapshotVersion - The version of the snapshot when the
      * query was last synchronized.
      */
-    ss(e, t, n, r) {
+    ls(e, t, n, r) {
       if (null === e.limit)
         return false;
       if (n.size !== t.size)
@@ -9606,15 +9678,15 @@ Total Duration: ${u - c}ms`);
       const i = "F" === e.limitType ? t.last() : t.first();
       return !!i && (i.hasPendingWrites || i.version.compareTo(r) > 0);
     }
-    ts(e, t, n) {
-      return __PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Using full collection scan to execute query:", __PRIVATE_stringifyQuery(t)), this.Zi.getDocumentsMatchingQuery(e, t, IndexOffset.min(), n);
+    _s(e, t, n) {
+      return __PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Using full collection scan to execute query:", __PRIVATE_stringifyQuery(t)), this.ns.getDocumentsMatchingQuery(e, t, IndexOffset.min(), n);
     }
     /**
      * Combines the results from an indexed execution with the remaining documents
      * that have not yet been indexed.
      */
-    os(e, t, n, r) {
-      return this.Zi.getDocumentsMatchingQuery(e, n, r).next((e2) => (
+    hs(e, t, n, r) {
+      return this.ns.getDocumentsMatchingQuery(e, n, r).next((e2) => (
         // Merge with existing results
         (t.forEach((t2) => {
           e2 = e2.insert(t2.key, t2);
@@ -9622,29 +9694,31 @@ Total Duration: ${u - c}ms`);
       ));
     }
   };
+  var Ot = "LocalStore";
+  var Nt = 3e8;
   var __PRIVATE_LocalStoreImpl = class {
     constructor(e, t, n, r) {
-      this.persistence = e, this._s = t, this.serializer = r, /**
+      this.persistence = e, this.Ps = t, this.serializer = r, /**
        * Maps a targetID to data about its target.
        *
        * PORTING NOTE: We are using an immutable data structure on Web to make re-runs
        * of `applyRemoteEvent()` idempotent.
        */
-      this.us = new SortedMap(__PRIVATE_primitiveComparator), /** Maps a target to its targetID. */
+      this.Ts = new SortedMap(__PRIVATE_primitiveComparator), /** Maps a target to its targetID. */
       // TODO(wuandy): Evaluate if TargetId can be part of Target.
-      this.cs = new ObjectMap((e2) => __PRIVATE_canonifyTarget(e2), __PRIVATE_targetEquals), /**
+      this.Is = new ObjectMap((e2) => __PRIVATE_canonifyTarget(e2), __PRIVATE_targetEquals), /**
        * A per collection group index of the last read time processed by
        * `getNewDocumentChanges()`.
        *
        * PORTING NOTE: This is only used for multi-tab synchronization.
        */
-      this.ls = /* @__PURE__ */ new Map(), this.hs = e.getRemoteDocumentCache(), this.Gr = e.getTargetCache(), this.jr = e.getBundleCache(), this.Ps(n);
+      this.Es = /* @__PURE__ */ new Map(), this.ds = e.getRemoteDocumentCache(), this.Hr = e.getTargetCache(), this.Yr = e.getBundleCache(), this.As(n);
     }
-    Ps(e) {
-      this.documentOverlayCache = this.persistence.getDocumentOverlayCache(e), this.indexManager = this.persistence.getIndexManager(e), this.mutationQueue = this.persistence.getMutationQueue(e, this.indexManager), this.localDocuments = new LocalDocumentsView(this.hs, this.mutationQueue, this.documentOverlayCache, this.indexManager), this.hs.setIndexManager(this.indexManager), this._s.initialize(this.localDocuments, this.indexManager);
+    As(e) {
+      this.documentOverlayCache = this.persistence.getDocumentOverlayCache(e), this.indexManager = this.persistence.getIndexManager(e), this.mutationQueue = this.persistence.getMutationQueue(e, this.indexManager), this.localDocuments = new LocalDocumentsView(this.ds, this.mutationQueue, this.documentOverlayCache, this.indexManager), this.ds.setIndexManager(this.indexManager), this.Ps.initialize(this.localDocuments, this.indexManager);
     }
     collectGarbage(e) {
-      return this.persistence.runTransaction("Collect garbage", "readwrite-primary", (t) => e.collect(t, this.us));
+      return this.persistence.runTransaction("Collect garbage", "readwrite-primary", (t) => e.collect(t, this.Ts));
     }
   };
   function __PRIVATE_newLocalStore(e, t, n, r) {
@@ -9654,7 +9728,7 @@ Total Duration: ${u - c}ms`);
     const n = __PRIVATE_debugCast(e);
     return await n.persistence.runTransaction("Handle user change", "readonly", (e2) => {
       let r;
-      return n.mutationQueue.getAllMutationBatches(e2).next((i) => (r = i, n.Ps(t), n.mutationQueue.getAllMutationBatches(e2))).next((t2) => {
+      return n.mutationQueue.getAllMutationBatches(e2).next((i) => (r = i, n.As(t), n.mutationQueue.getAllMutationBatches(e2))).next((t2) => {
         const i = [], s = [];
         let o = __PRIVATE_documentKeySet();
         for (const e3 of r) {
@@ -9666,7 +9740,7 @@ Total Duration: ${u - c}ms`);
           for (const t3 of e3.mutations) o = o.add(t3.key);
         }
         return n.localDocuments.getDocuments(e2, o).next((e3) => ({
-          Ts: e3,
+          Rs: e3,
           removedBatchIds: i,
           addedBatchIds: s
         }));
@@ -9676,7 +9750,7 @@ Total Duration: ${u - c}ms`);
   function __PRIVATE_localStoreAcknowledgeBatch(e, t) {
     const n = __PRIVATE_debugCast(e);
     return n.persistence.runTransaction("Acknowledge batch", "readwrite-primary", (e2) => {
-      const r = t.batch.keys(), i = n.hs.newChangeBuffer({
+      const r = t.batch.keys(), i = n.ds.newChangeBuffer({
         trackRemovals: true
       });
       return function __PRIVATE_applyWriteToRemoteDocuments(e3, t2, n2, r2) {
@@ -9702,21 +9776,21 @@ Total Duration: ${u - c}ms`);
   }
   function __PRIVATE_localStoreGetLastRemoteSnapshotVersion(e) {
     const t = __PRIVATE_debugCast(e);
-    return t.persistence.runTransaction("Get last remote snapshot version", "readonly", (e2) => t.Gr.getLastRemoteSnapshotVersion(e2));
+    return t.persistence.runTransaction("Get last remote snapshot version", "readonly", (e2) => t.Hr.getLastRemoteSnapshotVersion(e2));
   }
   function __PRIVATE_localStoreApplyRemoteEventToLocalCache(e, t) {
     const n = __PRIVATE_debugCast(e), r = t.snapshotVersion;
-    let i = n.us;
+    let i = n.Ts;
     return n.persistence.runTransaction("Apply remote event", "readwrite-primary", (e2) => {
-      const s = n.hs.newChangeBuffer({
+      const s = n.ds.newChangeBuffer({
         trackRemovals: true
       });
-      i = n.us;
+      i = n.Ts;
       const o = [];
       t.targetChanges.forEach((s2, _2) => {
         const a2 = i.get(_2);
         if (!a2) return;
-        o.push(n.Gr.removeMatchingKeys(e2, s2.removedDocuments, _2).next(() => n.Gr.addMatchingKeys(e2, s2.addedDocuments, _2)));
+        o.push(n.Hr.removeMatchingKeys(e2, s2.removedDocuments, _2).next(() => n.Hr.addMatchingKeys(e2, s2.addedDocuments, _2)));
         let u = a2.withSequenceNumber(e2.currentSequenceNumber);
         null !== t.targetMismatches.get(_2) ? u = u.withResumeToken(ByteString.EMPTY_BYTE_STRING, SnapshotVersion.min()).withLastLimboFreeSnapshotVersion(SnapshotVersion.min()) : s2.resumeToken.approximateByteSize() > 0 && (u = u.withResumeToken(s2.resumeToken, r)), i = i.insert(_2, u), // Update the target data if there are target changes (or if
         // sufficient time has passed since the last update).
@@ -9733,9 +9807,11 @@ Total Duration: ${u - c}ms`);
         */
         function __PRIVATE_shouldPersistTargetData(e3, t2, n2) {
           if (0 === e3.resumeToken.approximateByteSize()) return true;
-          if (t2.snapshotVersion.toMicroseconds() - e3.snapshotVersion.toMicroseconds() >= 3e8) return true;
-          return n2.addedDocuments.size + n2.modifiedDocuments.size + n2.removedDocuments.size > 0;
-        }(a2, u, s2) && o.push(n.Gr.updateTargetData(e2, u));
+          const r2 = t2.snapshotVersion.toMicroseconds() - e3.snapshotVersion.toMicroseconds();
+          if (r2 >= Nt) return true;
+          const i2 = n2.addedDocuments.size + n2.modifiedDocuments.size + n2.removedDocuments.size;
+          return i2 > 0;
+        }(a2, u, s2) && o.push(n.Hr.updateTargetData(e2, u));
       });
       let _ = __PRIVATE_mutableDocumentMap(), a = __PRIVATE_documentKeySet();
       if (t.documentUpdates.forEach((r2) => {
@@ -9743,13 +9819,13 @@ Total Duration: ${u - c}ms`);
       }), // Each loop iteration only affects its "own" doc, so it's safe to get all
       // the remote documents in advance in a single call.
       o.push(__PRIVATE_populateDocumentChangeBuffer(e2, s, t.documentUpdates).next((e3) => {
-        _ = e3.Is, a = e3.ds;
+        _ = e3.Vs, a = e3.fs;
       })), !r.isEqual(SnapshotVersion.min())) {
-        const t2 = n.Gr.getLastRemoteSnapshotVersion(e2).next((t3) => n.Gr.setTargetsMetadata(e2, e2.currentSequenceNumber, r));
+        const t2 = n.Hr.getLastRemoteSnapshotVersion(e2).next((t3) => n.Hr.setTargetsMetadata(e2, e2.currentSequenceNumber, r));
         o.push(t2);
       }
       return PersistencePromise.waitFor(o).next(() => s.apply(e2)).next(() => n.localDocuments.getLocalViewOfDocuments(e2, _, a)).next(() => _);
-    }).then((e2) => (n.us = i, e2));
+    }).then((e2) => (n.Ts = i, e2));
   }
   function __PRIVATE_populateDocumentChangeBuffer(e, t, n) {
     let r = __PRIVATE_documentKeySet(), i = __PRIVATE_documentKeySet();
@@ -9766,41 +9842,41 @@ Total Duration: ${u - c}ms`);
           // events. We remove these documents from cache since we lost
           // access.
           (t.removeEntry(n2, s.readTime), r2 = r2.insert(n2, s))
-        ) : !o.isValidDocument() || s.version.compareTo(o.version) > 0 || 0 === s.version.compareTo(o.version) && o.hasPendingWrites ? (t.addEntry(s), r2 = r2.insert(n2, s)) : __PRIVATE_logDebug("LocalStore", "Ignoring outdated watch update for ", n2, ". Current version:", o.version, " Watch version:", s.version);
+        ) : !o.isValidDocument() || s.version.compareTo(o.version) > 0 || 0 === s.version.compareTo(o.version) && o.hasPendingWrites ? (t.addEntry(s), r2 = r2.insert(n2, s)) : __PRIVATE_logDebug(Ot, "Ignoring outdated watch update for ", n2, ". Current version:", o.version, " Watch version:", s.version);
       }), {
-        Is: r2,
-        ds: i
+        Vs: r2,
+        fs: i
       };
     });
   }
   function __PRIVATE_localStoreGetNextMutationBatch(e, t) {
     const n = __PRIVATE_debugCast(e);
-    return n.persistence.runTransaction("Get next mutation batch", "readonly", (e2) => (void 0 === t && (t = -1), n.mutationQueue.getNextMutationBatchAfterBatchId(e2, t)));
+    return n.persistence.runTransaction("Get next mutation batch", "readonly", (e2) => (void 0 === t && (t = Q), n.mutationQueue.getNextMutationBatchAfterBatchId(e2, t)));
   }
   function __PRIVATE_localStoreAllocateTarget(e, t) {
     const n = __PRIVATE_debugCast(e);
     return n.persistence.runTransaction("Allocate target", "readwrite", (e2) => {
       let r;
-      return n.Gr.getTargetData(e2, t).next((i) => i ? (
+      return n.Hr.getTargetData(e2, t).next((i) => i ? (
         // This target has been listened to previously, so reuse the
         // previous targetID.
         // TODO(mcg): freshen last accessed date?
         (r = i, PersistencePromise.resolve(r))
-      ) : n.Gr.allocateTargetId(e2).next((i2) => (r = new TargetData(t, i2, "TargetPurposeListen", e2.currentSequenceNumber), n.Gr.addTargetData(e2, r).next(() => r))));
+      ) : n.Hr.allocateTargetId(e2).next((i2) => (r = new TargetData(t, i2, "TargetPurposeListen", e2.currentSequenceNumber), n.Hr.addTargetData(e2, r).next(() => r))));
     }).then((e2) => {
-      const r = n.us.get(e2.targetId);
-      return (null === r || e2.snapshotVersion.compareTo(r.snapshotVersion) > 0) && (n.us = n.us.insert(e2.targetId, e2), n.cs.set(t, e2.targetId)), e2;
+      const r = n.Ts.get(e2.targetId);
+      return (null === r || e2.snapshotVersion.compareTo(r.snapshotVersion) > 0) && (n.Ts = n.Ts.insert(e2.targetId, e2), n.Is.set(t, e2.targetId)), e2;
     });
   }
   async function __PRIVATE_localStoreReleaseTarget(e, t, n) {
-    const r = __PRIVATE_debugCast(e), i = r.us.get(t), s = n ? "readwrite" : "readwrite-primary";
+    const r = __PRIVATE_debugCast(e), i = r.Ts.get(t), s = n ? "readwrite" : "readwrite-primary";
     try {
       n || await r.persistence.runTransaction("Release target", s, (e2) => r.persistence.referenceDelegate.removeTarget(e2, i));
     } catch (e2) {
       if (!__PRIVATE_isIndexedDbTransactionError(e2)) throw e2;
-      __PRIVATE_logDebug("LocalStore", `Failed to update sequence numbers for target ${t}: ${e2}`);
+      __PRIVATE_logDebug(Ot, `Failed to update sequence numbers for target ${t}: ${e2}`);
     }
-    r.us = r.us.remove(t), r.cs.delete(i.target);
+    r.Ts = r.Ts.remove(t), r.Is.delete(i.target);
   }
   function __PRIVATE_localStoreExecuteQuery(e, t, n) {
     const r = __PRIVATE_debugCast(e);
@@ -9811,39 +9887,39 @@ Total Duration: ${u - c}ms`);
       // Use readwrite instead of readonly so indexes can be created
       // Use readwrite instead of readonly so indexes can be created
       (e2) => function __PRIVATE_localStoreGetTargetData(e3, t2, n2) {
-        const r2 = __PRIVATE_debugCast(e3), i2 = r2.cs.get(n2);
-        return void 0 !== i2 ? PersistencePromise.resolve(r2.us.get(i2)) : r2.Gr.getTargetData(t2, n2);
+        const r2 = __PRIVATE_debugCast(e3), i2 = r2.Is.get(n2);
+        return void 0 !== i2 ? PersistencePromise.resolve(r2.Ts.get(i2)) : r2.Hr.getTargetData(t2, n2);
       }(r, e2, __PRIVATE_queryToTarget(t)).next((t2) => {
-        if (t2) return i = t2.lastLimboFreeSnapshotVersion, r.Gr.getMatchingKeysForTargetId(e2, t2.targetId).next((e3) => {
+        if (t2) return i = t2.lastLimboFreeSnapshotVersion, r.Hr.getMatchingKeysForTargetId(e2, t2.targetId).next((e3) => {
           s = e3;
         });
-      }).next(() => r._s.getDocumentsMatchingQuery(e2, t, n ? i : SnapshotVersion.min(), n ? s : __PRIVATE_documentKeySet())).next((e3) => (__PRIVATE_setMaxReadTime(r, __PRIVATE_queryCollectionGroup(t), e3), {
+      }).next(() => r.Ps.getDocumentsMatchingQuery(e2, t, n ? i : SnapshotVersion.min(), n ? s : __PRIVATE_documentKeySet())).next((e3) => (__PRIVATE_setMaxReadTime(r, __PRIVATE_queryCollectionGroup(t), e3), {
         documents: e3,
-        Es: s
+        gs: s
       }))
     );
   }
   function __PRIVATE_setMaxReadTime(e, t, n) {
-    let r = e.ls.get(t) || SnapshotVersion.min();
+    let r = e.Es.get(t) || SnapshotVersion.min();
     n.forEach((e2, t2) => {
       t2.readTime.compareTo(r) > 0 && (r = t2.readTime);
-    }), e.ls.set(t, r);
+    }), e.Es.set(t, r);
   }
   var __PRIVATE_LocalClientState = class {
     constructor() {
       this.activeTargetIds = __PRIVATE_targetIdSet();
     }
-    ps(e) {
+    Ds(e) {
       this.activeTargetIds = this.activeTargetIds.add(e);
     }
-    ys(e) {
+    vs(e) {
       this.activeTargetIds = this.activeTargetIds.delete(e);
     }
     /**
      * Converts this entry into a JSON-encoded format we can use for WebStorage.
      * Does not encode `clientId` as it is part of the key in WebStorage.
      */
-    gs() {
+    bs() {
       const e = {
         activeTargetIds: this.activeTargetIds.toArray(),
         updateTimeMs: Date.now()
@@ -9853,35 +9929,35 @@ Total Duration: ${u - c}ms`);
   };
   var __PRIVATE_MemorySharedClientState = class {
     constructor() {
-      this._o = new __PRIVATE_LocalClientState(), this.ao = {}, this.onlineStateHandler = null, this.sequenceNumberHandler = null;
+      this.ho = new __PRIVATE_LocalClientState(), this.Po = {}, this.onlineStateHandler = null, this.sequenceNumberHandler = null;
     }
     addPendingMutation(e) {
     }
     updateMutationState(e, t, n) {
     }
     addLocalQueryTarget(e, t = true) {
-      return t && this._o.ps(e), this.ao[e] || "not-current";
+      return t && this.ho.Ds(e), this.Po[e] || "not-current";
     }
     updateQueryState(e, t, n) {
-      this.ao[e] = t;
+      this.Po[e] = t;
     }
     removeLocalQueryTarget(e) {
-      this._o.ys(e);
+      this.ho.vs(e);
     }
     isLocalQueryTarget(e) {
-      return this._o.activeTargetIds.has(e);
+      return this.ho.activeTargetIds.has(e);
     }
     clearQueryState(e) {
-      delete this.ao[e];
+      delete this.Po[e];
     }
     getAllActiveQueryTargets() {
-      return this._o.activeTargetIds;
+      return this.ho.activeTargetIds;
     }
     isActiveQueryTarget(e) {
-      return this._o.activeTargetIds.has(e);
+      return this.ho.activeTargetIds.has(e);
     }
     start() {
-      return this._o = new __PRIVATE_LocalClientState(), Promise.resolve();
+      return this.ho = new __PRIVATE_LocalClientState(), Promise.resolve();
     }
     handleUserChange(e, t, n) {
     }
@@ -9895,34 +9971,35 @@ Total Duration: ${u - c}ms`);
     }
   };
   var __PRIVATE_NoopConnectivityMonitor = class {
-    uo(e) {
+    To(e) {
     }
     shutdown() {
     }
   };
+  var Qt = "ConnectivityMonitor";
   var __PRIVATE_BrowserConnectivityMonitor = class {
     constructor() {
-      this.co = () => this.lo(), this.ho = () => this.Po(), this.To = [], this.Io();
+      this.Io = () => this.Eo(), this.Ao = () => this.Ro(), this.Vo = [], this.mo();
     }
-    uo(e) {
-      this.To.push(e);
+    To(e) {
+      this.Vo.push(e);
     }
     shutdown() {
-      window.removeEventListener("online", this.co), window.removeEventListener("offline", this.ho);
+      window.removeEventListener("online", this.Io), window.removeEventListener("offline", this.Ao);
     }
-    Io() {
-      window.addEventListener("online", this.co), window.addEventListener("offline", this.ho);
+    mo() {
+      window.addEventListener("online", this.Io), window.addEventListener("offline", this.Ao);
     }
-    lo() {
-      __PRIVATE_logDebug("ConnectivityMonitor", "Network connectivity changed: AVAILABLE");
-      for (const e of this.To) e(
+    Eo() {
+      __PRIVATE_logDebug(Qt, "Network connectivity changed: AVAILABLE");
+      for (const e of this.Vo) e(
         0
         /* NetworkStatus.AVAILABLE */
       );
     }
-    Po() {
-      __PRIVATE_logDebug("ConnectivityMonitor", "Network connectivity changed: UNAVAILABLE");
-      for (const e of this.To) e(
+    Ro() {
+      __PRIVATE_logDebug(Qt, "Network connectivity changed: UNAVAILABLE");
+      for (const e of this.Vo) e(
         1
         /* NetworkStatus.UNAVAILABLE */
       );
@@ -9930,103 +10007,64 @@ Total Duration: ${u - c}ms`);
     // TODO(chenbrian): Consider passing in window either into this component or
     // here for testing via FakeWindow.
     /** Checks that all used attributes of window are available. */
-    static p() {
+    static D() {
       return "undefined" != typeof window && void 0 !== window.addEventListener && void 0 !== window.removeEventListener;
     }
   };
-  var me = null;
+  var $t = null;
   function __PRIVATE_generateUniqueDebugId() {
-    return null === me ? me = function __PRIVATE_generateInitialUniqueDebugId() {
+    return null === $t ? $t = function __PRIVATE_generateInitialUniqueDebugId() {
       return 268435456 + Math.round(2147483648 * Math.random());
-    }() : me++, "0x" + me.toString(16);
+    }() : $t++, "0x" + $t.toString(16);
   }
-  var fe = {
+  var Kt = "RestConnection";
+  var Ut = {
     BatchGetDocuments: "batchGet",
     Commit: "commit",
     RunQuery: "runQuery",
     RunAggregationQuery: "runAggregationQuery"
   };
-  var __PRIVATE_StreamBridge = class {
-    constructor(e) {
-      this.Eo = e.Eo, this.Ao = e.Ao;
-    }
-    Ro(e) {
-      this.Vo = e;
-    }
-    mo(e) {
-      this.fo = e;
-    }
-    po(e) {
-      this.yo = e;
-    }
-    onMessage(e) {
-      this.wo = e;
-    }
-    close() {
-      this.Ao();
-    }
-    send(e) {
-      this.Eo(e);
-    }
-    So() {
-      this.Vo();
-    }
-    bo() {
-      this.fo();
-    }
-    Do(e) {
-      this.yo(e);
-    }
-    vo(e) {
-      this.wo(e);
-    }
-  };
-  var ge = "WebChannelConnection";
-  var __PRIVATE_WebChannelConnection = class extends /**
-   * Base class for all Rest-based connections to the backend (WebChannel and
-   * HTTP).
-   */
-  class __PRIVATE_RestConnection {
-    get Co() {
+  var __PRIVATE_RestConnection = class {
+    get fo() {
       return false;
     }
     constructor(e) {
       this.databaseInfo = e, this.databaseId = e.databaseId;
       const t = e.ssl ? "https" : "http", n = encodeURIComponent(this.databaseId.projectId), r = encodeURIComponent(this.databaseId.database);
-      this.Fo = t + "://" + e.host, this.Mo = `projects/${n}/databases/${r}`, this.xo = "(default)" === this.databaseId.database ? `project_id=${n}` : `project_id=${n}&database_id=${r}`;
+      this.po = t + "://" + e.host, this.yo = `projects/${n}/databases/${r}`, this.wo = this.databaseId.database === rt ? `project_id=${n}` : `project_id=${n}&database_id=${r}`;
     }
-    Oo(e, t, n, r, i) {
-      const s = __PRIVATE_generateUniqueDebugId(), o = this.No(e, t.toUriEncodedString());
-      __PRIVATE_logDebug("RestConnection", `Sending RPC '${e}' ${s}:`, o, n);
+    So(e, t, n, r, i) {
+      const s = __PRIVATE_generateUniqueDebugId(), o = this.bo(e, t.toUriEncodedString());
+      __PRIVATE_logDebug(Kt, `Sending RPC '${e}' ${s}:`, o, n);
       const _ = {
-        "google-cloud-resource-prefix": this.Mo,
-        "x-goog-request-params": this.xo
+        "google-cloud-resource-prefix": this.yo,
+        "x-goog-request-params": this.wo
       };
-      return this.Bo(_, r, i), this.Lo(e, o, _, n).then((t2) => (__PRIVATE_logDebug("RestConnection", `Received RPC '${e}' ${s}: `, t2), t2), (t2) => {
-        throw __PRIVATE_logWarn("RestConnection", `RPC '${e}' ${s} failed with error: `, t2, "url: ", o, "request:", n), t2;
+      return this.Do(_, r, i), this.vo(e, o, _, n).then((t2) => (__PRIVATE_logDebug(Kt, `Received RPC '${e}' ${s}: `, t2), t2), (t2) => {
+        throw __PRIVATE_logWarn(Kt, `RPC '${e}' ${s} failed with error: `, t2, "url: ", o, "request:", n), t2;
       });
     }
-    ko(e, t, n, r, i, s) {
-      return this.Oo(e, t, n, r, i);
+    Co(e, t, n, r, i, s) {
+      return this.So(e, t, n, r, i);
     }
     /**
      * Modifies the headers for a request, adding any authorization token if
      * present and any additional headers for the request.
      */
-    Bo(e, t, n) {
+    Do(e, t, n) {
       e["X-Goog-Api-Client"] = // SDK_VERSION is updated to different value at runtime depending on the entry point,
       // so we need to get its value when we need it in a function.
       function __PRIVATE_getGoogApiClientValue() {
-        return "gl-js/ fire/" + S;
+        return "gl-js/ fire/" + D;
       }(), // Content-Type: text/plain will avoid preflight requests which might
       // mess with CORS and redirects by proxies. If we add custom headers
       // we will need to change this code to potentially use the $httpOverwrite
       // parameter supported by ESF to avoid triggering preflight requests.
       e["Content-Type"] = "text/plain", this.databaseInfo.appId && (e["X-Firebase-GMPID"] = this.databaseInfo.appId), t && t.headers.forEach((t2, n2) => e[n2] = t2), n && n.headers.forEach((t2, n2) => e[n2] = t2);
     }
-    No(e, t) {
-      const n = fe[e];
-      return `${this.Fo}/v1/${t}:${n}`;
+    bo(e, t) {
+      const n = Ut[e];
+      return `${this.po}/v1/${t}:${n}`;
     }
     /**
      * Closes and cleans up any resources associated with the connection. This
@@ -10035,11 +10073,48 @@ Total Duration: ${u - c}ms`);
      */
     terminate() {
     }
-  } {
+  };
+  var __PRIVATE_StreamBridge = class {
+    constructor(e) {
+      this.Fo = e.Fo, this.Mo = e.Mo;
+    }
+    xo(e) {
+      this.Oo = e;
+    }
+    No(e) {
+      this.Bo = e;
+    }
+    Lo(e) {
+      this.ko = e;
+    }
+    onMessage(e) {
+      this.qo = e;
+    }
+    close() {
+      this.Mo();
+    }
+    send(e) {
+      this.Fo(e);
+    }
+    Qo() {
+      this.Oo();
+    }
+    $o() {
+      this.Bo();
+    }
+    Ko(e) {
+      this.ko(e);
+    }
+    Uo(e) {
+      this.qo(e);
+    }
+  };
+  var Wt = "WebChannelConnection";
+  var __PRIVATE_WebChannelConnection = class extends __PRIVATE_RestConnection {
     constructor(e) {
       super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling = e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions = e.longPollingOptions;
     }
-    Lo(e, t, n, r) {
+    vo(e, t, n, r) {
       const i = __PRIVATE_generateUniqueDebugId();
       return new Promise((s, o) => {
         const _ = new XhrIo();
@@ -10048,40 +10123,40 @@ Total Duration: ${u - c}ms`);
             switch (_.getLastErrorCode()) {
               case ErrorCode.NO_ERROR:
                 const t2 = _.getResponseJson();
-                __PRIVATE_logDebug(ge, `XHR for RPC '${e}' ${i} received:`, JSON.stringify(t2)), s(t2);
+                __PRIVATE_logDebug(Wt, `XHR for RPC '${e}' ${i} received:`, JSON.stringify(t2)), s(t2);
                 break;
               case ErrorCode.TIMEOUT:
-                __PRIVATE_logDebug(ge, `RPC '${e}' ${i} timed out`), o(new FirestoreError(D.DEADLINE_EXCEEDED, "Request time out"));
+                __PRIVATE_logDebug(Wt, `RPC '${e}' ${i} timed out`), o(new FirestoreError(C.DEADLINE_EXCEEDED, "Request time out"));
                 break;
               case ErrorCode.HTTP_ERROR:
                 const n2 = _.getStatus();
-                if (__PRIVATE_logDebug(ge, `RPC '${e}' ${i} failed with status:`, n2, "response text:", _.getResponseText()), n2 > 0) {
+                if (__PRIVATE_logDebug(Wt, `RPC '${e}' ${i} failed with status:`, n2, "response text:", _.getResponseText()), n2 > 0) {
                   let e2 = _.getResponseJson();
                   Array.isArray(e2) && (e2 = e2[0]);
                   const t3 = null == e2 ? void 0 : e2.error;
                   if (t3 && t3.status && t3.message) {
                     const e3 = function __PRIVATE_mapCodeFromHttpResponseErrorStatus(e4) {
                       const t4 = e4.toLowerCase().replace(/_/g, "-");
-                      return Object.values(D).indexOf(t4) >= 0 ? t4 : D.UNKNOWN;
+                      return Object.values(C).indexOf(t4) >= 0 ? t4 : C.UNKNOWN;
                     }(t3.status);
                     o(new FirestoreError(e3, t3.message));
-                  } else o(new FirestoreError(D.UNKNOWN, "Server responded with status " + _.getStatus()));
+                  } else o(new FirestoreError(C.UNKNOWN, "Server responded with status " + _.getStatus()));
                 } else
-                  o(new FirestoreError(D.UNAVAILABLE, "Connection failed."));
+                  o(new FirestoreError(C.UNAVAILABLE, "Connection failed."));
                 break;
               default:
                 fail();
             }
           } finally {
-            __PRIVATE_logDebug(ge, `RPC '${e}' ${i} completed.`);
+            __PRIVATE_logDebug(Wt, `RPC '${e}' ${i} completed.`);
           }
         });
         const a = JSON.stringify(r);
-        __PRIVATE_logDebug(ge, `RPC '${e}' ${i} sending request:`, r), _.send(t, "POST", a, n, 15);
+        __PRIVATE_logDebug(Wt, `RPC '${e}' ${i} sending request:`, r), _.send(t, "POST", a, n, 15);
       });
     }
-    qo(e, t, n) {
-      const r = __PRIVATE_generateUniqueDebugId(), i = [this.Fo, "/", "google.firestore.v1.Firestore", "/", e, "/channel"], s = createWebChannelTransport(), o = getStatEventTarget(), _ = {
+    Wo(e, t, n) {
+      const r = __PRIVATE_generateUniqueDebugId(), i = [this.po, "/", "google.firestore.v1.Firestore", "/", e, "/channel"], s = createWebChannelTransport(), o = getStatEventTarget(), _ = {
         // Required for backend stickiness, routing behavior is based on this
         // parameter.
         httpSessionIdParam: "gsessionid",
@@ -10105,7 +10180,7 @@ Total Duration: ${u - c}ms`);
         forceLongPolling: this.forceLongPolling,
         detectBufferingProxy: this.autoDetectLongPolling
       }, a = this.longPollingOptions.timeoutSeconds;
-      void 0 !== a && (_.longPollingTimeout = Math.round(1e3 * a)), this.useFetchStreams && (_.useFetchStreams = true), this.Bo(_.initMessageHeaders, t, n), // Sending the custom headers we just added to request.initMessageHeaders
+      void 0 !== a && (_.longPollingTimeout = Math.round(1e3 * a)), this.useFetchStreams && (_.useFetchStreams = true), this.Do(_.initMessageHeaders, t, n), // Sending the custom headers we just added to request.initMessageHeaders
       // (Authorization, etc.) will trigger the browser to make a CORS preflight
       // request because the XHR will no longer meet the criteria for a "simple"
       // CORS request:
@@ -10116,14 +10191,14 @@ Total Duration: ${u - c}ms`);
       // which is recognized by the webchannel backend.
       _.encodeInitMessageHeaders = true;
       const u = i.join("");
-      __PRIVATE_logDebug(ge, `Creating RPC '${e}' stream ${r}: ${u}`, _);
+      __PRIVATE_logDebug(Wt, `Creating RPC '${e}' stream ${r}: ${u}`, _);
       const c = s.createWebChannel(u, _);
       let l = false, h = false;
       const P = new __PRIVATE_StreamBridge({
-        Eo: (t2) => {
-          h ? __PRIVATE_logDebug(ge, `Not sending because RPC '${e}' stream ${r} is closed:`, t2) : (l || (__PRIVATE_logDebug(ge, `Opening RPC '${e}' stream ${r} transport.`), c.open(), l = true), __PRIVATE_logDebug(ge, `RPC '${e}' stream ${r} sending:`, t2), c.send(t2));
+        Fo: (t2) => {
+          h ? __PRIVATE_logDebug(Wt, `Not sending because RPC '${e}' stream ${r} is closed:`, t2) : (l || (__PRIVATE_logDebug(Wt, `Opening RPC '${e}' stream ${r} transport.`), c.open(), l = true), __PRIVATE_logDebug(Wt, `RPC '${e}' stream ${r} sending:`, t2), c.send(t2));
         },
-        Ao: () => c.close()
+        Mo: () => c.close()
       }), __PRIVATE_unguardedEventListen = (e2, t2, n2) => {
         e2.listen(t2, (e3) => {
           try {
@@ -10136,11 +10211,11 @@ Total Duration: ${u - c}ms`);
         });
       };
       return __PRIVATE_unguardedEventListen(c, WebChannel.EventType.OPEN, () => {
-        h || (__PRIVATE_logDebug(ge, `RPC '${e}' stream ${r} transport opened.`), P.So());
+        h || (__PRIVATE_logDebug(Wt, `RPC '${e}' stream ${r} transport opened.`), P.Qo());
       }), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.CLOSE, () => {
-        h || (h = true, __PRIVATE_logDebug(ge, `RPC '${e}' stream ${r} transport closed`), P.Do());
+        h || (h = true, __PRIVATE_logDebug(Wt, `RPC '${e}' stream ${r} transport closed`), P.Ko());
       }), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.ERROR, (t2) => {
-        h || (h = true, __PRIVATE_logWarn(ge, `RPC '${e}' stream ${r} transport errored:`, t2), P.Do(new FirestoreError(D.UNAVAILABLE, "The operation could not be completed")));
+        h || (h = true, __PRIVATE_logWarn(Wt, `RPC '${e}' stream ${r} transport errored:`, t2), P.Ko(new FirestoreError(C.UNAVAILABLE, "The operation could not be completed")));
       }), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.MESSAGE, (t2) => {
         var n2;
         if (!h) {
@@ -10148,7 +10223,7 @@ Total Duration: ${u - c}ms`);
           __PRIVATE_hardAssert(!!i2);
           const s2 = i2, o2 = (null == s2 ? void 0 : s2.error) || (null === (n2 = s2[0]) || void 0 === n2 ? void 0 : n2.error);
           if (o2) {
-            __PRIVATE_logDebug(ge, `RPC '${e}' stream ${r} received error:`, o2);
+            __PRIVATE_logDebug(Wt, `RPC '${e}' stream ${r} received error:`, o2);
             const t3 = o2.status;
             let n3 = (
               /**
@@ -10158,18 +10233,18 @@ Total Duration: ${u - c}ms`);
               *     there is no match.
               */
               function __PRIVATE_mapCodeFromRpcStatus(e2) {
-                const t4 = le[e2];
+                const t4 = Et[e2];
                 if (void 0 !== t4) return __PRIVATE_mapCodeFromRpcCode(t4);
               }(t3)
             ), i3 = o2.message;
-            void 0 === n3 && (n3 = D.INTERNAL, i3 = "Unknown error status: " + t3 + " with message " + o2.message), // Mark closed so no further events are propagated
-            h = true, P.Do(new FirestoreError(n3, i3)), c.close();
-          } else __PRIVATE_logDebug(ge, `RPC '${e}' stream ${r} received:`, i2), P.vo(i2);
+            void 0 === n3 && (n3 = C.INTERNAL, i3 = "Unknown error status: " + t3 + " with message " + o2.message), // Mark closed so no further events are propagated
+            h = true, P.Ko(new FirestoreError(n3, i3)), c.close();
+          } else __PRIVATE_logDebug(Wt, `RPC '${e}' stream ${r} received:`, i2), P.Uo(i2);
         }
       }), __PRIVATE_unguardedEventListen(o, Event.STAT_EVENT, (t2) => {
-        t2.stat === Stat.PROXY ? __PRIVATE_logDebug(ge, `RPC '${e}' stream ${r} detected buffering proxy`) : t2.stat === Stat.NOPROXY && __PRIVATE_logDebug(ge, `RPC '${e}' stream ${r} detected no buffering proxy`);
+        t2.stat === Stat.PROXY ? __PRIVATE_logDebug(Wt, `RPC '${e}' stream ${r} detected buffering proxy`) : t2.stat === Stat.NOPROXY && __PRIVATE_logDebug(Wt, `RPC '${e}' stream ${r} detected no buffering proxy`);
       }), setTimeout(() => {
-        P.bo();
+        P.$o();
       }, 0), P;
     }
   };
@@ -10185,8 +10260,8 @@ Total Duration: ${u - c}ms`);
   }
   var __PRIVATE_ExponentialBackoff = class {
     constructor(e, t, n = 1e3, r = 1.5, i = 6e4) {
-      this.li = e, this.timerId = t, this.Qo = n, this.Ko = r, this.$o = i, this.Uo = 0, this.Wo = null, /** The last backoff attempt, as epoch milliseconds. */
-      this.Go = Date.now(), this.reset();
+      this.Ti = e, this.timerId = t, this.Go = n, this.zo = r, this.jo = i, this.Ho = 0, this.Jo = null, /** The last backoff attempt, as epoch milliseconds. */
+      this.Yo = Date.now(), this.reset();
     }
     /**
      * Resets the backoff delay.
@@ -10196,49 +10271,50 @@ Total Duration: ${u - c}ms`);
      * subsequent ones will increase according to the backoffFactor.
      */
     reset() {
-      this.Uo = 0;
+      this.Ho = 0;
     }
     /**
      * Resets the backoff delay to the maximum delay (e.g. for use after a
      * RESOURCE_EXHAUSTED error).
      */
-    zo() {
-      this.Uo = this.$o;
+    Zo() {
+      this.Ho = this.jo;
     }
     /**
      * Returns a promise that resolves after currentDelayMs, and increases the
      * delay for any subsequent attempts. If there was a pending backoff operation
      * already, it will be canceled.
      */
-    jo(e) {
+    Xo(e) {
       this.cancel();
-      const t = Math.floor(this.Uo + this.Ho()), n = Math.max(0, Date.now() - this.Go), r = Math.max(0, t - n);
-      r > 0 && __PRIVATE_logDebug("ExponentialBackoff", `Backing off for ${r} ms (base delay: ${this.Uo} ms, delay with jitter: ${t} ms, last attempt: ${n} ms ago)`), this.Wo = this.li.enqueueAfterDelay(this.timerId, r, () => (this.Go = Date.now(), e())), // Apply backoff factor to determine next delay and ensure it is within
+      const t = Math.floor(this.Ho + this.e_()), n = Math.max(0, Date.now() - this.Yo), r = Math.max(0, t - n);
+      r > 0 && __PRIVATE_logDebug("ExponentialBackoff", `Backing off for ${r} ms (base delay: ${this.Ho} ms, delay with jitter: ${t} ms, last attempt: ${n} ms ago)`), this.Jo = this.Ti.enqueueAfterDelay(this.timerId, r, () => (this.Yo = Date.now(), e())), // Apply backoff factor to determine next delay and ensure it is within
       // bounds.
-      this.Uo *= this.Ko, this.Uo < this.Qo && (this.Uo = this.Qo), this.Uo > this.$o && (this.Uo = this.$o);
+      this.Ho *= this.zo, this.Ho < this.Go && (this.Ho = this.Go), this.Ho > this.jo && (this.Ho = this.jo);
     }
-    Jo() {
-      null !== this.Wo && (this.Wo.skipDelay(), this.Wo = null);
+    t_() {
+      null !== this.Jo && (this.Jo.skipDelay(), this.Jo = null);
     }
     cancel() {
-      null !== this.Wo && (this.Wo.cancel(), this.Wo = null);
+      null !== this.Jo && (this.Jo.cancel(), this.Jo = null);
     }
     /** Returns a random value in the range [-currentBaseMs/2, currentBaseMs/2] */
-    Ho() {
-      return (Math.random() - 0.5) * this.Uo;
+    e_() {
+      return (Math.random() - 0.5) * this.Ho;
     }
   };
+  var Gt = "PersistentStream";
   var __PRIVATE_PersistentStream = class {
     constructor(e, t, n, r, i, s, o, _) {
-      this.li = e, this.Yo = n, this.Zo = r, this.connection = i, this.authCredentialsProvider = s, this.appCheckCredentialsProvider = o, this.listener = _, this.state = 0, /**
+      this.Ti = e, this.n_ = n, this.r_ = r, this.connection = i, this.authCredentialsProvider = s, this.appCheckCredentialsProvider = o, this.listener = _, this.state = 0, /**
        * A close count that's incremented every time the stream is closed; used by
        * getCloseGuardedDispatcher() to invalidate callbacks that happen after
        * close.
        */
-      this.Xo = 0, this.e_ = null, this.t_ = null, this.stream = null, /**
+      this.i_ = 0, this.s_ = null, this.o_ = null, this.stream = null, /**
        * Count of response messages received.
        */
-      this.n_ = 0, this.r_ = new __PRIVATE_ExponentialBackoff(e, t);
+      this.__ = 0, this.a_ = new __PRIVATE_ExponentialBackoff(e, t);
     }
     /**
      * Returns true if start() has been called and no error has occurred. True
@@ -10247,14 +10323,14 @@ Total Duration: ${u - c}ms`);
      * actual RPC). Use isOpen() to determine if the stream is open and ready for
      * outbound requests.
      */
-    i_() {
-      return 1 === this.state || 5 === this.state || this.s_();
+    u_() {
+      return 1 === this.state || 5 === this.state || this.c_();
     }
     /**
      * Returns true if the underlying RPC is open (the onOpen() listener has been
      * called) and the stream is ready for outbound requests.
      */
-    s_() {
+    c_() {
       return 2 === this.state || 3 === this.state;
     }
     /**
@@ -10265,7 +10341,7 @@ Total Duration: ${u - c}ms`);
      * When start returns, isStarted() will return true.
      */
     start() {
-      this.n_ = 0, 4 !== this.state ? this.auth() : this.o_();
+      this.__ = 0, 4 !== this.state ? this.auth() : this.l_();
     }
     /**
      * Stops the RPC. This call is idempotent and allowed regardless of the
@@ -10274,7 +10350,7 @@ Total Duration: ${u - c}ms`);
      * When stop returns, isStarted() and isOpen() will both return false.
      */
     async stop() {
-      this.i_() && await this.close(
+      this.u_() && await this.close(
         0
         /* PersistentStreamState.Initial */
       );
@@ -10287,8 +10363,8 @@ Total Duration: ${u - c}ms`);
      * Each error will call the onClose() listener. That function can decide to
      * inhibit backoff if required.
      */
-    __() {
-      this.state = 0, this.r_.reset();
+    h_() {
+      this.state = 0, this.a_.reset();
     }
     /**
      * Marks this stream as idle. If no further actions are performed on the
@@ -10300,28 +10376,28 @@ Total Duration: ${u - c}ms`);
      * Only streams that are in state 'Open' can be marked idle, as all other
      * states imply pending network operations.
      */
-    a_() {
-      this.s_() && null === this.e_ && (this.e_ = this.li.enqueueAfterDelay(this.Yo, 6e4, () => this.u_()));
+    P_() {
+      this.c_() && null === this.s_ && (this.s_ = this.Ti.enqueueAfterDelay(this.n_, 6e4, () => this.T_()));
     }
     /** Sends a message to the underlying stream. */
-    c_(e) {
-      this.l_(), this.stream.send(e);
+    I_(e) {
+      this.E_(), this.stream.send(e);
     }
     /** Called by the idle timer when the stream should close due to inactivity. */
-    async u_() {
-      if (this.s_())
+    async T_() {
+      if (this.c_())
         return this.close(
           0
           /* PersistentStreamState.Initial */
         );
     }
     /** Marks the stream as active again. */
-    l_() {
-      this.e_ && (this.e_.cancel(), this.e_ = null);
+    E_() {
+      this.s_ && (this.s_.cancel(), this.s_ = null);
     }
     /** Cancels the health check delayed operation. */
-    h_() {
-      this.t_ && (this.t_.cancel(), this.t_ = null);
+    d_() {
+      this.o_ && (this.o_.cancel(), this.o_ = null);
     }
     /**
      * Closes the stream and cleans up as necessary:
@@ -10337,67 +10413,67 @@ Total Duration: ${u - c}ms`);
      * @param error - the error the connection was closed with.
      */
     async close(e, t) {
-      this.l_(), this.h_(), this.r_.cancel(), // Invalidates any stream-related callbacks (e.g. from auth or the
+      this.E_(), this.d_(), this.a_.cancel(), // Invalidates any stream-related callbacks (e.g. from auth or the
       // underlying stream), guaranteeing they won't execute.
-      this.Xo++, 4 !== e ? (
+      this.i_++, 4 !== e ? (
         // If this is an intentional close ensure we don't delay our next connection attempt.
-        this.r_.reset()
-      ) : t && t.code === D.RESOURCE_EXHAUSTED ? (
+        this.a_.reset()
+      ) : t && t.code === C.RESOURCE_EXHAUSTED ? (
         // Log the error. (Probably either 'quota exceeded' or 'max queue length reached'.)
-        (__PRIVATE_logError(t.toString()), __PRIVATE_logError("Using maximum backoff delay to prevent overloading the backend."), this.r_.zo())
-      ) : t && t.code === D.UNAUTHENTICATED && 3 !== this.state && // "unauthenticated" error means the token was rejected. This should rarely
+        (__PRIVATE_logError(t.toString()), __PRIVATE_logError("Using maximum backoff delay to prevent overloading the backend."), this.a_.Zo())
+      ) : t && t.code === C.UNAUTHENTICATED && 3 !== this.state && // "unauthenticated" error means the token was rejected. This should rarely
       // happen since both Auth and AppCheck ensure a sufficient TTL when we
       // request a token. If a user manually resets their system clock this can
       // fail, however. In this case, we should get a Code.UNAUTHENTICATED error
       // before we received the first message and we need to invalidate the token
       // to ensure that we fetch a new token.
       (this.authCredentialsProvider.invalidateToken(), this.appCheckCredentialsProvider.invalidateToken()), // Clean up the underlying stream because we are no longer interested in events.
-      null !== this.stream && (this.P_(), this.stream.close(), this.stream = null), // This state must be assigned before calling onClose() to allow the callback to
+      null !== this.stream && (this.A_(), this.stream.close(), this.stream = null), // This state must be assigned before calling onClose() to allow the callback to
       // inhibit backoff or otherwise manipulate the state in its non-started state.
       this.state = e, // Notify the listener that the stream closed.
-      await this.listener.po(t);
+      await this.listener.Lo(t);
     }
     /**
      * Can be overridden to perform additional cleanup before the stream is closed.
      * Calling super.tearDown() is not required.
      */
-    P_() {
+    A_() {
     }
     auth() {
       this.state = 1;
-      const e = this.T_(this.Xo), t = this.Xo;
+      const e = this.R_(this.i_), t = this.i_;
       Promise.all([this.authCredentialsProvider.getToken(), this.appCheckCredentialsProvider.getToken()]).then(([e2, n]) => {
-        this.Xo === t && // Normally we'd have to schedule the callback on the AsyncQueue.
+        this.i_ === t && // Normally we'd have to schedule the callback on the AsyncQueue.
         // However, the following calls are safe to be called outside the
         // AsyncQueue since they don't chain asynchronous calls
-        this.I_(e2, n);
+        this.V_(e2, n);
       }, (t2) => {
         e(() => {
-          const e2 = new FirestoreError(D.UNKNOWN, "Fetching auth token failed: " + t2.message);
-          return this.d_(e2);
+          const e2 = new FirestoreError(C.UNKNOWN, "Fetching auth token failed: " + t2.message);
+          return this.m_(e2);
         });
       });
     }
-    I_(e, t) {
-      const n = this.T_(this.Xo);
-      this.stream = this.E_(e, t), this.stream.Ro(() => {
-        n(() => this.listener.Ro());
-      }), this.stream.mo(() => {
-        n(() => (this.state = 2, this.t_ = this.li.enqueueAfterDelay(this.Zo, 1e4, () => (this.s_() && (this.state = 3), Promise.resolve())), this.listener.mo()));
-      }), this.stream.po((e2) => {
-        n(() => this.d_(e2));
+    V_(e, t) {
+      const n = this.R_(this.i_);
+      this.stream = this.f_(e, t), this.stream.xo(() => {
+        n(() => this.listener.xo());
+      }), this.stream.No(() => {
+        n(() => (this.state = 2, this.o_ = this.Ti.enqueueAfterDelay(this.r_, 1e4, () => (this.c_() && (this.state = 3), Promise.resolve())), this.listener.No()));
+      }), this.stream.Lo((e2) => {
+        n(() => this.m_(e2));
       }), this.stream.onMessage((e2) => {
-        n(() => 1 == ++this.n_ ? this.A_(e2) : this.onNext(e2));
+        n(() => 1 == ++this.__ ? this.g_(e2) : this.onNext(e2));
       });
     }
-    o_() {
-      this.state = 5, this.r_.jo(async () => {
+    l_() {
+      this.state = 5, this.a_.Xo(async () => {
         this.state = 0, this.start();
       });
     }
     // Visible for tests
-    d_(e) {
-      return __PRIVATE_logDebug("PersistentStream", `close with error: ${e}`), this.stream = null, this.close(4, e);
+    m_(e) {
+      return __PRIVATE_logDebug(Gt, `close with error: ${e}`), this.stream = null, this.close(4, e);
     }
     /**
      * Returns a "dispatcher" function that dispatches operations onto the
@@ -10405,9 +10481,9 @@ Total Duration: ${u - c}ms`);
      * us to turn auth / stream callbacks into no-ops if the stream is closed /
      * re-opened, etc.
      */
-    T_(e) {
+    R_(e) {
       return (t) => {
-        this.li.enqueueAndForget(() => this.Xo === e ? t() : (__PRIVATE_logDebug("PersistentStream", "stream callback skipped by getCloseGuardedDispatcher."), Promise.resolve()));
+        this.Ti.enqueueAndForget(() => this.i_ === e ? t() : (__PRIVATE_logDebug(Gt, "stream callback skipped by getCloseGuardedDispatcher."), Promise.resolve()));
       };
     }
   };
@@ -10415,20 +10491,20 @@ Total Duration: ${u - c}ms`);
     constructor(e, t, n, r, i, s) {
       super(e, "listen_stream_connection_backoff", "listen_stream_idle", "health_check_timeout", t, n, r, s), this.serializer = i;
     }
-    E_(e, t) {
-      return this.connection.qo("Listen", e, t);
+    f_(e, t) {
+      return this.connection.Wo("Listen", e, t);
     }
-    A_(e) {
+    g_(e) {
       return this.onNext(e);
     }
     onNext(e) {
-      this.r_.reset();
+      this.a_.reset();
       const t = __PRIVATE_fromWatchChange(this.serializer, e), n = function __PRIVATE_versionFromListenResponse(e2) {
         if (!("targetChange" in e2)) return SnapshotVersion.min();
         const t2 = e2.targetChange;
         return t2.targetIds && t2.targetIds.length ? SnapshotVersion.min() : t2.readTime ? __PRIVATE_fromVersion(t2.readTime) : SnapshotVersion.min();
       }(e);
-      return this.listener.R_(t, n);
+      return this.listener.p_(t, n);
     }
     /**
      * Registers interest in the results of the given target. If the target
@@ -10436,7 +10512,7 @@ Total Duration: ${u - c}ms`);
      * affect the target will be streamed back as WatchChange messages that
      * reference the targetId.
      */
-    V_(e) {
+    y_(e) {
       const t = {};
       t.database = __PRIVATE_getEncodedDatabaseId(this.serializer), t.addTarget = function __PRIVATE_toTarget(e2, t2) {
         let n2;
@@ -10444,7 +10520,7 @@ Total Duration: ${u - c}ms`);
         if (n2 = __PRIVATE_targetIsDocumentTarget(r) ? {
           documents: __PRIVATE_toDocumentsTarget(e2, r)
         } : {
-          query: __PRIVATE_toQueryTarget(e2, r).ct
+          query: __PRIVATE_toQueryTarget(e2, r).ht
         }, n2.targetId = t2.targetId, t2.resumeToken.approximateByteSize() > 0) {
           n2.resumeToken = __PRIVATE_toBytes(e2, t2.resumeToken);
           const r2 = __PRIVATE_toInt32Proto(e2, t2.expectedCount);
@@ -10457,15 +10533,15 @@ Total Duration: ${u - c}ms`);
         return n2;
       }(this.serializer, e);
       const n = __PRIVATE_toListenRequestLabels(this.serializer, e);
-      n && (t.labels = n), this.c_(t);
+      n && (t.labels = n), this.I_(t);
     }
     /**
      * Unregisters interest in the results of the target associated with the
      * given targetId.
      */
-    m_(e) {
+    w_(e) {
       const t = {};
-      t.database = __PRIVATE_getEncodedDatabaseId(this.serializer), t.removeTarget = e, this.c_(t);
+      t.database = __PRIVATE_getEncodedDatabaseId(this.serializer), t.removeTarget = e, this.I_(t);
     }
   };
   var __PRIVATE_PersistentWriteStream = class extends __PRIVATE_PersistentStream {
@@ -10476,71 +10552,72 @@ Total Duration: ${u - c}ms`);
      * Tracks whether or not a handshake has been successfully exchanged and
      * the stream is ready to accept mutations.
      */
-    get f_() {
-      return this.n_ > 0;
+    get S_() {
+      return this.__ > 0;
     }
     // Override of PersistentStream.start
     start() {
       this.lastStreamToken = void 0, super.start();
     }
-    P_() {
-      this.f_ && this.g_([]);
+    A_() {
+      this.S_ && this.b_([]);
     }
-    E_(e, t) {
-      return this.connection.qo("Write", e, t);
+    f_(e, t) {
+      return this.connection.Wo("Write", e, t);
     }
-    A_(e) {
+    g_(e) {
       return __PRIVATE_hardAssert(!!e.streamToken), this.lastStreamToken = e.streamToken, // The first response is always the handshake response
-      __PRIVATE_hardAssert(!e.writeResults || 0 === e.writeResults.length), this.listener.p_();
+      __PRIVATE_hardAssert(!e.writeResults || 0 === e.writeResults.length), this.listener.D_();
     }
     onNext(e) {
       __PRIVATE_hardAssert(!!e.streamToken), this.lastStreamToken = e.streamToken, // A successful first write response means the stream is healthy,
       // Note, that we could consider a successful handshake healthy, however,
       // the write itself might be causing an error we want to back off from.
-      this.r_.reset();
+      this.a_.reset();
       const t = __PRIVATE_fromWriteResults(e.writeResults, e.commitTime), n = __PRIVATE_fromVersion(e.commitTime);
-      return this.listener.y_(n, t);
+      return this.listener.v_(n, t);
     }
     /**
      * Sends an initial streamToken to the server, performing the handshake
      * required to make the StreamingWrite RPC work. Subsequent
      * calls should wait until onHandshakeComplete was called.
      */
-    w_() {
+    C_() {
       const e = {};
-      e.database = __PRIVATE_getEncodedDatabaseId(this.serializer), this.c_(e);
+      e.database = __PRIVATE_getEncodedDatabaseId(this.serializer), this.I_(e);
     }
     /** Sends a group of mutations to the Firestore backend to apply. */
-    g_(e) {
+    b_(e) {
       const t = {
         streamToken: this.lastStreamToken,
         writes: e.map((e2) => toMutation(this.serializer, e2))
       };
-      this.c_(t);
+      this.I_(t);
     }
   };
-  var __PRIVATE_DatastoreImpl = class extends class Datastore {
-  } {
+  var Datastore = class {
+  };
+  var __PRIVATE_DatastoreImpl = class extends Datastore {
     constructor(e, t, n, r) {
-      super(), this.authCredentials = e, this.appCheckCredentials = t, this.connection = n, this.serializer = r, this.S_ = false;
+      super(), this.authCredentials = e, this.appCheckCredentials = t, this.connection = n, this.serializer = r, this.F_ = false;
     }
-    b_() {
-      if (this.S_) throw new FirestoreError(D.FAILED_PRECONDITION, "The client has already been terminated.");
+    M_() {
+      if (this.F_) throw new FirestoreError(C.FAILED_PRECONDITION, "The client has already been terminated.");
     }
     /** Invokes the provided RPC with auth and AppCheck tokens. */
-    Oo(e, t, n, r) {
-      return this.b_(), Promise.all([this.authCredentials.getToken(), this.appCheckCredentials.getToken()]).then(([i, s]) => this.connection.Oo(e, __PRIVATE_toResourcePath(t, n), r, i, s)).catch((e2) => {
-        throw "FirebaseError" === e2.name ? (e2.code === D.UNAUTHENTICATED && (this.authCredentials.invalidateToken(), this.appCheckCredentials.invalidateToken()), e2) : new FirestoreError(D.UNKNOWN, e2.toString());
+    So(e, t, n, r) {
+      return this.M_(), Promise.all([this.authCredentials.getToken(), this.appCheckCredentials.getToken()]).then(([i, s]) => this.connection.So(e, __PRIVATE_toResourcePath(t, n), r, i, s)).catch((e2) => {
+        throw "FirebaseError" === e2.name ? (e2.code === C.UNAUTHENTICATED && (this.authCredentials.invalidateToken(), this.appCheckCredentials.invalidateToken()), e2) : new FirestoreError(C.UNKNOWN, e2.toString());
       });
     }
     /** Invokes the provided RPC with streamed results with auth and AppCheck tokens. */
-    ko(e, t, n, r, i) {
-      return this.b_(), Promise.all([this.authCredentials.getToken(), this.appCheckCredentials.getToken()]).then(([s, o]) => this.connection.ko(e, __PRIVATE_toResourcePath(t, n), r, s, o, i)).catch((e2) => {
-        throw "FirebaseError" === e2.name ? (e2.code === D.UNAUTHENTICATED && (this.authCredentials.invalidateToken(), this.appCheckCredentials.invalidateToken()), e2) : new FirestoreError(D.UNKNOWN, e2.toString());
+    Co(e, t, n, r, i) {
+      return this.M_(), Promise.all([this.authCredentials.getToken(), this.appCheckCredentials.getToken()]).then(([s, o]) => this.connection.Co(e, __PRIVATE_toResourcePath(t, n), r, s, o, i)).catch((e2) => {
+        throw "FirebaseError" === e2.name ? (e2.code === C.UNAUTHENTICATED && (this.authCredentials.invalidateToken(), this.appCheckCredentials.invalidateToken()), e2) : new FirestoreError(C.UNKNOWN, e2.toString());
       });
     }
     terminate() {
-      this.S_ = true, this.connection.terminate();
+      this.F_ = true, this.connection.terminate();
     }
   };
   var __PRIVATE_OnlineStateTracker = class {
@@ -10551,17 +10628,17 @@ Total Duration: ${u - c}ms`);
        * maximum defined by MAX_WATCH_STREAM_FAILURES, we'll set the OnlineState to
        * Offline.
        */
-      this.D_ = 0, /**
+      this.x_ = 0, /**
        * A timer that elapses after ONLINE_STATE_TIMEOUT_MS, at which point we
        * transition from OnlineState.Unknown to OnlineState.Offline without waiting
        * for the stream to actually fail (MAX_WATCH_STREAM_FAILURES times).
        */
-      this.v_ = null, /**
+      this.O_ = null, /**
        * Whether the client should log a warning message if it fails to connect to
        * the backend (initially true, cleared after a successful stream, or if we've
        * logged the message already).
        */
-      this.C_ = true;
+      this.N_ = true;
     }
     /**
      * Called by RemoteStore when a watch stream is started (including on each
@@ -10570,11 +10647,11 @@ Total Duration: ${u - c}ms`);
      * If this is the first attempt, it sets the OnlineState to Unknown and starts
      * the onlineStateTimer.
      */
-    F_() {
-      0 === this.D_ && (this.M_(
+    B_() {
+      0 === this.x_ && (this.L_(
         "Unknown"
         /* OnlineState.Unknown */
-      ), this.v_ = this.asyncQueue.enqueueAfterDelay("online_state_timeout", 1e4, () => (this.v_ = null, this.x_("Backend didn't respond within 10 seconds."), this.M_(
+      ), this.O_ = this.asyncQueue.enqueueAfterDelay("online_state_timeout", 1e4, () => (this.O_ = null, this.k_("Backend didn't respond within 10 seconds."), this.L_(
         "Offline"
         /* OnlineState.Offline */
       ), Promise.resolve())));
@@ -10585,11 +10662,11 @@ Total Duration: ${u - c}ms`);
      * allow multiple failures (based on MAX_WATCH_STREAM_FAILURES) before we
      * actually transition to the 'Offline' state.
      */
-    O_(e) {
-      "Online" === this.state ? this.M_(
+    q_(e) {
+      "Online" === this.state ? this.L_(
         "Unknown"
         /* OnlineState.Unknown */
-      ) : (this.D_++, this.D_ >= 1 && (this.N_(), this.x_(`Connection failed 1 times. Most recent error: ${e.toString()}`), this.M_(
+      ) : (this.x_++, this.x_ >= 1 && (this.Q_(), this.k_(`Connection failed 1 times. Most recent error: ${e.toString()}`), this.L_(
         "Offline"
         /* OnlineState.Offline */
       )));
@@ -10602,22 +10679,23 @@ Total Duration: ${u - c}ms`);
      * handleWatchStreamStart() and handleWatchStreamFailure().
      */
     set(e) {
-      this.N_(), this.D_ = 0, "Online" === e && // We've connected to watch at least once. Don't warn the developer
+      this.Q_(), this.x_ = 0, "Online" === e && // We've connected to watch at least once. Don't warn the developer
       // about being offline going forward.
-      (this.C_ = false), this.M_(e);
+      (this.N_ = false), this.L_(e);
     }
-    M_(e) {
+    L_(e) {
       e !== this.state && (this.state = e, this.onlineStateHandler(e));
     }
-    x_(e) {
+    k_(e) {
       const t = `Could not reach Cloud Firestore backend. ${e}
 This typically indicates that your device does not have a healthy Internet connection at the moment. The client will operate in offline mode until it is able to successfully connect to the backend.`;
-      this.C_ ? (__PRIVATE_logError(t), this.C_ = false) : __PRIVATE_logDebug("OnlineStateTracker", t);
+      this.N_ ? (__PRIVATE_logError(t), this.N_ = false) : __PRIVATE_logDebug("OnlineStateTracker", t);
     }
-    N_() {
-      null !== this.v_ && (this.v_.cancel(), this.v_ = null);
+    Q_() {
+      null !== this.O_ && (this.O_.cancel(), this.O_ = null);
     }
   };
+  var zt = "RemoteStore";
   var __PRIVATE_RemoteStoreImpl = class {
     constructor(e, t, n, r, i) {
       this.localStore = e, this.datastore = t, this.asyncQueue = n, this.remoteSyncer = {}, /**
@@ -10637,7 +10715,7 @@ This typically indicates that your device does not have a healthy Internet conne
        * purely based on order, and so we can just shift() writes from the front of
        * the writePipeline as we receive responses.
        */
-      this.B_ = [], /**
+      this.K_ = [], /**
        * A mapping of watched targets that the client cares about tracking and the
        * user has explicitly called a 'listen' for this target.
        *
@@ -10646,110 +10724,110 @@ This typically indicates that your device does not have a healthy Internet conne
        * to the server. The targets removed with unlistens are removed eagerly
        * without waiting for confirmation from the listen stream.
        */
-      this.L_ = /* @__PURE__ */ new Map(), /**
+      this.U_ = /* @__PURE__ */ new Map(), /**
        * A set of reasons for why the RemoteStore may be offline. If empty, the
        * RemoteStore may start its network connections.
        */
-      this.k_ = /* @__PURE__ */ new Set(), /**
+      this.W_ = /* @__PURE__ */ new Set(), /**
        * Event handlers that get called when the network is disabled or enabled.
        *
        * PORTING NOTE: These functions are used on the Web client to create the
        * underlying streams (to support tree-shakeable streams). On Android and iOS,
        * the streams are created during construction of RemoteStore.
        */
-      this.q_ = [], this.Q_ = i, this.Q_.uo((e2) => {
+      this.G_ = [], this.z_ = i, this.z_.To((e2) => {
         n.enqueueAndForget(async () => {
-          __PRIVATE_canUseNetwork(this) && (__PRIVATE_logDebug("RemoteStore", "Restarting streams for network reachability change."), await async function __PRIVATE_restartNetwork(e3) {
+          __PRIVATE_canUseNetwork(this) && (__PRIVATE_logDebug(zt, "Restarting streams for network reachability change."), await async function __PRIVATE_restartNetwork(e3) {
             const t2 = __PRIVATE_debugCast(e3);
-            t2.k_.add(
+            t2.W_.add(
               4
               /* OfflineCause.ConnectivityChange */
-            ), await __PRIVATE_disableNetworkInternal(t2), t2.K_.set(
+            ), await __PRIVATE_disableNetworkInternal(t2), t2.j_.set(
               "Unknown"
               /* OnlineState.Unknown */
-            ), t2.k_.delete(
+            ), t2.W_.delete(
               4
               /* OfflineCause.ConnectivityChange */
             ), await __PRIVATE_enableNetworkInternal(t2);
           }(this));
         });
-      }), this.K_ = new __PRIVATE_OnlineStateTracker(n, r);
+      }), this.j_ = new __PRIVATE_OnlineStateTracker(n, r);
     }
   };
   async function __PRIVATE_enableNetworkInternal(e) {
-    if (__PRIVATE_canUseNetwork(e)) for (const t of e.q_) await t(
+    if (__PRIVATE_canUseNetwork(e)) for (const t of e.G_) await t(
       /* enabled= */
       true
     );
   }
   async function __PRIVATE_disableNetworkInternal(e) {
-    for (const t of e.q_) await t(
+    for (const t of e.G_) await t(
       /* enabled= */
       false
     );
   }
   function __PRIVATE_remoteStoreListen(e, t) {
     const n = __PRIVATE_debugCast(e);
-    n.L_.has(t.targetId) || // Mark this as something the client is currently listening for.
-    (n.L_.set(t.targetId, t), __PRIVATE_shouldStartWatchStream(n) ? (
+    n.U_.has(t.targetId) || // Mark this as something the client is currently listening for.
+    (n.U_.set(t.targetId, t), __PRIVATE_shouldStartWatchStream(n) ? (
       // The listen will be sent in onWatchStreamOpen
       __PRIVATE_startWatchStream(n)
-    ) : __PRIVATE_ensureWatchStream(n).s_() && __PRIVATE_sendWatchRequest(n, t));
+    ) : __PRIVATE_ensureWatchStream(n).c_() && __PRIVATE_sendWatchRequest(n, t));
   }
   function __PRIVATE_remoteStoreUnlisten(e, t) {
     const n = __PRIVATE_debugCast(e), r = __PRIVATE_ensureWatchStream(n);
-    n.L_.delete(t), r.s_() && __PRIVATE_sendUnwatchRequest(n, t), 0 === n.L_.size && (r.s_() ? r.a_() : __PRIVATE_canUseNetwork(n) && // Revert to OnlineState.Unknown if the watch stream is not open and we
+    n.U_.delete(t), r.c_() && __PRIVATE_sendUnwatchRequest(n, t), 0 === n.U_.size && (r.c_() ? r.P_() : __PRIVATE_canUseNetwork(n) && // Revert to OnlineState.Unknown if the watch stream is not open and we
     // have no listeners, since without any listens to send we cannot
     // confirm if the stream is healthy and upgrade to OnlineState.Online.
-    n.K_.set(
+    n.j_.set(
       "Unknown"
       /* OnlineState.Unknown */
     ));
   }
   function __PRIVATE_sendWatchRequest(e, t) {
-    if (e.U_.xe(t.targetId), t.resumeToken.approximateByteSize() > 0 || t.snapshotVersion.compareTo(SnapshotVersion.min()) > 0) {
+    if (e.H_.Ne(t.targetId), t.resumeToken.approximateByteSize() > 0 || t.snapshotVersion.compareTo(SnapshotVersion.min()) > 0) {
       const n = e.remoteSyncer.getRemoteKeysForTarget(t.targetId).size;
       t = t.withExpectedCount(n);
     }
-    __PRIVATE_ensureWatchStream(e).V_(t);
+    __PRIVATE_ensureWatchStream(e).y_(t);
   }
   function __PRIVATE_sendUnwatchRequest(e, t) {
-    e.U_.xe(t), __PRIVATE_ensureWatchStream(e).m_(t);
+    e.H_.Ne(t), __PRIVATE_ensureWatchStream(e).w_(t);
   }
   function __PRIVATE_startWatchStream(e) {
-    e.U_ = new __PRIVATE_WatchChangeAggregator({
+    e.H_ = new __PRIVATE_WatchChangeAggregator({
       getRemoteKeysForTarget: (t) => e.remoteSyncer.getRemoteKeysForTarget(t),
-      ut: (t) => e.L_.get(t) || null,
-      nt: () => e.datastore.serializer.databaseId
-    }), __PRIVATE_ensureWatchStream(e).start(), e.K_.F_();
+      lt: (t) => e.U_.get(t) || null,
+      it: () => e.datastore.serializer.databaseId
+    }), __PRIVATE_ensureWatchStream(e).start(), e.j_.B_();
   }
   function __PRIVATE_shouldStartWatchStream(e) {
-    return __PRIVATE_canUseNetwork(e) && !__PRIVATE_ensureWatchStream(e).i_() && e.L_.size > 0;
+    return __PRIVATE_canUseNetwork(e) && !__PRIVATE_ensureWatchStream(e).u_() && e.U_.size > 0;
   }
   function __PRIVATE_canUseNetwork(e) {
-    return 0 === __PRIVATE_debugCast(e).k_.size;
+    return 0 === __PRIVATE_debugCast(e).W_.size;
   }
   function __PRIVATE_cleanUpWatchStreamState(e) {
-    e.U_ = void 0;
+    e.H_ = void 0;
   }
   async function __PRIVATE_onWatchStreamConnected(e) {
-    e.K_.set(
+    e.j_.set(
       "Online"
       /* OnlineState.Online */
     );
   }
   async function __PRIVATE_onWatchStreamOpen(e) {
-    e.L_.forEach((t, n) => {
+    e.U_.forEach((t, n) => {
       __PRIVATE_sendWatchRequest(e, t);
     });
   }
   async function __PRIVATE_onWatchStreamClose(e, t) {
     __PRIVATE_cleanUpWatchStreamState(e), // If we still need the watch stream, retry the connection.
-    __PRIVATE_shouldStartWatchStream(e) ? (e.K_.O_(t), __PRIVATE_startWatchStream(e)) : (
+    __PRIVATE_shouldStartWatchStream(e) ? (e.j_.q_(t), __PRIVATE_startWatchStream(e)) : (
       // No need to restart watch stream because there are no active targets.
       // The online state is set to unknown because there is no active attempt
       // at establishing a connection
-      e.K_.set(
+      e.j_.set(
         "Unknown"
         /* OnlineState.Unknown */
       )
@@ -10758,44 +10836,43 @@ This typically indicates that your device does not have a healthy Internet conne
   async function __PRIVATE_onWatchStreamChange(e, t, n) {
     if (
       // Mark the client as online since we got a message from the server
-      e.K_.set(
+      e.j_.set(
         "Online"
         /* OnlineState.Online */
       ), t instanceof __PRIVATE_WatchTargetChange && 2 === t.state && t.cause
     )
       try {
-        await /** Handles an error on a target */
-        async function __PRIVATE_handleTargetError(e2, t2) {
+        await async function __PRIVATE_handleTargetError(e2, t2) {
           const n2 = t2.cause;
           for (const r of t2.targetIds)
-            e2.L_.has(r) && (await e2.remoteSyncer.rejectListen(r, n2), e2.L_.delete(r), e2.U_.removeTarget(r));
+            e2.U_.has(r) && (await e2.remoteSyncer.rejectListen(r, n2), e2.U_.delete(r), e2.H_.removeTarget(r));
         }(e, t);
       } catch (n2) {
-        __PRIVATE_logDebug("RemoteStore", "Failed to remove targets %s: %s ", t.targetIds.join(","), n2), await __PRIVATE_disableNetworkUntilRecovery(e, n2);
+        __PRIVATE_logDebug(zt, "Failed to remove targets %s: %s ", t.targetIds.join(","), n2), await __PRIVATE_disableNetworkUntilRecovery(e, n2);
       }
-    else if (t instanceof __PRIVATE_DocumentWatchChange ? e.U_.$e(t) : t instanceof __PRIVATE_ExistenceFilterChange ? e.U_.Je(t) : e.U_.Ge(t), !n.isEqual(SnapshotVersion.min())) try {
+    else if (t instanceof __PRIVATE_DocumentWatchChange ? e.H_.We(t) : t instanceof __PRIVATE_ExistenceFilterChange ? e.H_.Ze(t) : e.H_.je(t), !n.isEqual(SnapshotVersion.min())) try {
       const t2 = await __PRIVATE_localStoreGetLastRemoteSnapshotVersion(e.localStore);
       n.compareTo(t2) >= 0 && // We have received a target change with a global snapshot if the snapshot
       // version is not equal to SnapshotVersion.min().
-      await /**
+      /**
       * Takes a batch of changes from the Datastore, repackages them as a
       * RemoteEvent, and passes that on to the listener, which is typically the
       * SyncEngine.
       */
-      function __PRIVATE_raiseWatchSnapshot(e2, t3) {
-        const n2 = e2.U_.it(t3);
+      await function __PRIVATE_raiseWatchSnapshot(e2, t3) {
+        const n2 = e2.H_.ot(t3);
         return n2.targetChanges.forEach((n3, r) => {
           if (n3.resumeToken.approximateByteSize() > 0) {
-            const i = e2.L_.get(r);
-            i && e2.L_.set(r, i.withResumeToken(n3.resumeToken, t3));
+            const i = e2.U_.get(r);
+            i && e2.U_.set(r, i.withResumeToken(n3.resumeToken, t3));
           }
         }), // Re-establish listens for the targets that have been invalidated by
         // existence filter mismatches.
         n2.targetMismatches.forEach((t4, n3) => {
-          const r = e2.L_.get(t4);
+          const r = e2.U_.get(t4);
           if (!r)
             return;
-          e2.L_.set(t4, r.withResumeToken(ByteString.EMPTY_BYTE_STRING, r.snapshotVersion)), // Cause a hard reset by unwatching and rewatching immediately, but
+          e2.U_.set(t4, r.withResumeToken(ByteString.EMPTY_BYTE_STRING, r.snapshotVersion)), // Cause a hard reset by unwatching and rewatching immediately, but
           // deliberately don't send a resume token so that we get a full update.
           __PRIVATE_sendUnwatchRequest(e2, t4);
           const i = new TargetData(r.target, t4, n3, r.sequenceNumber);
@@ -10803,16 +10880,16 @@ This typically indicates that your device does not have a healthy Internet conne
         }), e2.remoteSyncer.applyRemoteEvent(n2);
       }(e, n);
     } catch (t2) {
-      __PRIVATE_logDebug("RemoteStore", "Failed to raise snapshot:", t2), await __PRIVATE_disableNetworkUntilRecovery(e, t2);
+      __PRIVATE_logDebug(zt, "Failed to raise snapshot:", t2), await __PRIVATE_disableNetworkUntilRecovery(e, t2);
     }
   }
   async function __PRIVATE_disableNetworkUntilRecovery(e, t, n) {
     if (!__PRIVATE_isIndexedDbTransactionError(t)) throw t;
-    e.k_.add(
+    e.W_.add(
       1
       /* OfflineCause.IndexedDbFailed */
     ), // Disable network and raise offline snapshots
-    await __PRIVATE_disableNetworkInternal(e), e.K_.set(
+    await __PRIVATE_disableNetworkInternal(e), e.j_.set(
       "Offline"
       /* OnlineState.Offline */
     ), n || // Use a simple read operation to determine if IndexedDB recovered.
@@ -10820,7 +10897,7 @@ This typically indicates that your device does not have a healthy Internet conne
     // RemoteStore only has access to persistence through LocalStore.
     (n = () => __PRIVATE_localStoreGetLastRemoteSnapshotVersion(e.localStore)), // Probe IndexedDB periodically and re-enable network
     e.asyncQueue.enqueueRetryable(async () => {
-      __PRIVATE_logDebug("RemoteStore", "Retrying IndexedDB access"), await n(), e.k_.delete(
+      __PRIVATE_logDebug(zt, "Retrying IndexedDB access"), await n(), e.W_.delete(
         1
         /* OfflineCause.IndexedDbFailed */
       ), await __PRIVATE_enableNetworkInternal(e);
@@ -10831,11 +10908,11 @@ This typically indicates that your device does not have a healthy Internet conne
   }
   async function __PRIVATE_fillWritePipeline(e) {
     const t = __PRIVATE_debugCast(e), n = __PRIVATE_ensureWriteStream(t);
-    let r = t.B_.length > 0 ? t.B_[t.B_.length - 1].batchId : -1;
+    let r = t.K_.length > 0 ? t.K_[t.K_.length - 1].batchId : Q;
     for (; __PRIVATE_canAddToWritePipeline(t); ) try {
       const e2 = await __PRIVATE_localStoreGetNextMutationBatch(t.localStore, r);
       if (null === e2) {
-        0 === t.B_.length && n.a_();
+        0 === t.K_.length && n.P_();
         break;
       }
       r = e2.batchId, __PRIVATE_addToWritePipeline(t, e2);
@@ -10845,40 +10922,40 @@ This typically indicates that your device does not have a healthy Internet conne
     __PRIVATE_shouldStartWriteStream(t) && __PRIVATE_startWriteStream(t);
   }
   function __PRIVATE_canAddToWritePipeline(e) {
-    return __PRIVATE_canUseNetwork(e) && e.B_.length < 10;
+    return __PRIVATE_canUseNetwork(e) && e.K_.length < 10;
   }
   function __PRIVATE_addToWritePipeline(e, t) {
-    e.B_.push(t);
+    e.K_.push(t);
     const n = __PRIVATE_ensureWriteStream(e);
-    n.s_() && n.f_ && n.g_(t.mutations);
+    n.c_() && n.S_ && n.b_(t.mutations);
   }
   function __PRIVATE_shouldStartWriteStream(e) {
-    return __PRIVATE_canUseNetwork(e) && !__PRIVATE_ensureWriteStream(e).i_() && e.B_.length > 0;
+    return __PRIVATE_canUseNetwork(e) && !__PRIVATE_ensureWriteStream(e).u_() && e.K_.length > 0;
   }
   function __PRIVATE_startWriteStream(e) {
     __PRIVATE_ensureWriteStream(e).start();
   }
   async function __PRIVATE_onWriteStreamOpen(e) {
-    __PRIVATE_ensureWriteStream(e).w_();
+    __PRIVATE_ensureWriteStream(e).C_();
   }
   async function __PRIVATE_onWriteHandshakeComplete(e) {
     const t = __PRIVATE_ensureWriteStream(e);
-    for (const n of e.B_) t.g_(n.mutations);
+    for (const n of e.K_) t.b_(n.mutations);
   }
   async function __PRIVATE_onMutationResult(e, t, n) {
-    const r = e.B_.shift(), i = MutationBatchResult.from(r, t, n);
+    const r = e.K_.shift(), i = MutationBatchResult.from(r, t, n);
     await __PRIVATE_executeWithRecovery(e, () => e.remoteSyncer.applySuccessfulWrite(i)), // It's possible that with the completion of this mutation another
     // slot has freed up.
     await __PRIVATE_fillWritePipeline(e);
   }
   async function __PRIVATE_onWriteStreamClose(e, t) {
-    t && __PRIVATE_ensureWriteStream(e).f_ && // This error affects the actual write.
+    t && __PRIVATE_ensureWriteStream(e).S_ && // This error affects the actual write.
     await async function __PRIVATE_handleWriteError(e2, t2) {
       if (function __PRIVATE_isPermanentWriteError(e3) {
-        return __PRIVATE_isPermanentError(e3) && e3 !== D.ABORTED;
+        return __PRIVATE_isPermanentError(e3) && e3 !== C.ABORTED;
       }(t2.code)) {
-        const n = e2.B_.shift();
-        __PRIVATE_ensureWriteStream(e2).__(), await __PRIVATE_executeWithRecovery(e2, () => e2.remoteSyncer.rejectFailedWrite(n.batchId, t2)), // It's possible that with the completion of this mutation
+        const n = e2.K_.shift();
+        __PRIVATE_ensureWriteStream(e2).h_(), await __PRIVATE_executeWithRecovery(e2, () => e2.remoteSyncer.rejectFailedWrite(n.batchId, t2)), // It's possible that with the completion of this mutation
         // another slot has freed up.
         await __PRIVATE_fillWritePipeline(e2);
       }
@@ -10888,65 +10965,65 @@ This typically indicates that your device does not have a healthy Internet conne
   }
   async function __PRIVATE_remoteStoreHandleCredentialChange(e, t) {
     const n = __PRIVATE_debugCast(e);
-    n.asyncQueue.verifyOperationInProgress(), __PRIVATE_logDebug("RemoteStore", "RemoteStore received new credentials");
+    n.asyncQueue.verifyOperationInProgress(), __PRIVATE_logDebug(zt, "RemoteStore received new credentials");
     const r = __PRIVATE_canUseNetwork(n);
-    n.k_.add(
+    n.W_.add(
       3
       /* OfflineCause.CredentialChange */
     ), await __PRIVATE_disableNetworkInternal(n), r && // Don't set the network status to Unknown if we are offline.
-    n.K_.set(
+    n.j_.set(
       "Unknown"
       /* OnlineState.Unknown */
-    ), await n.remoteSyncer.handleCredentialChange(t), n.k_.delete(
+    ), await n.remoteSyncer.handleCredentialChange(t), n.W_.delete(
       3
       /* OfflineCause.CredentialChange */
     ), await __PRIVATE_enableNetworkInternal(n);
   }
   async function __PRIVATE_remoteStoreApplyPrimaryState(e, t) {
     const n = __PRIVATE_debugCast(e);
-    t ? (n.k_.delete(
+    t ? (n.W_.delete(
       2
       /* OfflineCause.IsSecondary */
-    ), await __PRIVATE_enableNetworkInternal(n)) : t || (n.k_.add(
+    ), await __PRIVATE_enableNetworkInternal(n)) : t || (n.W_.add(
       2
       /* OfflineCause.IsSecondary */
-    ), await __PRIVATE_disableNetworkInternal(n), n.K_.set(
+    ), await __PRIVATE_disableNetworkInternal(n), n.j_.set(
       "Unknown"
       /* OnlineState.Unknown */
     ));
   }
   function __PRIVATE_ensureWatchStream(e) {
-    return e.W_ || // Create stream (but note that it is not started yet).
-    (e.W_ = function __PRIVATE_newPersistentWatchStream(e2, t, n) {
+    return e.J_ || // Create stream (but note that it is not started yet).
+    (e.J_ = function __PRIVATE_newPersistentWatchStream(e2, t, n) {
       const r = __PRIVATE_debugCast(e2);
-      return r.b_(), new __PRIVATE_PersistentListenStream(t, r.connection, r.authCredentials, r.appCheckCredentials, r.serializer, n);
+      return r.M_(), new __PRIVATE_PersistentListenStream(t, r.connection, r.authCredentials, r.appCheckCredentials, r.serializer, n);
     }(e.datastore, e.asyncQueue, {
-      Ro: __PRIVATE_onWatchStreamConnected.bind(null, e),
-      mo: __PRIVATE_onWatchStreamOpen.bind(null, e),
-      po: __PRIVATE_onWatchStreamClose.bind(null, e),
-      R_: __PRIVATE_onWatchStreamChange.bind(null, e)
-    }), e.q_.push(async (t) => {
-      t ? (e.W_.__(), __PRIVATE_shouldStartWatchStream(e) ? __PRIVATE_startWatchStream(e) : e.K_.set(
+      xo: __PRIVATE_onWatchStreamConnected.bind(null, e),
+      No: __PRIVATE_onWatchStreamOpen.bind(null, e),
+      Lo: __PRIVATE_onWatchStreamClose.bind(null, e),
+      p_: __PRIVATE_onWatchStreamChange.bind(null, e)
+    }), e.G_.push(async (t) => {
+      t ? (e.J_.h_(), __PRIVATE_shouldStartWatchStream(e) ? __PRIVATE_startWatchStream(e) : e.j_.set(
         "Unknown"
         /* OnlineState.Unknown */
-      )) : (await e.W_.stop(), __PRIVATE_cleanUpWatchStreamState(e));
-    })), e.W_;
+      )) : (await e.J_.stop(), __PRIVATE_cleanUpWatchStreamState(e));
+    })), e.J_;
   }
   function __PRIVATE_ensureWriteStream(e) {
-    return e.G_ || // Create stream (but note that it is not started yet).
-    (e.G_ = function __PRIVATE_newPersistentWriteStream(e2, t, n) {
+    return e.Y_ || // Create stream (but note that it is not started yet).
+    (e.Y_ = function __PRIVATE_newPersistentWriteStream(e2, t, n) {
       const r = __PRIVATE_debugCast(e2);
-      return r.b_(), new __PRIVATE_PersistentWriteStream(t, r.connection, r.authCredentials, r.appCheckCredentials, r.serializer, n);
+      return r.M_(), new __PRIVATE_PersistentWriteStream(t, r.connection, r.authCredentials, r.appCheckCredentials, r.serializer, n);
     }(e.datastore, e.asyncQueue, {
-      Ro: () => Promise.resolve(),
-      mo: __PRIVATE_onWriteStreamOpen.bind(null, e),
-      po: __PRIVATE_onWriteStreamClose.bind(null, e),
-      p_: __PRIVATE_onWriteHandshakeComplete.bind(null, e),
-      y_: __PRIVATE_onMutationResult.bind(null, e)
-    }), e.q_.push(async (t) => {
-      t ? (e.G_.__(), // This will start the write stream if necessary.
-      await __PRIVATE_fillWritePipeline(e)) : (await e.G_.stop(), e.B_.length > 0 && (__PRIVATE_logDebug("RemoteStore", `Stopping write stream with ${e.B_.length} pending writes`), e.B_ = []));
-    })), e.G_;
+      xo: () => Promise.resolve(),
+      No: __PRIVATE_onWriteStreamOpen.bind(null, e),
+      Lo: __PRIVATE_onWriteStreamClose.bind(null, e),
+      D_: __PRIVATE_onWriteHandshakeComplete.bind(null, e),
+      v_: __PRIVATE_onMutationResult.bind(null, e)
+    }), e.G_.push(async (t) => {
+      t ? (e.Y_.h_(), // This will start the write stream if necessary.
+      await __PRIVATE_fillWritePipeline(e)) : (await e.Y_.stop(), e.K_.length > 0 && (__PRIVATE_logDebug(zt, `Stopping write stream with ${e.K_.length} pending writes`), e.K_ = []));
+    })), e.Y_;
   }
   var DelayedOperation = class _DelayedOperation {
     constructor(e, t, n, r, i) {
@@ -10999,7 +11076,7 @@ This typically indicates that your device does not have a healthy Internet conne
      * guarantee that the operation will not be run.
      */
     cancel(e) {
-      null !== this.timerHandle && (this.clearTimeout(), this.deferred.reject(new FirestoreError(D.CANCELLED, "Operation cancelled" + (e ? ": " + e : ""))));
+      null !== this.timerHandle && (this.clearTimeout(), this.deferred.reject(new FirestoreError(C.CANCELLED, "Operation cancelled" + (e ? ": " + e : ""))));
     }
     handleDelayElapsed() {
       this.asyncQueue.enqueueAndForget(() => null !== this.timerHandle ? (this.clearTimeout(), this.op().then((e) => this.deferred.resolve(e))) : Promise.resolve());
@@ -11009,7 +11086,7 @@ This typically indicates that your device does not have a healthy Internet conne
     }
   };
   function __PRIVATE_wrapInUserErrorIfRecoverable(e, t) {
-    if (__PRIVATE_logError("AsyncQueue", `${t}: ${e}`), __PRIVATE_isIndexedDbTransactionError(e)) return new FirestoreError(D.UNAVAILABLE, `${t}: ${e}`);
+    if (__PRIVATE_logError("AsyncQueue", `${t}: ${e}`), __PRIVATE_isIndexedDbTransactionError(e)) return new FirestoreError(C.UNAVAILABLE, `${t}: ${e}`);
     throw e;
   }
   var DocumentSet = class _DocumentSet {
@@ -11087,25 +11164,25 @@ This typically indicates that your device does not have a healthy Internet conne
   };
   var __PRIVATE_DocumentChangeSet = class {
     constructor() {
-      this.z_ = new SortedMap(DocumentKey.comparator);
+      this.Z_ = new SortedMap(DocumentKey.comparator);
     }
     track(e) {
-      const t = e.doc.key, n = this.z_.get(t);
+      const t = e.doc.key, n = this.Z_.get(t);
       n ? (
         // Merge the new change with the existing change.
-        0 !== e.type && 3 === n.type ? this.z_ = this.z_.insert(t, e) : 3 === e.type && 1 !== n.type ? this.z_ = this.z_.insert(t, {
+        0 !== e.type && 3 === n.type ? this.Z_ = this.Z_.insert(t, e) : 3 === e.type && 1 !== n.type ? this.Z_ = this.Z_.insert(t, {
           type: n.type,
           doc: e.doc
-        }) : 2 === e.type && 2 === n.type ? this.z_ = this.z_.insert(t, {
+        }) : 2 === e.type && 2 === n.type ? this.Z_ = this.Z_.insert(t, {
           type: 2,
           doc: e.doc
-        }) : 2 === e.type && 0 === n.type ? this.z_ = this.z_.insert(t, {
+        }) : 2 === e.type && 0 === n.type ? this.Z_ = this.Z_.insert(t, {
           type: 0,
           doc: e.doc
-        }) : 1 === e.type && 0 === n.type ? this.z_ = this.z_.remove(t) : 1 === e.type && 2 === n.type ? this.z_ = this.z_.insert(t, {
+        }) : 1 === e.type && 0 === n.type ? this.Z_ = this.Z_.remove(t) : 1 === e.type && 2 === n.type ? this.Z_ = this.Z_.insert(t, {
           type: 1,
           doc: n.doc
-        }) : 0 === e.type && 1 === n.type ? this.z_ = this.z_.insert(t, {
+        }) : 0 === e.type && 1 === n.type ? this.Z_ = this.Z_.insert(t, {
           type: 2,
           doc: e.doc
         }) : (
@@ -11118,11 +11195,11 @@ This typically indicates that your device does not have a healthy Internet conne
           // Removed->Metadata
           fail()
         )
-      ) : this.z_ = this.z_.insert(t, e);
+      ) : this.Z_ = this.Z_.insert(t, e);
     }
-    j_() {
+    X_() {
       const e = [];
-      return this.z_.inorderTraversal((t, n) => {
+      return this.Z_.inorderTraversal((t, n) => {
         e.push(n);
       }), e;
     }
@@ -11166,24 +11243,24 @@ This typically indicates that your device does not have a healthy Internet conne
   };
   var __PRIVATE_QueryListenersInfo = class {
     constructor() {
-      this.H_ = void 0, this.J_ = [];
+      this.ea = void 0, this.ta = [];
     }
     // Helper methods that checks if the query has listeners that listening to remote store
-    Y_() {
-      return this.J_.some((e) => e.Z_());
+    na() {
+      return this.ta.some((e) => e.ra());
     }
   };
   var __PRIVATE_EventManagerImpl = class {
     constructor() {
-      this.queries = __PRIVATE_newQueriesObjectMap(), this.onlineState = "Unknown", this.X_ = /* @__PURE__ */ new Set();
+      this.queries = __PRIVATE_newQueriesObjectMap(), this.onlineState = "Unknown", this.ia = /* @__PURE__ */ new Set();
     }
     terminate() {
       !function __PRIVATE_errorAllTargets(e, t) {
         const n = __PRIVATE_debugCast(e), r = n.queries;
         n.queries = __PRIVATE_newQueriesObjectMap(), r.forEach((e2, n2) => {
-          for (const e3 of n2.J_) e3.onError(t);
+          for (const e3 of n2.ta) e3.onError(t);
         });
-      }(this, new FirestoreError(D.ABORTED, "Firestore shutting down"));
+      }(this, new FirestoreError(C.ABORTED, "Firestore shutting down"));
     }
   };
   function __PRIVATE_newQueriesObjectMap() {
@@ -11194,19 +11271,19 @@ This typically indicates that your device does not have a healthy Internet conne
     let r = 3;
     const i = t.query;
     let s = n.queries.get(i);
-    s ? !s.Y_() && t.Z_() && // Query has been listening to local cache, and tries to add a new listener sourced from watch.
-    (r = 2) : (s = new __PRIVATE_QueryListenersInfo(), r = t.Z_() ? 0 : 1);
+    s ? !s.na() && t.ra() && // Query has been listening to local cache, and tries to add a new listener sourced from watch.
+    (r = 2) : (s = new __PRIVATE_QueryListenersInfo(), r = t.ra() ? 0 : 1);
     try {
       switch (r) {
         case 0:
-          s.H_ = await n.onListen(
+          s.ea = await n.onListen(
             i,
             /** enableRemoteListen= */
             true
           );
           break;
         case 1:
-          s.H_ = await n.onListen(
+          s.ea = await n.onListen(
             i,
             /** enableRemoteListen= */
             false
@@ -11219,9 +11296,9 @@ This typically indicates that your device does not have a healthy Internet conne
       const n2 = __PRIVATE_wrapInUserErrorIfRecoverable(e2, `Initialization of query '${__PRIVATE_stringifyQuery(t.query)}' failed`);
       return void t.onError(n2);
     }
-    if (n.queries.set(i, s), s.J_.push(t), // Run global snapshot listeners if a consistent snapshot has been emitted.
-    t.ea(n.onlineState), s.H_) {
-      t.ta(s.H_) && __PRIVATE_raiseSnapshotsInSyncEvent(n);
+    if (n.queries.set(i, s), s.ta.push(t), // Run global snapshot listeners if a consistent snapshot has been emitted.
+    t.sa(n.onlineState), s.ea) {
+      t.oa(s.ea) && __PRIVATE_raiseSnapshotsInSyncEvent(n);
     }
   }
   async function __PRIVATE_eventManagerUnlisten(e, t) {
@@ -11229,8 +11306,8 @@ This typically indicates that your device does not have a healthy Internet conne
     let i = 3;
     const s = n.queries.get(r);
     if (s) {
-      const e2 = s.J_.indexOf(t);
-      e2 >= 0 && (s.J_.splice(e2, 1), 0 === s.J_.length ? i = t.Z_() ? 0 : 1 : !s.Y_() && t.Z_() && // The removed listener is the last one that sourced from watch.
+      const e2 = s.ta.indexOf(t);
+      e2 >= 0 && (s.ta.splice(e2, 1), 0 === s.ta.length ? i = t.ra() ? 0 : 1 : !s.na() && t.ra() && // The removed listener is the last one that sourced from watch.
       (i = 2));
     }
     switch (i) {
@@ -11258,33 +11335,33 @@ This typically indicates that your device does not have a healthy Internet conne
     for (const e2 of t) {
       const t2 = e2.query, i = n.queries.get(t2);
       if (i) {
-        for (const t3 of i.J_) t3.ta(e2) && (r = true);
-        i.H_ = e2;
+        for (const t3 of i.ta) t3.oa(e2) && (r = true);
+        i.ea = e2;
       }
     }
     r && __PRIVATE_raiseSnapshotsInSyncEvent(n);
   }
   function __PRIVATE_eventManagerOnWatchError(e, t, n) {
     const r = __PRIVATE_debugCast(e), i = r.queries.get(t);
-    if (i) for (const e2 of i.J_) e2.onError(n);
+    if (i) for (const e2 of i.ta) e2.onError(n);
     r.queries.delete(t);
   }
   function __PRIVATE_raiseSnapshotsInSyncEvent(e) {
-    e.X_.forEach((e2) => {
+    e.ia.forEach((e2) => {
       e2.next();
     });
   }
-  var pe;
-  var ye;
-  (ye = pe || (pe = {})).na = "default", /** Listen to changes in cache only */
-  ye.Cache = "cache";
+  var jt;
+  var Ht;
+  (Ht = jt || (jt = {}))._a = "default", /** Listen to changes in cache only */
+  Ht.Cache = "cache";
   var __PRIVATE_QueryListener = class {
     constructor(e, t, n) {
-      this.query = e, this.ra = t, /**
+      this.query = e, this.aa = t, /**
        * Initial snapshots (e.g. from cache) may not be propagated to the wrapped
        * observer. This flag is set to true once we've actually raised an event.
        */
-      this.ia = false, this.sa = null, this.onlineState = "Unknown", this.options = n || {};
+      this.ua = false, this.ca = null, this.onlineState = "Unknown", this.options = n || {};
     }
     /**
      * Applies the new ViewSnapshot to this listener, raising a user-facing event
@@ -11292,7 +11369,7 @@ This typically indicates that your device does not have a healthy Internet conne
      * metadata-only changes, etc.). Returns true if a user-facing event was
      * indeed raised.
      */
-    ta(e) {
+    oa(e) {
       if (!this.options.includeMetadataChanges) {
         const t2 = [];
         for (const n of e.docChanges) 3 !== n.type && t2.push(n);
@@ -11310,33 +11387,33 @@ This typically indicates that your device does not have a healthy Internet conne
         );
       }
       let t = false;
-      return this.ia ? this.oa(e) && (this.ra.next(e), t = true) : this._a(e, this.onlineState) && (this.aa(e), t = true), this.sa = e, t;
+      return this.ua ? this.la(e) && (this.aa.next(e), t = true) : this.ha(e, this.onlineState) && (this.Pa(e), t = true), this.ca = e, t;
     }
     onError(e) {
-      this.ra.error(e);
+      this.aa.error(e);
     }
     /** Returns whether a snapshot was raised. */
-    ea(e) {
+    sa(e) {
       this.onlineState = e;
       let t = false;
-      return this.sa && !this.ia && this._a(this.sa, e) && (this.aa(this.sa), t = true), t;
+      return this.ca && !this.ua && this.ha(this.ca, e) && (this.Pa(this.ca), t = true), t;
     }
-    _a(e, t) {
+    ha(e, t) {
       if (!e.fromCache) return true;
-      if (!this.Z_()) return true;
+      if (!this.ra()) return true;
       const n = "Offline" !== t;
-      return (!this.options.ua || !n) && (!e.docs.isEmpty() || e.hasCachedResults || "Offline" === t);
+      return (!this.options.Ta || !n) && (!e.docs.isEmpty() || e.hasCachedResults || "Offline" === t);
     }
-    oa(e) {
+    la(e) {
       if (e.docChanges.length > 0) return true;
-      const t = this.sa && this.sa.hasPendingWrites !== e.hasPendingWrites;
+      const t = this.ca && this.ca.hasPendingWrites !== e.hasPendingWrites;
       return !(!e.syncStateChanged && !t) && true === this.options.includeMetadataChanges;
     }
-    aa(e) {
-      e = ViewSnapshot.fromInitialDocuments(e.query, e.docs, e.mutatedKeys, e.fromCache, e.hasCachedResults), this.ia = true, this.ra.next(e);
+    Pa(e) {
+      e = ViewSnapshot.fromInitialDocuments(e.query, e.docs, e.mutatedKeys, e.fromCache, e.hasCachedResults), this.ua = true, this.aa.next(e);
     }
-    Z_() {
-      return this.options.source !== pe.Cache;
+    ra() {
+      return this.options.source !== jt.Cache;
     }
   };
   var __PRIVATE_AddedLimboDocument = class {
@@ -11351,22 +11428,22 @@ This typically indicates that your device does not have a healthy Internet conne
   };
   var __PRIVATE_View = class {
     constructor(e, t) {
-      this.query = e, this.Ea = t, this.Aa = null, this.hasCachedResults = false, /**
+      this.query = e, this.fa = t, this.ga = null, this.hasCachedResults = false, /**
        * A flag whether the view is current with the backend. A view is considered
        * current after it has seen the current flag from the backend and did not
        * lose consistency within the watch stream (e.g. because of an existence
        * filter mismatch).
        */
       this.current = false, /** Documents in the view but not in the remote target */
-      this.Ra = __PRIVATE_documentKeySet(), /** Document Keys that have local changes */
-      this.mutatedKeys = __PRIVATE_documentKeySet(), this.Va = __PRIVATE_newQueryComparator(e), this.ma = new DocumentSet(this.Va);
+      this.pa = __PRIVATE_documentKeySet(), /** Document Keys that have local changes */
+      this.mutatedKeys = __PRIVATE_documentKeySet(), this.ya = __PRIVATE_newQueryComparator(e), this.wa = new DocumentSet(this.ya);
     }
     /**
      * The set of remote documents that the server has told us belongs to the target associated with
      * this view.
      */
-    get fa() {
-      return this.Ea;
+    get Sa() {
+      return this.fa;
     }
     /**
      * Iterates over a set of doc changes, applies the query limit, and computes
@@ -11378,8 +11455,8 @@ This typically indicates that your device does not have a healthy Internet conne
      *        with this set of docs and changes instead of the current view.
      * @returns a new set of docs, changes, and refill flag.
      */
-    ga(e, t) {
-      const n = t ? t.pa : new __PRIVATE_DocumentChangeSet(), r = t ? t.ma : this.ma;
+    ba(e, t) {
+      const n = t ? t.Da : new __PRIVATE_DocumentChangeSet(), r = t ? t.wa : this.wa;
       let i = t ? t.mutatedKeys : this.mutatedKeys, s = r, o = false;
       const _ = "F" === this.query.limitType && r.size === this.query.limit ? r.last() : null, a = "L" === this.query.limitType && r.size === this.query.limit ? r.first() : null;
       if (e.inorderTraversal((e2, t2) => {
@@ -11391,10 +11468,10 @@ This typically indicates that your device does not have a healthy Internet conne
           u.data.isEqual(c.data) ? l !== h && (n.track({
             type: 3,
             doc: c
-          }), P = true) : this.ya(u, c) || (n.track({
+          }), P = true) : this.va(u, c) || (n.track({
             type: 2,
             doc: c
-          }), P = true, (_ && this.Va(c, _) > 0 || a && this.Va(c, a) < 0) && // This doc moved from inside the limit to outside the limit.
+          }), P = true, (_ && this.ya(c, _) > 0 || a && this.ya(c, a) < 0) && // This doc moved from inside the limit to outside the limit.
           // That means there may be some other doc in the local cache
           // that should be included instead.
           (o = true));
@@ -11417,13 +11494,13 @@ This typically indicates that your device does not have a healthy Internet conne
         });
       }
       return {
-        ma: s,
-        pa: n,
-        ss: o,
+        wa: s,
+        Da: n,
+        ls: o,
         mutatedKeys: i
       };
     }
-    ya(e, t) {
+    va(e, t) {
       return e.hasLocalMutations && t.hasCommittedMutations && !t.hasLocalMutations;
     }
     /**
@@ -11441,9 +11518,9 @@ This typically indicates that your device does not have a healthy Internet conne
      */
     // PORTING NOTE: The iOS/Android clients always compute limbo document changes.
     applyChanges(e, t, n, r) {
-      const i = this.ma;
-      this.ma = e.ma, this.mutatedKeys = e.mutatedKeys;
-      const s = e.pa.j_();
+      const i = this.wa;
+      this.wa = e.wa, this.mutatedKeys = e.mutatedKeys;
+      const s = e.Da.X_();
       s.sort((e2, t2) => function __PRIVATE_compareChangeType(e3, t3) {
         const order = (e4) => {
           switch (e4) {
@@ -11459,13 +11536,13 @@ This typically indicates that your device does not have a healthy Internet conne
           }
         };
         return order(e3) - order(t3);
-      }(e2.type, t2.type) || this.Va(e2.doc, t2.doc)), this.wa(n), r = null != r && r;
-      const o = t && !r ? this.Sa() : [], _ = 0 === this.Ra.size && this.current && !r ? 1 : 0, a = _ !== this.Aa;
-      if (this.Aa = _, 0 !== s.length || a) {
+      }(e2.type, t2.type) || this.ya(e2.doc, t2.doc)), this.Ca(n), r = null != r && r;
+      const o = t && !r ? this.Fa() : [], _ = 0 === this.pa.size && this.current && !r ? 1 : 0, a = _ !== this.ga;
+      if (this.ga = _, 0 !== s.length || a) {
         return {
           snapshot: new ViewSnapshot(
             this.query,
-            e.ma,
+            e.wa,
             i,
             s,
             e.mutatedKeys,
@@ -11475,18 +11552,18 @@ This typically indicates that your device does not have a healthy Internet conne
             false,
             !!n && n.resumeToken.approximateByteSize() > 0
           ),
-          ba: o
+          Ma: o
         };
       }
       return {
-        ba: o
+        Ma: o
       };
     }
     /**
      * Applies an OnlineState change to the view, potentially generating a
      * ViewChange if the view's syncState changes as a result.
      */
-    ea(e) {
+    sa(e) {
       return this.current && "Offline" === e ? (
         // If we're offline, set `current` to false and then call applyChanges()
         // to refresh our syncState and generate a ViewChange as appropriate. We
@@ -11494,43 +11571,43 @@ This typically indicates that your device does not have a healthy Internet conne
         // true once the client is back online.
         (this.current = false, this.applyChanges(
           {
-            ma: this.ma,
-            pa: new __PRIVATE_DocumentChangeSet(),
+            wa: this.wa,
+            Da: new __PRIVATE_DocumentChangeSet(),
             mutatedKeys: this.mutatedKeys,
-            ss: false
+            ls: false
           },
           /* limboResolutionEnabled= */
           false
         ))
       ) : {
-        ba: []
+        Ma: []
       };
     }
     /**
      * Returns whether the doc for the given key should be in limbo.
      */
-    Da(e) {
-      return !this.Ea.has(e) && // The local store doesn't think it's a result, so it shouldn't be in limbo.
-      (!!this.ma.has(e) && !this.ma.get(e).hasLocalMutations);
+    xa(e) {
+      return !this.fa.has(e) && // The local store doesn't think it's a result, so it shouldn't be in limbo.
+      (!!this.wa.has(e) && !this.wa.get(e).hasLocalMutations);
     }
     /**
      * Updates syncedDocuments, current, and limbo docs based on the given change.
      * Returns the list of changes to which docs are in limbo.
      */
-    wa(e) {
-      e && (e.addedDocuments.forEach((e2) => this.Ea = this.Ea.add(e2)), e.modifiedDocuments.forEach((e2) => {
-      }), e.removedDocuments.forEach((e2) => this.Ea = this.Ea.delete(e2)), this.current = e.current);
+    Ca(e) {
+      e && (e.addedDocuments.forEach((e2) => this.fa = this.fa.add(e2)), e.modifiedDocuments.forEach((e2) => {
+      }), e.removedDocuments.forEach((e2) => this.fa = this.fa.delete(e2)), this.current = e.current);
     }
-    Sa() {
+    Fa() {
       if (!this.current) return [];
-      const e = this.Ra;
-      this.Ra = __PRIVATE_documentKeySet(), this.ma.forEach((e2) => {
-        this.Da(e2.key) && (this.Ra = this.Ra.add(e2.key));
+      const e = this.pa;
+      this.pa = __PRIVATE_documentKeySet(), this.wa.forEach((e2) => {
+        this.xa(e2.key) && (this.pa = this.pa.add(e2.key));
       });
       const t = [];
       return e.forEach((e2) => {
-        this.Ra.has(e2) || t.push(new __PRIVATE_RemovedLimboDocument(e2));
-      }), this.Ra.forEach((n) => {
+        this.pa.has(e2) || t.push(new __PRIVATE_RemovedLimboDocument(e2));
+      }), this.pa.forEach((n) => {
         e.has(n) || t.push(new __PRIVATE_AddedLimboDocument(n));
       }), t;
     }
@@ -11554,9 +11631,9 @@ This typically indicates that your device does not have a healthy Internet conne
      * @returns The ViewChange that resulted from this synchronization.
      */
     // PORTING NOTE: Multi-tab only.
-    va(e) {
-      this.Ea = e.Es, this.Ra = __PRIVATE_documentKeySet();
-      const t = this.ga(e.documents);
+    Oa(e) {
+      this.fa = e.gs, this.pa = __PRIVATE_documentKeySet();
+      const t = this.ba(e.documents);
       return this.applyChanges(
         t,
         /* limboResolutionEnabled= */
@@ -11569,10 +11646,11 @@ This typically indicates that your device does not have a healthy Internet conne
      * `hasPendingWrites` status of the already established view.
      */
     // PORTING NOTE: Multi-tab only.
-    Ca() {
-      return ViewSnapshot.fromInitialDocuments(this.query, this.ma, this.mutatedKeys, 0 === this.Aa, this.hasCachedResults);
+    Na() {
+      return ViewSnapshot.fromInitialDocuments(this.query, this.wa, this.mutatedKeys, 0 === this.ga, this.hasCachedResults);
     }
   };
+  var Jt = "SyncEngine";
   var __PRIVATE_QueryView = class {
     constructor(e, t, n) {
       this.query = e, this.targetId = t, this.view = n;
@@ -11586,12 +11664,12 @@ This typically indicates that your device does not have a healthy Internet conne
        * decide whether it needs to manufacture a delete event for the target once
        * the target is CURRENT.
        */
-      this.Fa = false;
+      this.Ba = false;
     }
   };
   var __PRIVATE_SyncEngineImpl = class {
     constructor(e, t, n, r, i, s) {
-      this.localStore = e, this.remoteStore = t, this.eventManager = n, this.sharedClientState = r, this.currentUser = i, this.maxConcurrentLimboResolutions = s, this.Ma = {}, this.xa = new ObjectMap((e2) => __PRIVATE_canonifyQuery(e2), __PRIVATE_queryEquals), this.Oa = /* @__PURE__ */ new Map(), /**
+      this.localStore = e, this.remoteStore = t, this.eventManager = n, this.sharedClientState = r, this.currentUser = i, this.maxConcurrentLimboResolutions = s, this.La = {}, this.ka = new ObjectMap((e2) => __PRIVATE_canonifyQuery(e2), __PRIVATE_queryEquals), this.qa = /* @__PURE__ */ new Map(), /**
        * The keys of documents that are in limbo for which we haven't yet started a
        * limbo resolution query. The strings in this set are the result of calling
        * `key.path.canonicalString()` where `key` is a `DocumentKey` object.
@@ -11600,29 +11678,29 @@ This typically indicates that your device does not have a healthy Internet conne
        * of arbitrary elements and it also maintains insertion order, providing the
        * desired queue-like FIFO semantics.
        */
-      this.Na = /* @__PURE__ */ new Set(), /**
+      this.Qa = /* @__PURE__ */ new Set(), /**
        * Keeps track of the target ID for each document that is in limbo with an
        * active target.
        */
-      this.Ba = new SortedMap(DocumentKey.comparator), /**
+      this.$a = new SortedMap(DocumentKey.comparator), /**
        * Keeps track of the information about an active limbo resolution for each
        * active target ID that was started for the purpose of limbo resolution.
        */
-      this.La = /* @__PURE__ */ new Map(), this.ka = new __PRIVATE_ReferenceSet(), /** Stores user completion handlers, indexed by User and BatchId. */
-      this.qa = {}, /** Stores user callbacks waiting for all pending writes to be acknowledged. */
-      this.Qa = /* @__PURE__ */ new Map(), this.Ka = __PRIVATE_TargetIdGenerator.Qn(), this.onlineState = "Unknown", // The primary state is set to `true` or `false` immediately after Firestore
+      this.Ka = /* @__PURE__ */ new Map(), this.Ua = new __PRIVATE_ReferenceSet(), /** Stores user completion handlers, indexed by User and BatchId. */
+      this.Wa = {}, /** Stores user callbacks waiting for all pending writes to be acknowledged. */
+      this.Ga = /* @__PURE__ */ new Map(), this.za = __PRIVATE_TargetIdGenerator.Un(), this.onlineState = "Unknown", // The primary state is set to `true` or `false` immediately after Firestore
       // startup. In the interim, a client should only be considered primary if
       // `isPrimary` is true.
-      this.$a = void 0;
+      this.ja = void 0;
     }
     get isPrimaryClient() {
-      return true === this.$a;
+      return true === this.ja;
     }
   };
   async function __PRIVATE_syncEngineListen(e, t, n = true) {
     const r = __PRIVATE_ensureWatchCallbacks(e);
     let i;
-    const s = r.xa.get(t);
+    const s = r.ka.get(t);
     return s ? (
       // PORTING NOTE: With Multi-Tab Web, it is possible that a query view
       // already exists when EventManager calls us for the first time. This
@@ -11630,7 +11708,7 @@ This typically indicates that your device does not have a healthy Internet conne
       // behalf of another tab and the user of the primary also starts listening
       // to the query. EventManager will not have an assigned target ID in this
       // case and calls `listen` to obtain this ID.
-      (r.sharedClientState.addLocalQueryTarget(s.targetId), i = s.view.Ca())
+      (r.sharedClientState.addLocalQueryTarget(s.targetId), i = s.view.Na())
     ) : i = await __PRIVATE_allocateTargetAndMaybeListen(
       r,
       t,
@@ -11656,9 +11734,9 @@ This typically indicates that your device does not have a healthy Internet conne
     return r && (_ = await __PRIVATE_initializeViewAndComputeSnapshot(e, t, s, "current" === o, i.resumeToken)), e.isPrimaryClient && n && __PRIVATE_remoteStoreListen(e.remoteStore, i), _;
   }
   async function __PRIVATE_initializeViewAndComputeSnapshot(e, t, n, r, i) {
-    e.Ua = (t2, n2, r2) => async function __PRIVATE_applyDocChanges(e2, t3, n3, r3) {
-      let i2 = t3.view.ga(n3);
-      i2.ss && // The query has a limit and some docs were removed, so we need
+    e.Ha = (t2, n2, r2) => async function __PRIVATE_applyDocChanges(e2, t3, n3, r3) {
+      let i2 = t3.view.ba(n3);
+      i2.ls && // The query has a limit and some docs were removed, so we need
       // to re-run the query against the local store to make sure we
       // didn't lose any good docs that had been past the limit.
       (i2 = await __PRIVATE_localStoreExecuteQuery(
@@ -11666,7 +11744,7 @@ This typically indicates that your device does not have a healthy Internet conne
         t3.query,
         /* usePreviousResults= */
         false
-      ).then(({ documents: e3 }) => t3.view.ga(e3, i2)));
+      ).then(({ documents: e3 }) => t3.view.ba(e3, i2)));
       const s2 = r3 && r3.targetChanges.get(t3.targetId), o2 = r3 && null != r3.targetMismatches.get(t3.targetId), _2 = t3.view.applyChanges(
         i2,
         /* limboResolutionEnabled= */
@@ -11674,26 +11752,26 @@ This typically indicates that your device does not have a healthy Internet conne
         s2,
         o2
       );
-      return __PRIVATE_updateTrackedLimbos(e2, t3.targetId, _2.ba), _2.snapshot;
+      return __PRIVATE_updateTrackedLimbos(e2, t3.targetId, _2.Ma), _2.snapshot;
     }(e, t2, n2, r2);
     const s = await __PRIVATE_localStoreExecuteQuery(
       e.localStore,
       t,
       /* usePreviousResults= */
       true
-    ), o = new __PRIVATE_View(t, s.Es), _ = o.ga(s.documents), a = TargetChange.createSynthesizedTargetChangeForCurrentChange(n, r && "Offline" !== e.onlineState, i), u = o.applyChanges(
+    ), o = new __PRIVATE_View(t, s.gs), _ = o.ba(s.documents), a = TargetChange.createSynthesizedTargetChangeForCurrentChange(n, r && "Offline" !== e.onlineState, i), u = o.applyChanges(
       _,
       /* limboResolutionEnabled= */
       e.isPrimaryClient,
       a
     );
-    __PRIVATE_updateTrackedLimbos(e, n, u.ba);
+    __PRIVATE_updateTrackedLimbos(e, n, u.Ma);
     const c = new __PRIVATE_QueryView(t, n, o);
-    return e.xa.set(t, c), e.Oa.has(n) ? e.Oa.get(n).push(t) : e.Oa.set(n, [t]), u.snapshot;
+    return e.ka.set(t, c), e.qa.has(n) ? e.qa.get(n).push(t) : e.qa.set(n, [t]), u.snapshot;
   }
   async function __PRIVATE_syncEngineUnlisten(e, t, n) {
-    const r = __PRIVATE_debugCast(e), i = r.xa.get(t), s = r.Oa.get(i.targetId);
-    if (s.length > 1) return r.Oa.set(i.targetId, s.filter((e2) => !__PRIVATE_queryEquals(e2, t))), void r.xa.delete(t);
+    const r = __PRIVATE_debugCast(e), i = r.ka.get(t), s = r.qa.get(i.targetId);
+    if (s.length > 1) return r.qa.set(i.targetId, s.filter((e2) => !__PRIVATE_queryEquals(e2, t))), void r.ka.delete(t);
     if (r.isPrimaryClient) {
       r.sharedClientState.removeLocalQueryTarget(i.targetId);
       r.sharedClientState.isActiveQueryTarget(i.targetId) || await __PRIVATE_localStoreReleaseTarget(
@@ -11712,7 +11790,7 @@ This typically indicates that your device does not have a healthy Internet conne
     );
   }
   async function __PRIVATE_triggerRemoteStoreUnlisten(e, t) {
-    const n = __PRIVATE_debugCast(e), r = n.xa.get(t), i = n.Oa.get(r.targetId);
+    const n = __PRIVATE_debugCast(e), r = n.ka.get(t), i = n.qa.get(r.targetId);
     n.isPrimaryClient && 1 === i.length && // PORTING NOTE: Unregister the target ID with local Firestore client as
     // watch target.
     (n.sharedClientState.removeLocalQueryTarget(r.targetId), __PRIVATE_remoteStoreUnlisten(n.remoteStore, r.targetId));
@@ -11725,7 +11803,7 @@ This typically indicates that your device does not have a healthy Internet conne
         let s, o;
         return n2.persistence.runTransaction("Locally write mutations", "readwrite", (e4) => {
           let _ = __PRIVATE_mutableDocumentMap(), a = __PRIVATE_documentKeySet();
-          return n2.hs.getEntries(e4, i).next((e5) => {
+          return n2.ds.getEntries(e4, i).next((e5) => {
             _ = e5, _.forEach((e6, t3) => {
               t3.isValidDocument() || (a = a.add(e6));
             });
@@ -11751,9 +11829,9 @@ This typically indicates that your device does not have a healthy Internet conne
         }));
       }(r.localStore, t);
       r.sharedClientState.addPendingMutation(e2.batchId), function __PRIVATE_addMutationCallback(e3, t2, n2) {
-        let r2 = e3.qa[e3.currentUser.toKey()];
+        let r2 = e3.Wa[e3.currentUser.toKey()];
         r2 || (r2 = new SortedMap(__PRIVATE_primitiveComparator));
-        r2 = r2.insert(t2, n2), e3.qa[e3.currentUser.toKey()] = r2;
+        r2 = r2.insert(t2, n2), e3.Wa[e3.currentUser.toKey()] = r2;
       }(r, e2.batchId, n), await __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(r, e2.changes), await __PRIVATE_fillWritePipeline(r.remoteStore);
     } catch (e2) {
       const t2 = __PRIVATE_wrapInUserErrorIfRecoverable(e2, "Failed to persist write");
@@ -11765,10 +11843,10 @@ This typically indicates that your device does not have a healthy Internet conne
     try {
       const e2 = await __PRIVATE_localStoreApplyRemoteEventToLocalCache(n.localStore, t);
       t.targetChanges.forEach((e3, t2) => {
-        const r = n.La.get(t2);
+        const r = n.Ka.get(t2);
         r && // Since this is a limbo resolution lookup, it's for a single document
         // and it could be added, modified, or removed, but not a combination.
-        (__PRIVATE_hardAssert(e3.addedDocuments.size + e3.modifiedDocuments.size + e3.removedDocuments.size <= 1), e3.addedDocuments.size > 0 ? r.Fa = true : e3.modifiedDocuments.size > 0 ? __PRIVATE_hardAssert(r.Fa) : e3.removedDocuments.size > 0 && (__PRIVATE_hardAssert(r.Fa), r.Fa = false));
+        (__PRIVATE_hardAssert(e3.addedDocuments.size + e3.modifiedDocuments.size + e3.removedDocuments.size <= 1), e3.addedDocuments.size > 0 ? r.Ba = true : e3.modifiedDocuments.size > 0 ? __PRIVATE_hardAssert(r.Ba) : e3.removedDocuments.size > 0 && (__PRIVATE_hardAssert(r.Ba), r.Ba = false));
       }), await __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(n, e2, t);
     } catch (e2) {
       await __PRIVATE_ignoreIfPrimaryLeaseLoss(e2);
@@ -11778,24 +11856,24 @@ This typically indicates that your device does not have a healthy Internet conne
     const r = __PRIVATE_debugCast(e);
     if (r.isPrimaryClient && 0 === n || !r.isPrimaryClient && 1 === n) {
       const e2 = [];
-      r.xa.forEach((n2, r2) => {
-        const i = r2.view.ea(t);
+      r.ka.forEach((n2, r2) => {
+        const i = r2.view.sa(t);
         i.snapshot && e2.push(i.snapshot);
       }), function __PRIVATE_eventManagerOnOnlineStateChange(e3, t2) {
         const n2 = __PRIVATE_debugCast(e3);
         n2.onlineState = t2;
         let r2 = false;
         n2.queries.forEach((e4, n3) => {
-          for (const e5 of n3.J_)
-            e5.ea(t2) && (r2 = true);
+          for (const e5 of n3.ta)
+            e5.sa(t2) && (r2 = true);
         }), r2 && __PRIVATE_raiseSnapshotsInSyncEvent(n2);
-      }(r.eventManager, t), e2.length && r.Ma.R_(e2), r.onlineState = t, r.isPrimaryClient && r.sharedClientState.setOnlineState(t);
+      }(r.eventManager, t), e2.length && r.La.p_(e2), r.onlineState = t, r.isPrimaryClient && r.sharedClientState.setOnlineState(t);
     }
   }
   async function __PRIVATE_syncEngineRejectListen(e, t, n) {
     const r = __PRIVATE_debugCast(e);
     r.sharedClientState.updateQueryState(t, "rejected", n);
-    const i = r.La.get(t), s = i && i.key;
+    const i = r.Ka.get(t), s = i && i.key;
     if (s) {
       let e2 = new SortedMap(DocumentKey.comparator);
       e2 = e2.insert(s, MutableDocument.newNoDocument(s, SnapshotVersion.min()));
@@ -11813,7 +11891,7 @@ This typically indicates that your device does not have a healthy Internet conne
       // RemoteEvent. If `applyRemoteEvent()` throws, we want to re-listen to
       // this query when the RemoteStore restarts the Watch stream, which should
       // re-trigger the target failure.
-      r.Ba = r.Ba.remove(s), r.La.delete(t), __PRIVATE_pumpEnqueuedLimboResolutions(r);
+      r.$a = r.$a.remove(s), r.Ka.delete(t), __PRIVATE_pumpEnqueuedLimboResolutions(r);
     } else await __PRIVATE_localStoreReleaseTarget(
       r.localStore,
       t,
@@ -11851,57 +11929,57 @@ This typically indicates that your device does not have a healthy Internet conne
     }
   }
   function __PRIVATE_triggerPendingWritesCallbacks(e, t) {
-    (e.Qa.get(t) || []).forEach((e2) => {
+    (e.Ga.get(t) || []).forEach((e2) => {
       e2.resolve();
-    }), e.Qa.delete(t);
+    }), e.Ga.delete(t);
   }
   function __PRIVATE_processUserCallback(e, t, n) {
     const r = __PRIVATE_debugCast(e);
-    let i = r.qa[r.currentUser.toKey()];
+    let i = r.Wa[r.currentUser.toKey()];
     if (i) {
       const e2 = i.get(t);
-      e2 && (n ? e2.reject(n) : e2.resolve(), i = i.remove(t)), r.qa[r.currentUser.toKey()] = i;
+      e2 && (n ? e2.reject(n) : e2.resolve(), i = i.remove(t)), r.Wa[r.currentUser.toKey()] = i;
     }
   }
   function __PRIVATE_removeAndCleanupTarget(e, t, n = null) {
     e.sharedClientState.removeLocalQueryTarget(t);
-    for (const r of e.Oa.get(t)) e.xa.delete(r), n && e.Ma.Wa(r, n);
-    if (e.Oa.delete(t), e.isPrimaryClient) {
-      e.ka.yr(t).forEach((t2) => {
-        e.ka.containsKey(t2) || // We removed the last reference for this key
+    for (const r of e.qa.get(t)) e.ka.delete(r), n && e.La.Ja(r, n);
+    if (e.qa.delete(t), e.isPrimaryClient) {
+      e.Ua.br(t).forEach((t2) => {
+        e.Ua.containsKey(t2) || // We removed the last reference for this key
         __PRIVATE_removeLimboTarget(e, t2);
       });
     }
   }
   function __PRIVATE_removeLimboTarget(e, t) {
-    e.Na.delete(t.path.canonicalString());
-    const n = e.Ba.get(t);
-    null !== n && (__PRIVATE_remoteStoreUnlisten(e.remoteStore, n), e.Ba = e.Ba.remove(t), e.La.delete(n), __PRIVATE_pumpEnqueuedLimboResolutions(e));
+    e.Qa.delete(t.path.canonicalString());
+    const n = e.$a.get(t);
+    null !== n && (__PRIVATE_remoteStoreUnlisten(e.remoteStore, n), e.$a = e.$a.remove(t), e.Ka.delete(n), __PRIVATE_pumpEnqueuedLimboResolutions(e));
   }
   function __PRIVATE_updateTrackedLimbos(e, t, n) {
-    for (const r of n) if (r instanceof __PRIVATE_AddedLimboDocument) e.ka.addReference(r.key, t), __PRIVATE_trackLimboChange(e, r);
+    for (const r of n) if (r instanceof __PRIVATE_AddedLimboDocument) e.Ua.addReference(r.key, t), __PRIVATE_trackLimboChange(e, r);
     else if (r instanceof __PRIVATE_RemovedLimboDocument) {
-      __PRIVATE_logDebug("SyncEngine", "Document no longer in limbo: " + r.key), e.ka.removeReference(r.key, t);
-      e.ka.containsKey(r.key) || // We removed the last reference for this key
+      __PRIVATE_logDebug(Jt, "Document no longer in limbo: " + r.key), e.Ua.removeReference(r.key, t);
+      e.Ua.containsKey(r.key) || // We removed the last reference for this key
       __PRIVATE_removeLimboTarget(e, r.key);
     } else fail();
   }
   function __PRIVATE_trackLimboChange(e, t) {
     const n = t.key, r = n.path.canonicalString();
-    e.Ba.get(n) || e.Na.has(r) || (__PRIVATE_logDebug("SyncEngine", "New document in limbo: " + n), e.Na.add(r), __PRIVATE_pumpEnqueuedLimboResolutions(e));
+    e.$a.get(n) || e.Qa.has(r) || (__PRIVATE_logDebug(Jt, "New document in limbo: " + n), e.Qa.add(r), __PRIVATE_pumpEnqueuedLimboResolutions(e));
   }
   function __PRIVATE_pumpEnqueuedLimboResolutions(e) {
-    for (; e.Na.size > 0 && e.Ba.size < e.maxConcurrentLimboResolutions; ) {
-      const t = e.Na.values().next().value;
-      e.Na.delete(t);
-      const n = new DocumentKey(ResourcePath.fromString(t)), r = e.Ka.next();
-      e.La.set(r, new LimboResolution(n)), e.Ba = e.Ba.insert(n, r), __PRIVATE_remoteStoreListen(e.remoteStore, new TargetData(__PRIVATE_queryToTarget(__PRIVATE_newQueryForPath(n.path)), r, "TargetPurposeLimboResolution", __PRIVATE_ListenSequence.oe));
+    for (; e.Qa.size > 0 && e.$a.size < e.maxConcurrentLimboResolutions; ) {
+      const t = e.Qa.values().next().value;
+      e.Qa.delete(t);
+      const n = new DocumentKey(ResourcePath.fromString(t)), r = e.za.next();
+      e.Ka.set(r, new LimboResolution(n)), e.$a = e.$a.insert(n, r), __PRIVATE_remoteStoreListen(e.remoteStore, new TargetData(__PRIVATE_queryToTarget(__PRIVATE_newQueryForPath(n.path)), r, "TargetPurposeLimboResolution", __PRIVATE_ListenSequence.ae));
     }
   }
   async function __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(e, t, n) {
     const r = __PRIVATE_debugCast(e), i = [], s = [], o = [];
-    r.xa.isEmpty() || (r.xa.forEach((e2, _) => {
-      o.push(r.Ua(_, t, n).then((e3) => {
+    r.ka.isEmpty() || (r.ka.forEach((e2, _) => {
+      o.push(r.Ha(_, t, n).then((e3) => {
         var t2;
         if ((e3 || n) && r.isPrimaryClient) {
           const i2 = e3 ? !e3.fromCache : null === (t2 = null == n ? void 0 : n.targetChanges.get(_.targetId)) || void 0 === t2 ? void 0 : t2.current;
@@ -11909,23 +11987,23 @@ This typically indicates that your device does not have a healthy Internet conne
         }
         if (e3) {
           i.push(e3);
-          const t3 = __PRIVATE_LocalViewChanges.zi(_.targetId, e3);
+          const t3 = __PRIVATE_LocalViewChanges.Yi(_.targetId, e3);
           s.push(t3);
         }
       }));
-    }), await Promise.all(o), r.Ma.R_(i), await async function __PRIVATE_localStoreNotifyLocalViewChanges(e2, t2) {
+    }), await Promise.all(o), r.La.p_(i), await async function __PRIVATE_localStoreNotifyLocalViewChanges(e2, t2) {
       const n2 = __PRIVATE_debugCast(e2);
       try {
-        await n2.persistence.runTransaction("notifyLocalViewChanges", "readwrite", (e3) => PersistencePromise.forEach(t2, (t3) => PersistencePromise.forEach(t3.Wi, (r2) => n2.persistence.referenceDelegate.addReference(e3, t3.targetId, r2)).next(() => PersistencePromise.forEach(t3.Gi, (r2) => n2.persistence.referenceDelegate.removeReference(e3, t3.targetId, r2)))));
+        await n2.persistence.runTransaction("notifyLocalViewChanges", "readwrite", (e3) => PersistencePromise.forEach(t2, (t3) => PersistencePromise.forEach(t3.Hi, (r2) => n2.persistence.referenceDelegate.addReference(e3, t3.targetId, r2)).next(() => PersistencePromise.forEach(t3.Ji, (r2) => n2.persistence.referenceDelegate.removeReference(e3, t3.targetId, r2)))));
       } catch (e3) {
         if (!__PRIVATE_isIndexedDbTransactionError(e3)) throw e3;
-        __PRIVATE_logDebug("LocalStore", "Failed to update sequence numbers: " + e3);
+        __PRIVATE_logDebug(Ot, "Failed to update sequence numbers: " + e3);
       }
       for (const e3 of t2) {
         const t3 = e3.targetId;
         if (!e3.fromCache) {
-          const e4 = n2.us.get(t3), r2 = e4.snapshotVersion, i2 = e4.withLastLimboFreeSnapshotVersion(r2);
-          n2.us = n2.us.insert(t3, i2);
+          const e4 = n2.Ts.get(t3), r2 = e4.snapshotVersion, i2 = e4.withLastLimboFreeSnapshotVersion(r2);
+          n2.Ts = n2.Ts.insert(t3, i2);
         }
       }
     }(r.localStore, s));
@@ -11933,36 +12011,36 @@ This typically indicates that your device does not have a healthy Internet conne
   async function __PRIVATE_syncEngineHandleCredentialChange(e, t) {
     const n = __PRIVATE_debugCast(e);
     if (!n.currentUser.isEqual(t)) {
-      __PRIVATE_logDebug("SyncEngine", "User change. New user:", t.toKey());
+      __PRIVATE_logDebug(Jt, "User change. New user:", t.toKey());
       const e2 = await __PRIVATE_localStoreHandleUserChange(n.localStore, t);
       n.currentUser = t, // Fails tasks waiting for pending writes requested by previous user.
       function __PRIVATE_rejectOutstandingPendingWritesCallbacks(e3, t2) {
-        e3.Qa.forEach((e4) => {
+        e3.Ga.forEach((e4) => {
           e4.forEach((e5) => {
-            e5.reject(new FirestoreError(D.CANCELLED, t2));
+            e5.reject(new FirestoreError(C.CANCELLED, t2));
           });
-        }), e3.Qa.clear();
+        }), e3.Ga.clear();
       }(n, "'waitForPendingWrites' promise is rejected due to a user change."), // TODO(b/114226417): Consider calling this only in the primary tab.
-      n.sharedClientState.handleUserChange(t, e2.removedBatchIds, e2.addedBatchIds), await __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(n, e2.Ts);
+      n.sharedClientState.handleUserChange(t, e2.removedBatchIds, e2.addedBatchIds), await __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(n, e2.Rs);
     }
   }
   function __PRIVATE_syncEngineGetRemoteKeysForTarget(e, t) {
-    const n = __PRIVATE_debugCast(e), r = n.La.get(t);
-    if (r && r.Fa) return __PRIVATE_documentKeySet().add(r.key);
+    const n = __PRIVATE_debugCast(e), r = n.Ka.get(t);
+    if (r && r.Ba) return __PRIVATE_documentKeySet().add(r.key);
     {
       let e2 = __PRIVATE_documentKeySet();
-      const r2 = n.Oa.get(t);
+      const r2 = n.qa.get(t);
       if (!r2) return e2;
       for (const t2 of r2) {
-        const r3 = n.xa.get(t2);
-        e2 = e2.unionWith(r3.view.fa);
+        const r3 = n.ka.get(t2);
+        e2 = e2.unionWith(r3.view.Sa);
       }
       return e2;
     }
   }
   function __PRIVATE_ensureWatchCallbacks(e) {
     const t = __PRIVATE_debugCast(e);
-    return t.remoteStore.remoteSyncer.applyRemoteEvent = __PRIVATE_syncEngineApplyRemoteEvent.bind(null, t), t.remoteStore.remoteSyncer.getRemoteKeysForTarget = __PRIVATE_syncEngineGetRemoteKeysForTarget.bind(null, t), t.remoteStore.remoteSyncer.rejectListen = __PRIVATE_syncEngineRejectListen.bind(null, t), t.Ma.R_ = __PRIVATE_eventManagerOnWatchChange.bind(null, t.eventManager), t.Ma.Wa = __PRIVATE_eventManagerOnWatchError.bind(null, t.eventManager), t;
+    return t.remoteStore.remoteSyncer.applyRemoteEvent = __PRIVATE_syncEngineApplyRemoteEvent.bind(null, t), t.remoteStore.remoteSyncer.getRemoteKeysForTarget = __PRIVATE_syncEngineGetRemoteKeysForTarget.bind(null, t), t.remoteStore.remoteSyncer.rejectListen = __PRIVATE_syncEngineRejectListen.bind(null, t), t.La.p_ = __PRIVATE_eventManagerOnWatchChange.bind(null, t.eventManager), t.La.Ja = __PRIVATE_eventManagerOnWatchError.bind(null, t.eventManager), t;
   }
   function __PRIVATE_syncEngineEnsureWriteCallbacks(e) {
     const t = __PRIVATE_debugCast(e);
@@ -11973,21 +12051,21 @@ This typically indicates that your device does not have a healthy Internet conne
       this.kind = "memory", this.synchronizeTabs = false;
     }
     async initialize(e) {
-      this.serializer = __PRIVATE_newSerializer(e.databaseInfo.databaseId), this.sharedClientState = this.za(e), this.persistence = this.ja(e), await this.persistence.start(), this.localStore = this.Ha(e), this.gcScheduler = this.Ja(e, this.localStore), this.indexBackfillerScheduler = this.Ya(e, this.localStore);
+      this.serializer = __PRIVATE_newSerializer(e.databaseInfo.databaseId), this.sharedClientState = this.Za(e), this.persistence = this.Xa(e), await this.persistence.start(), this.localStore = this.eu(e), this.gcScheduler = this.tu(e, this.localStore), this.indexBackfillerScheduler = this.nu(e, this.localStore);
     }
-    Ja(e, t) {
+    tu(e, t) {
       return null;
     }
-    Ya(e, t) {
+    nu(e, t) {
       return null;
     }
-    Ha(e) {
+    eu(e) {
       return __PRIVATE_newLocalStore(this.persistence, new __PRIVATE_QueryEngine(), e.initialUser, this.serializer);
     }
-    ja(e) {
-      return new __PRIVATE_MemoryPersistence(__PRIVATE_MemoryEagerDelegate.ei, this.serializer);
+    Xa(e) {
+      return new __PRIVATE_MemoryPersistence(__PRIVATE_MemoryEagerDelegate.ri, this.serializer);
     }
-    za(e) {
+    Za(e) {
       return new __PRIVATE_MemorySharedClientState();
     }
     async terminate() {
@@ -12002,14 +12080,14 @@ This typically indicates that your device does not have a healthy Internet conne
     constructor(e) {
       super(), this.cacheSizeBytes = e;
     }
-    Ja(e, t) {
+    tu(e, t) {
       __PRIVATE_hardAssert(this.persistence.referenceDelegate instanceof __PRIVATE_MemoryLruDelegate);
       const n = this.persistence.referenceDelegate.garbageCollector;
       return new __PRIVATE_LruScheduler(n, e.asyncQueue, t);
     }
-    ja(e) {
+    Xa(e) {
       const t = void 0 !== this.cacheSizeBytes ? LruParams.withCacheSize(this.cacheSizeBytes) : LruParams.DEFAULT;
-      return new __PRIVATE_MemoryPersistence((e2) => __PRIVATE_MemoryLruDelegate.ei(e2, t), this.serializer);
+      return new __PRIVATE_MemoryPersistence((e2) => __PRIVATE_MemoryLruDelegate.ri(e2, t), this.serializer);
     }
   };
   var OnlineComponentProvider = class {
@@ -12047,25 +12125,25 @@ This typically indicates that your device does not have a healthy Internet conne
         0
         /* OnlineStateSource.RemoteStore */
       ), function __PRIVATE_newConnectivityMonitor() {
-        return __PRIVATE_BrowserConnectivityMonitor.p() ? new __PRIVATE_BrowserConnectivityMonitor() : new __PRIVATE_NoopConnectivityMonitor();
+        return __PRIVATE_BrowserConnectivityMonitor.D() ? new __PRIVATE_BrowserConnectivityMonitor() : new __PRIVATE_NoopConnectivityMonitor();
       }());
     }
     createSyncEngine(e, t) {
       return function __PRIVATE_newSyncEngine(e2, t2, n, r, i, s, o) {
         const _ = new __PRIVATE_SyncEngineImpl(e2, t2, n, r, i, s);
-        return o && (_.$a = true), _;
+        return o && (_.ja = true), _;
       }(this.localStore, this.remoteStore, this.eventManager, this.sharedClientState, e.initialUser, e.maxConcurrentLimboResolutions, t);
     }
     async terminate() {
       var e, t;
       await async function __PRIVATE_remoteStoreShutdown(e2) {
         const t2 = __PRIVATE_debugCast(e2);
-        __PRIVATE_logDebug("RemoteStore", "RemoteStore shutting down."), t2.k_.add(
+        __PRIVATE_logDebug(zt, "RemoteStore shutting down."), t2.W_.add(
           5
           /* OfflineCause.Shutdown */
-        ), await __PRIVATE_disableNetworkInternal(t2), t2.Q_.shutdown(), // Set the OnlineState to Unknown (rather than Offline) to avoid potentially
+        ), await __PRIVATE_disableNetworkInternal(t2), t2.z_.shutdown(), // Set the OnlineState to Unknown (rather than Offline) to avoid potentially
         // triggering spurious listener events with cached data, etc.
-        t2.K_.set(
+        t2.j_.set(
           "Unknown"
           /* OnlineState.Unknown */
         );
@@ -12084,25 +12162,26 @@ This typically indicates that your device does not have a healthy Internet conne
       this.muted = false;
     }
     next(e) {
-      this.muted || this.observer.next && this.Xa(this.observer.next, e);
+      this.muted || this.observer.next && this.iu(this.observer.next, e);
     }
     error(e) {
-      this.muted || (this.observer.error ? this.Xa(this.observer.error, e) : __PRIVATE_logError("Uncaught Error in snapshot listener:", e.toString()));
+      this.muted || (this.observer.error ? this.iu(this.observer.error, e) : __PRIVATE_logError("Uncaught Error in snapshot listener:", e.toString()));
     }
-    eu() {
+    su() {
       this.muted = true;
     }
-    Xa(e, t) {
+    iu(e, t) {
       setTimeout(() => {
         this.muted || e(t);
       }, 0);
     }
   };
+  var Yt = "FirestoreClient";
   var FirestoreClient = class {
     constructor(e, t, n, r, i) {
       this.authCredentials = e, this.appCheckCredentials = t, this.asyncQueue = n, this.databaseInfo = r, this.user = User.UNAUTHENTICATED, this.clientId = __PRIVATE_AutoId.newId(), this.authCredentialListener = () => Promise.resolve(), this.appCheckCredentialListener = () => Promise.resolve(), this._uninitializedComponentsProvider = i, this.authCredentials.start(n, async (e2) => {
-        __PRIVATE_logDebug("FirestoreClient", "Received user=", e2.uid), await this.authCredentialListener(e2), this.user = e2;
-      }), this.appCheckCredentials.start(n, (e2) => (__PRIVATE_logDebug("FirestoreClient", "Received new app check token=", e2), this.appCheckCredentialListener(e2, this.user)));
+        __PRIVATE_logDebug(Yt, "Received user=", e2.uid), await this.authCredentialListener(e2), this.user = e2;
+      }), this.appCheckCredentials.start(n, (e2) => (__PRIVATE_logDebug(Yt, "Received new app check token=", e2), this.appCheckCredentialListener(e2, this.user)));
     }
     get configuration() {
       return {
@@ -12138,7 +12217,7 @@ This typically indicates that your device does not have a healthy Internet conne
     }
   };
   async function __PRIVATE_setOfflineComponentProvider(e, t) {
-    e.asyncQueue.verifyOperationInProgress(), __PRIVATE_logDebug("FirestoreClient", "Initializing OfflineComponentProvider");
+    e.asyncQueue.verifyOperationInProgress(), __PRIVATE_logDebug(Yt, "Initializing OfflineComponentProvider");
     const n = e.configuration;
     await t.initialize(n);
     let r = n.initialUser;
@@ -12151,19 +12230,19 @@ This typically indicates that your device does not have a healthy Internet conne
   async function __PRIVATE_setOnlineComponentProvider(e, t) {
     e.asyncQueue.verifyOperationInProgress();
     const n = await __PRIVATE_ensureOfflineComponents(e);
-    __PRIVATE_logDebug("FirestoreClient", "Initializing OnlineComponentProvider"), await t.initialize(n, e.configuration), // The CredentialChangeListener of the online component provider takes
+    __PRIVATE_logDebug(Yt, "Initializing OnlineComponentProvider"), await t.initialize(n, e.configuration), // The CredentialChangeListener of the online component provider takes
     // precedence over the offline component provider.
     e.setCredentialChangeListener((e2) => __PRIVATE_remoteStoreHandleCredentialChange(t.remoteStore, e2)), e.setAppCheckTokenChangeListener((e2, n2) => __PRIVATE_remoteStoreHandleCredentialChange(t.remoteStore, n2)), e._onlineComponents = t;
   }
   async function __PRIVATE_ensureOfflineComponents(e) {
     if (!e._offlineComponents) if (e._uninitializedComponentsProvider) {
-      __PRIVATE_logDebug("FirestoreClient", "Using user provided OfflineComponentProvider");
+      __PRIVATE_logDebug(Yt, "Using user provided OfflineComponentProvider");
       try {
         await __PRIVATE_setOfflineComponentProvider(e, e._uninitializedComponentsProvider._offline);
       } catch (t) {
         const n = t;
         if (!function __PRIVATE_canFallbackFromIndexedDbError(e2) {
-          return "FirebaseError" === e2.name ? e2.code === D.FAILED_PRECONDITION || e2.code === D.UNIMPLEMENTED : !("undefined" != typeof DOMException && e2 instanceof DOMException) || // When the browser is out of quota we could get either quota exceeded
+          return "FirebaseError" === e2.name ? e2.code === C.FAILED_PRECONDITION || e2.code === C.UNIMPLEMENTED : !("undefined" != typeof DOMException && e2 instanceof DOMException) || // When the browser is out of quota we could get either quota exceeded
           // or an aborted error depending on whether the error happened during
           // schema migration.
           22 === e2.code || 20 === e2.code || // Firefox Private Browsing mode disables IndexedDb and returns
@@ -12172,11 +12251,11 @@ This typically indicates that your device does not have a healthy Internet conne
         }(n)) throw n;
         __PRIVATE_logWarn("Error using user provided cache. Falling back to memory cache: " + n), await __PRIVATE_setOfflineComponentProvider(e, new __PRIVATE_MemoryOfflineComponentProvider());
       }
-    } else __PRIVATE_logDebug("FirestoreClient", "Using default OfflineComponentProvider"), await __PRIVATE_setOfflineComponentProvider(e, new __PRIVATE_LruGcMemoryOfflineComponentProvider(void 0));
+    } else __PRIVATE_logDebug(Yt, "Using default OfflineComponentProvider"), await __PRIVATE_setOfflineComponentProvider(e, new __PRIVATE_LruGcMemoryOfflineComponentProvider(void 0));
     return e._offlineComponents;
   }
   async function __PRIVATE_ensureOnlineComponents(e) {
-    return e._onlineComponents || (e._uninitializedComponentsProvider ? (__PRIVATE_logDebug("FirestoreClient", "Using user provided OnlineComponentProvider"), await __PRIVATE_setOnlineComponentProvider(e, e._uninitializedComponentsProvider._online)) : (__PRIVATE_logDebug("FirestoreClient", "Using default OnlineComponentProvider"), await __PRIVATE_setOnlineComponentProvider(e, new OnlineComponentProvider()))), e._onlineComponents;
+    return e._onlineComponents || (e._uninitializedComponentsProvider ? (__PRIVATE_logDebug(Yt, "Using user provided OnlineComponentProvider"), await __PRIVATE_setOnlineComponentProvider(e, e._uninitializedComponentsProvider._online)) : (__PRIVATE_logDebug(Yt, "Using default OnlineComponentProvider"), await __PRIVATE_setOnlineComponentProvider(e, new OnlineComponentProvider()))), e._onlineComponents;
   }
   function __PRIVATE_getSyncEngine(e) {
     return __PRIVATE_ensureOnlineComponents(e).then((e2) => e2.syncEngine);
@@ -12189,15 +12268,15 @@ This typically indicates that your device does not have a healthy Internet conne
     const t = {};
     return void 0 !== e.timeoutSeconds && (t.timeoutSeconds = e.timeoutSeconds), t;
   }
-  var we = /* @__PURE__ */ new Map();
+  var Zt = /* @__PURE__ */ new Map();
   function __PRIVATE_validateNonEmptyArgument(e, t, n) {
-    if (!n) throw new FirestoreError(D.INVALID_ARGUMENT, `Function ${e}() cannot be called with an empty ${t}.`);
+    if (!n) throw new FirestoreError(C.INVALID_ARGUMENT, `Function ${e}() cannot be called with an empty ${t}.`);
   }
   function __PRIVATE_validateIsNotUsedTogether(e, t, n, r) {
-    if (true === t && true === r) throw new FirestoreError(D.INVALID_ARGUMENT, `${e} and ${n} cannot be used together.`);
+    if (true === t && true === r) throw new FirestoreError(C.INVALID_ARGUMENT, `${e} and ${n} cannot be used together.`);
   }
   function __PRIVATE_validateDocumentPath(e) {
-    if (!DocumentKey.isDocumentKey(e)) throw new FirestoreError(D.INVALID_ARGUMENT, `Invalid document reference. Document references must have an even number of segments, but ${e} has ${e.length}.`);
+    if (!DocumentKey.isDocumentKey(e)) throw new FirestoreError(C.INVALID_ARGUMENT, `Invalid document reference. Document references must have an even number of segments, but ${e} has ${e.length}.`);
   }
   function __PRIVATE_valueDescription(e) {
     if (void 0 === e) return "undefined";
@@ -12223,24 +12302,26 @@ This typically indicates that your device does not have a healthy Internet conne
     if ("_delegate" in e && // Unwrap Compat types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (e = e._delegate), !(e instanceof t)) {
-      if (t.name === e.constructor.name) throw new FirestoreError(D.INVALID_ARGUMENT, "Type does not match the expected instance. Did you pass a reference from a different Firestore SDK?");
+      if (t.name === e.constructor.name) throw new FirestoreError(C.INVALID_ARGUMENT, "Type does not match the expected instance. Did you pass a reference from a different Firestore SDK?");
       {
         const n = __PRIVATE_valueDescription(e);
-        throw new FirestoreError(D.INVALID_ARGUMENT, `Expected type '${t.name}', but it was: ${n}`);
+        throw new FirestoreError(C.INVALID_ARGUMENT, `Expected type '${t.name}', but it was: ${n}`);
       }
     }
     return e;
   }
+  var Xt = "firestore.googleapis.com";
+  var en = true;
   var FirestoreSettingsImpl = class {
     constructor(e) {
       var t, n;
       if (void 0 === e.host) {
-        if (void 0 !== e.ssl) throw new FirestoreError(D.INVALID_ARGUMENT, "Can't provide ssl option if host option is not set");
-        this.host = "firestore.googleapis.com", this.ssl = true;
-      } else this.host = e.host, this.ssl = null === (t = e.ssl) || void 0 === t || t;
-      if (this.credentials = e.credentials, this.ignoreUndefinedProperties = !!e.ignoreUndefinedProperties, this.localCache = e.localCache, void 0 === e.cacheSizeBytes) this.cacheSizeBytes = 41943040;
+        if (void 0 !== e.ssl) throw new FirestoreError(C.INVALID_ARGUMENT, "Can't provide ssl option if host option is not set");
+        this.host = Xt, this.ssl = en;
+      } else this.host = e.host, this.ssl = null !== (t = e.ssl) && void 0 !== t ? t : en;
+      if (this.credentials = e.credentials, this.ignoreUndefinedProperties = !!e.ignoreUndefinedProperties, this.localCache = e.localCache, void 0 === e.cacheSizeBytes) this.cacheSizeBytes = St;
       else {
-        if (-1 !== e.cacheSizeBytes && e.cacheSizeBytes < 1048576) throw new FirestoreError(D.INVALID_ARGUMENT, "cacheSizeBytes must be at least 1048576");
+        if (-1 !== e.cacheSizeBytes && e.cacheSizeBytes < Dt) throw new FirestoreError(C.INVALID_ARGUMENT, "cacheSizeBytes must be at least 1048576");
         this.cacheSizeBytes = e.cacheSizeBytes;
       }
       __PRIVATE_validateIsNotUsedTogether("experimentalForceLongPolling", e.experimentalForceLongPolling, "experimentalAutoDetectLongPolling", e.experimentalAutoDetectLongPolling), this.experimentalForceLongPolling = !!e.experimentalForceLongPolling, this.experimentalForceLongPolling ? this.experimentalAutoDetectLongPolling = false : void 0 === e.experimentalAutoDetectLongPolling ? this.experimentalAutoDetectLongPolling = true : (
@@ -12250,9 +12331,9 @@ This typically indicates that your device does not have a healthy Internet conne
         this.experimentalAutoDetectLongPolling = !!e.experimentalAutoDetectLongPolling
       ), this.experimentalLongPollingOptions = __PRIVATE_cloneLongPollingOptions(null !== (n = e.experimentalLongPollingOptions) && void 0 !== n ? n : {}), function __PRIVATE_validateLongPollingOptions(e2) {
         if (void 0 !== e2.timeoutSeconds) {
-          if (isNaN(e2.timeoutSeconds)) throw new FirestoreError(D.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (must not be NaN)`);
-          if (e2.timeoutSeconds < 5) throw new FirestoreError(D.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (minimum allowed value is 5)`);
-          if (e2.timeoutSeconds > 30) throw new FirestoreError(D.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (maximum allowed value is 30)`);
+          if (isNaN(e2.timeoutSeconds)) throw new FirestoreError(C.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (must not be NaN)`);
+          if (e2.timeoutSeconds < 5) throw new FirestoreError(C.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (minimum allowed value is 5)`);
+          if (e2.timeoutSeconds > 30) throw new FirestoreError(C.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (maximum allowed value is 30)`);
         }
       }(this.experimentalLongPollingOptions), this.useFetchStreams = !!e.useFetchStreams;
     }
@@ -12279,7 +12360,7 @@ This typically indicates that your device does not have a healthy Internet conne
      * instance.
      */
     get app() {
-      if (!this._app) throw new FirestoreError(D.FAILED_PRECONDITION, "Firestore was not initialized using the Firebase SDK. 'app' is not available");
+      if (!this._app) throw new FirestoreError(C.FAILED_PRECONDITION, "Firestore was not initialized using the Firebase SDK. 'app' is not available");
       return this._app;
     }
     get _initialized() {
@@ -12289,7 +12370,7 @@ This typically indicates that your device does not have a healthy Internet conne
       return "notTerminated" !== this._terminateTask;
     }
     _setSettings(e) {
-      if (this._settingsFrozen) throw new FirestoreError(D.FAILED_PRECONDITION, "Firestore has already been started and its settings can no longer be changed. You can only modify settings before calling any other methods on a Firestore object.");
+      if (this._settingsFrozen) throw new FirestoreError(C.FAILED_PRECONDITION, "Firestore has already been started and its settings can no longer be changed. You can only modify settings before calling any other methods on a Firestore object.");
       this._settings = new FirestoreSettingsImpl(e), void 0 !== e.credentials && (this._authCredentials = function __PRIVATE_makeAuthCredentialsProvider(e2) {
         if (!e2) return new __PRIVATE_EmptyAuthCredentialsProvider();
         switch (e2.type) {
@@ -12298,7 +12379,7 @@ This typically indicates that your device does not have a healthy Internet conne
           case "provider":
             return e2.client;
           default:
-            throw new FirestoreError(D.INVALID_ARGUMENT, "makeAuthCredentialsProvider failed due to invalid credential type");
+            throw new FirestoreError(C.INVALID_ARGUMENT, "makeAuthCredentialsProvider failed due to invalid credential type");
         }
       }(e.credentials));
     }
@@ -12331,15 +12412,15 @@ This typically indicates that your device does not have a healthy Internet conne
      */
     _terminate() {
       return function __PRIVATE_removeComponents(e) {
-        const t = we.get(e);
-        t && (__PRIVATE_logDebug("ComponentProvider", "Removing Datastore"), we.delete(e), t.terminate());
+        const t = Zt.get(e);
+        t && (__PRIVATE_logDebug("ComponentProvider", "Removing Datastore"), Zt.delete(e), t.terminate());
       }(this), Promise.resolve();
     }
   };
   function connectFirestoreEmulator(e, t, n, r = {}) {
     var i;
     const s = (e = __PRIVATE_cast(e, Firestore$1))._getSettings(), o = `${t}:${n}`;
-    if ("firestore.googleapis.com" !== s.host && s.host !== o && __PRIVATE_logWarn("Host has been set in both settings() and connectFirestoreEmulator(), emulator host will be used."), e._setSettings(Object.assign(Object.assign({}, s), {
+    if (s.host !== Xt && s.host !== o && __PRIVATE_logWarn("Host has been set in both settings() and connectFirestoreEmulator(), emulator host will be used."), e._setSettings(Object.assign(Object.assign({}, s), {
       host: o,
       ssl: false
     })), r.mockUserToken) {
@@ -12348,7 +12429,7 @@ This typically indicates that your device does not have a healthy Internet conne
       else {
         t2 = createMockUserToken(r.mockUserToken, null === (i = e._app) || void 0 === i ? void 0 : i.options.projectId);
         const s2 = r.mockUserToken.sub || r.mockUserToken.user_id;
-        if (!s2) throw new FirestoreError(D.INVALID_ARGUMENT, "mockUserToken must contain 'sub' or 'user_id' field!");
+        if (!s2) throw new FirestoreError(C.INVALID_ARGUMENT, "mockUserToken must contain 'sub' or 'user_id' field!");
         n2 = new User(s2);
       }
       e._authCredentials = new __PRIVATE_EmulatorAuthCredentialsProvider(new __PRIVATE_OAuthToken(t2, n2));
@@ -12444,39 +12525,40 @@ This typically indicates that your device does not have a healthy Internet conne
       );
     }
     {
-      if (!(e instanceof DocumentReference || e instanceof CollectionReference)) throw new FirestoreError(D.INVALID_ARGUMENT, "Expected first argument to collection() to be a CollectionReference, a DocumentReference or FirebaseFirestore");
+      if (!(e instanceof DocumentReference || e instanceof CollectionReference)) throw new FirestoreError(C.INVALID_ARGUMENT, "Expected first argument to collection() to be a CollectionReference, a DocumentReference or FirebaseFirestore");
       const r = e._path.child(ResourcePath.fromString(t, ...n));
       return __PRIVATE_validateDocumentPath(r), new DocumentReference(e.firestore, e instanceof CollectionReference ? e.converter : null, new DocumentKey(r));
     }
   }
+  var tn = "AsyncQueue";
   var __PRIVATE_AsyncQueueImpl = class {
     constructor(e = Promise.resolve()) {
-      this.Iu = [], // Is this AsyncQueue being shut down? Once it is set to true, it will not
+      this.Vu = [], // Is this AsyncQueue being shut down? Once it is set to true, it will not
       // be changed again.
-      this.du = false, // Operations scheduled to be queued in the future. Operations are
+      this.mu = false, // Operations scheduled to be queued in the future. Operations are
       // automatically removed after they are run or canceled.
-      this.Eu = [], // visible for testing
-      this.Au = null, // Flag set while there's an outstanding AsyncQueue operation, used for
+      this.fu = [], // visible for testing
+      this.gu = null, // Flag set while there's an outstanding AsyncQueue operation, used for
       // assertion sanity-checks.
-      this.Ru = false, // Enabled during shutdown on Safari to prevent future access to IndexedDB.
-      this.Vu = false, // List of TimerIds to fast-forward delays for.
-      this.mu = [], // Backoff timer used to schedule retries for retryable operations
-      this.r_ = new __PRIVATE_ExponentialBackoff(
+      this.pu = false, // Enabled during shutdown on Safari to prevent future access to IndexedDB.
+      this.yu = false, // List of TimerIds to fast-forward delays for.
+      this.wu = [], // Backoff timer used to schedule retries for retryable operations
+      this.a_ = new __PRIVATE_ExponentialBackoff(
         this,
         "async_queue_retry"
         /* TimerId.AsyncQueueRetry */
       ), // Visibility handler that triggers an immediate retry of all retryable
       // operations. Meant to speed up recovery when we regain file system access
       // after page comes into foreground.
-      this.fu = () => {
+      this.Su = () => {
         const e2 = getDocument();
-        e2 && __PRIVATE_logDebug("AsyncQueue", "Visibility state changed to " + e2.visibilityState), this.r_.Jo();
-      }, this.gu = e;
+        e2 && __PRIVATE_logDebug(tn, "Visibility state changed to " + e2.visibilityState), this.a_.t_();
+      }, this.bu = e;
       const t = getDocument();
-      t && "function" == typeof t.addEventListener && t.addEventListener("visibilitychange", this.fu);
+      t && "function" == typeof t.addEventListener && t.addEventListener("visibilitychange", this.Su);
     }
     get isShuttingDown() {
-      return this.du;
+      return this.mu;
     }
     /**
      * Adds a new operation to the queue without waiting for it to complete (i.e.
@@ -12486,39 +12568,39 @@ This typically indicates that your device does not have a healthy Internet conne
       this.enqueue(e);
     }
     enqueueAndForgetEvenWhileRestricted(e) {
-      this.pu(), // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.yu(e);
+      this.Du(), // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      this.vu(e);
     }
     enterRestrictedMode(e) {
-      if (!this.du) {
-        this.du = true, this.Vu = e || false;
+      if (!this.mu) {
+        this.mu = true, this.yu = e || false;
         const t = getDocument();
-        t && "function" == typeof t.removeEventListener && t.removeEventListener("visibilitychange", this.fu);
+        t && "function" == typeof t.removeEventListener && t.removeEventListener("visibilitychange", this.Su);
       }
     }
     enqueue(e) {
-      if (this.pu(), this.du)
+      if (this.Du(), this.mu)
         return new Promise(() => {
         });
       const t = new __PRIVATE_Deferred();
-      return this.yu(() => this.du && this.Vu ? Promise.resolve() : (e().then(t.resolve, t.reject), t.promise)).then(() => t.promise);
+      return this.vu(() => this.mu && this.yu ? Promise.resolve() : (e().then(t.resolve, t.reject), t.promise)).then(() => t.promise);
     }
     enqueueRetryable(e) {
-      this.enqueueAndForget(() => (this.Iu.push(e), this.wu()));
+      this.enqueueAndForget(() => (this.Vu.push(e), this.Cu()));
     }
     /**
      * Runs the next operation from the retryable queue. If the operation fails,
      * reschedules with backoff.
      */
-    async wu() {
-      if (0 !== this.Iu.length) {
+    async Cu() {
+      if (0 !== this.Vu.length) {
         try {
-          await this.Iu[0](), this.Iu.shift(), this.r_.reset();
+          await this.Vu[0](), this.Vu.shift(), this.a_.reset();
         } catch (e) {
           if (!__PRIVATE_isIndexedDbTransactionError(e)) throw e;
-          __PRIVATE_logDebug("AsyncQueue", "Operation failed with retryable error: " + e);
+          __PRIVATE_logDebug(tn, "Operation failed with retryable error: " + e);
         }
-        this.Iu.length > 0 && // If there are additional operations, we re-schedule `retryNextOp()`.
+        this.Vu.length > 0 && // If there are additional operations, we re-schedule `retryNextOp()`.
         // This is necessary to run retryable operations that failed during
         // their initial attempt since we don't know whether they are already
         // enqueued. If, for example, `op1`, `op2`, `op3` are enqueued and `op1`
@@ -12528,12 +12610,12 @@ This typically indicates that your device does not have a healthy Internet conne
         // Since `backoffAndRun()` cancels an existing backoff and schedules a
         // new backoff on every call, there is only ever a single additional
         // operation in the queue.
-        this.r_.jo(() => this.wu());
+        this.a_.Xo(() => this.Cu());
       }
     }
-    yu(e) {
-      const t = this.gu.then(() => (this.Ru = true, e().catch((e2) => {
-        this.Au = e2, this.Ru = false;
+    vu(e) {
+      const t = this.bu.then(() => (this.pu = true, e().catch((e2) => {
+        this.gu = e2, this.pu = false;
         const t2 = (
           /**
           * Chrome includes Error.message in Error.stack. Other browsers do not.
@@ -12547,17 +12629,17 @@ This typically indicates that your device does not have a healthy Internet conne
           }(e2)
         );
         throw __PRIVATE_logError("INTERNAL UNHANDLED ERROR: ", t2), e2;
-      }).then((e2) => (this.Ru = false, e2))));
-      return this.gu = t, t;
+      }).then((e2) => (this.pu = false, e2))));
+      return this.bu = t, t;
     }
     enqueueAfterDelay(e, t, n) {
-      this.pu(), // Fast-forward delays for timerIds that have been overridden.
-      this.mu.indexOf(e) > -1 && (t = 0);
-      const r = DelayedOperation.createAndSchedule(this, e, t, n, (e2) => this.Su(e2));
-      return this.Eu.push(r), r;
+      this.Du(), // Fast-forward delays for timerIds that have been overridden.
+      this.wu.indexOf(e) > -1 && (t = 0);
+      const r = DelayedOperation.createAndSchedule(this, e, t, n, (e2) => this.Fu(e2));
+      return this.fu.push(r), r;
     }
-    pu() {
-      this.Au && fail();
+    Du() {
+      this.gu && fail();
     }
     verifyOperationInProgress() {
     }
@@ -12565,18 +12647,18 @@ This typically indicates that your device does not have a healthy Internet conne
      * Waits until all currently queued tasks are finished executing. Delayed
      * operations are not run.
      */
-    async bu() {
+    async Mu() {
       let e;
       do {
-        e = this.gu, await e;
-      } while (e !== this.gu);
+        e = this.bu, await e;
+      } while (e !== this.bu);
     }
     /**
      * For Tests: Determine if a delayed operation with a particular TimerId
      * exists.
      */
-    Du(e) {
-      for (const t of this.Eu) if (t.timerId === e) return true;
+    xu(e) {
+      for (const t of this.fu) if (t.timerId === e) return true;
       return false;
     }
     /**
@@ -12586,23 +12668,23 @@ This typically indicates that your device does not have a healthy Internet conne
      * will be drained. Pass TimerId.All to run all delayed operations.
      * @returns a Promise that resolves once all operations have been run.
      */
-    vu(e) {
-      return this.bu().then(() => {
-        this.Eu.sort((e2, t) => e2.targetTimeMs - t.targetTimeMs);
-        for (const t of this.Eu) if (t.skipDelay(), "all" !== e && t.timerId === e) break;
-        return this.bu();
+    Ou(e) {
+      return this.Mu().then(() => {
+        this.fu.sort((e2, t) => e2.targetTimeMs - t.targetTimeMs);
+        for (const t of this.fu) if (t.skipDelay(), "all" !== e && t.timerId === e) break;
+        return this.Mu();
       });
     }
     /**
      * For Tests: Skip all subsequent delays for a timer id.
      */
-    Cu(e) {
-      this.mu.push(e);
+    Nu(e) {
+      this.wu.push(e);
     }
     /** Called once a DelayedOperation is run or canceled. */
-    Su(e) {
-      const t = this.Eu.indexOf(e);
-      this.Eu.splice(t, 1);
+    Fu(e) {
+      const t = this.fu.indexOf(e);
+      this.fu.splice(t, 1);
     }
   };
   function __PRIVATE_isPartialObserver(e) {
@@ -12628,18 +12710,18 @@ This typically indicates that your device does not have a healthy Internet conne
       }
     }
   };
-  function getFirestore(t, n) {
-    const r = "object" == typeof t ? t : getApp(), i = "string" == typeof t ? t : n || "(default)", s = _getProvider(r, "firestore").getImmediate({
+  function getFirestore(e, n) {
+    const r = "object" == typeof e ? e : getApp(), i = "string" == typeof e ? e : n || rt, s = _getProvider(r, "firestore").getImmediate({
       identifier: i
     });
     if (!s._initialized) {
-      const e = getDefaultEmulatorHostnameAndPort("firestore");
-      e && connectFirestoreEmulator(s, ...e);
+      const e2 = getDefaultEmulatorHostnameAndPort("firestore");
+      e2 && connectFirestoreEmulator(s, ...e2);
     }
     return s;
   }
   function ensureFirestoreConfigured(e) {
-    if (e._terminated) throw new FirestoreError(D.FAILED_PRECONDITION, "The client has already been terminated.");
+    if (e._terminated) throw new FirestoreError(C.FAILED_PRECONDITION, "The client has already been terminated.");
     return e._firestoreClient || __PRIVATE_configureFirestore(e), e._firestoreClient;
   }
   function __PRIVATE_configureFirestore(e) {
@@ -12673,7 +12755,7 @@ This typically indicates that your device does not have a healthy Internet conne
       try {
         return new _Bytes(ByteString.fromBase64String(e));
       } catch (e2) {
-        throw new FirestoreError(D.INVALID_ARGUMENT, "Failed to construct data from Base64 string: " + e2);
+        throw new FirestoreError(C.INVALID_ARGUMENT, "Failed to construct data from Base64 string: " + e2);
       }
     }
     /**
@@ -12726,7 +12808,7 @@ This typically indicates that your device does not have a healthy Internet conne
      * @param fieldNames - A list of field names.
      */
     constructor(...e) {
-      for (let t = 0; t < e.length; ++t) if (0 === e[t].length) throw new FirestoreError(D.INVALID_ARGUMENT, "Invalid field name at argument $(i + 1). Field names must not be empty.");
+      for (let t = 0; t < e.length; ++t) if (0 === e[t].length) throw new FirestoreError(C.INVALID_ARGUMENT, "Invalid field name at argument $(i + 1). Field names must not be empty.");
       this._internalPath = new FieldPath$1(e);
     }
     /**
@@ -12756,8 +12838,8 @@ This typically indicates that your device does not have a healthy Internet conne
      * @param longitude - The longitude as number between -180 and 180.
      */
     constructor(e, t) {
-      if (!isFinite(e) || e < -90 || e > 90) throw new FirestoreError(D.INVALID_ARGUMENT, "Latitude must be a number between -90 and 90, but was: " + e);
-      if (!isFinite(t) || t < -180 || t > 180) throw new FirestoreError(D.INVALID_ARGUMENT, "Longitude must be a number between -180 and 180, but was: " + t);
+      if (!isFinite(e) || e < -90 || e > 90) throw new FirestoreError(C.INVALID_ARGUMENT, "Latitude must be a number between -90 and 90, but was: " + e);
+      if (!isFinite(t) || t < -180 || t > 180) throw new FirestoreError(C.INVALID_ARGUMENT, "Longitude must be a number between -180 and 180, but was: " + t);
       this._lat = e, this._long = t;
     }
     /**
@@ -12821,7 +12903,7 @@ This typically indicates that your device does not have a healthy Internet conne
       }(this._values, e._values);
     }
   };
-  var be = /^__.*__$/;
+  var rn = /^__.*__$/;
   var ParsedSetData = class {
     constructor(e, t, n) {
       this.data = e, this.fieldMask = t, this.fieldTransforms = n;
@@ -12867,53 +12949,53 @@ This typically indicates that your device does not have a healthy Internet conne
     constructor(e, t, n, r, i, s) {
       this.settings = e, this.databaseId = t, this.serializer = n, this.ignoreUndefinedProperties = r, // Minor hack: If fieldTransforms is undefined, we assume this is an
       // external call and we need to validate the entire path.
-      void 0 === i && this.Fu(), this.fieldTransforms = i || [], this.fieldMask = s || [];
+      void 0 === i && this.Bu(), this.fieldTransforms = i || [], this.fieldMask = s || [];
     }
     get path() {
       return this.settings.path;
     }
-    get Mu() {
-      return this.settings.Mu;
+    get Lu() {
+      return this.settings.Lu;
     }
     /** Returns a new context with the specified settings overwritten. */
-    xu(e) {
+    ku(e) {
       return new ___PRIVATE_ParseContextImpl(Object.assign(Object.assign({}, this.settings), e), this.databaseId, this.serializer, this.ignoreUndefinedProperties, this.fieldTransforms, this.fieldMask);
     }
-    Ou(e) {
-      var t;
-      const n = null === (t = this.path) || void 0 === t ? void 0 : t.child(e), r = this.xu({
-        path: n,
-        Nu: false
-      });
-      return r.Bu(e), r;
-    }
-    Lu(e) {
-      var t;
-      const n = null === (t = this.path) || void 0 === t ? void 0 : t.child(e), r = this.xu({
-        path: n,
-        Nu: false
-      });
-      return r.Fu(), r;
-    }
-    ku(e) {
-      return this.xu({
-        path: void 0,
-        Nu: true
-      });
-    }
     qu(e) {
-      return __PRIVATE_createError(e, this.settings.methodName, this.settings.Qu || false, this.path, this.settings.Ku);
+      var t;
+      const n = null === (t = this.path) || void 0 === t ? void 0 : t.child(e), r = this.ku({
+        path: n,
+        Qu: false
+      });
+      return r.$u(e), r;
+    }
+    Ku(e) {
+      var t;
+      const n = null === (t = this.path) || void 0 === t ? void 0 : t.child(e), r = this.ku({
+        path: n,
+        Qu: false
+      });
+      return r.Bu(), r;
+    }
+    Uu(e) {
+      return this.ku({
+        path: void 0,
+        Qu: true
+      });
+    }
+    Wu(e) {
+      return __PRIVATE_createError(e, this.settings.methodName, this.settings.Gu || false, this.path, this.settings.zu);
     }
     /** Returns 'true' if 'fieldPath' was traversed when creating this context. */
     contains(e) {
       return void 0 !== this.fieldMask.find((t) => e.isPrefixOf(t)) || void 0 !== this.fieldTransforms.find((t) => e.isPrefixOf(t.field));
     }
-    Fu() {
-      if (this.path) for (let e = 0; e < this.path.length; e++) this.Bu(this.path.get(e));
+    Bu() {
+      if (this.path) for (let e = 0; e < this.path.length; e++) this.$u(this.path.get(e));
     }
-    Bu(e) {
-      if (0 === e.length) throw this.qu("Document fields must not be empty");
-      if (__PRIVATE_isWrite(this.Mu) && be.test(e)) throw this.qu('Document fields cannot begin and end with "__"');
+    $u(e) {
+      if (0 === e.length) throw this.Wu("Document fields must not be empty");
+      if (__PRIVATE_isWrite(this.Lu) && rn.test(e)) throw this.Wu('Document fields cannot begin and end with "__"');
     }
   };
   var __PRIVATE_UserDataReader = class {
@@ -12921,14 +13003,14 @@ This typically indicates that your device does not have a healthy Internet conne
       this.databaseId = e, this.ignoreUndefinedProperties = t, this.serializer = n || __PRIVATE_newSerializer(e);
     }
     /** Creates a new top-level parse context. */
-    $u(e, t, n, r = false) {
+    ju(e, t, n, r = false) {
       return new __PRIVATE_ParseContextImpl({
-        Mu: e,
+        Lu: e,
         methodName: t,
-        Ku: n,
+        zu: n,
         path: FieldPath$1.emptyPath(),
-        Nu: false,
-        Qu: r
+        Qu: false,
+        Gu: r
       }, this.databaseId, this.serializer, this.ignoreUndefinedProperties);
     }
   };
@@ -12937,7 +13019,7 @@ This typically indicates that your device does not have a healthy Internet conne
     return new __PRIVATE_UserDataReader(e._databaseId, !!t.ignoreUndefinedProperties, n);
   }
   function __PRIVATE_parseSetData(e, t, n, r, i, s = {}) {
-    const o = e.$u(s.merge || s.mergeFields ? 2 : 0, t, n, i);
+    const o = e.ju(s.merge || s.mergeFields ? 2 : 0, t, n, i);
     __PRIVATE_validatePlainObject("Data must be an object, but it was:", o, r);
     const _ = __PRIVATE_parseObject(r, o);
     let a, u;
@@ -12946,7 +13028,7 @@ This typically indicates that your device does not have a healthy Internet conne
       const e2 = [];
       for (const r2 of s.mergeFields) {
         const i2 = __PRIVATE_fieldPathFromArgument$1(t, r2, n);
-        if (!o.contains(i2)) throw new FirestoreError(D.INVALID_ARGUMENT, `Field '${i2}' is specified in your field mask but missing from your input data.`);
+        if (!o.contains(i2)) throw new FirestoreError(C.INVALID_ARGUMENT, `Field '${i2}' is specified in your field mask but missing from your input data.`);
         __PRIVATE_fieldMaskContains(e2, i2) || e2.push(i2);
       }
       a = new FieldMask(e2), u = o.fieldTransforms.filter((e3) => a.covers(e3.field));
@@ -12961,8 +13043,8 @@ This typically indicates that your device does not have a healthy Internet conne
     )) return __PRIVATE_validatePlainObject("Unsupported field value:", t, e), __PRIVATE_parseObject(e, t);
     if (e instanceof FieldValue)
       return function __PRIVATE_parseSentinelFieldValue(e2, t2) {
-        if (!__PRIVATE_isWrite(t2.Mu)) throw t2.qu(`${e2._methodName}() can only be used with update() and set()`);
-        if (!t2.path) throw t2.qu(`${e2._methodName}() is not currently supported inside arrays`);
+        if (!__PRIVATE_isWrite(t2.Lu)) throw t2.Wu(`${e2._methodName}() can only be used with update() and set()`);
+        if (!t2.path) throw t2.Wu(`${e2._methodName}() is not currently supported inside arrays`);
         const n = e2._toFieldTransform(t2);
         n && t2.fieldTransforms.push(n);
       }(e, t), null;
@@ -12973,12 +13055,12 @@ This typically indicates that your device does not have a healthy Internet conne
       // field mask paths more granular than the top-level array.
       t.path && t.fieldMask.push(t.path), e instanceof Array
     ) {
-      if (t.settings.Nu && 4 !== t.Mu) throw t.qu("Nested arrays are not supported");
+      if (t.settings.Qu && 4 !== t.Lu) throw t.Wu("Nested arrays are not supported");
       return function __PRIVATE_parseArray(e2, t2) {
         const n = [];
         let r = 0;
         for (const i of e2) {
-          let e3 = __PRIVATE_parseData(i, t2.ku(r));
+          let e3 = __PRIVATE_parseData(i, t2.Uu(r));
           null == e3 && // Just include nulls in the array for fields being replaced with a
           // sentinel.
           (e3 = {
@@ -13026,32 +13108,33 @@ This typically indicates that your device does not have a healthy Internet conne
       };
       if (e2 instanceof DocumentReference) {
         const n = t2.databaseId, r = e2.firestore._databaseId;
-        if (!r.isEqual(n)) throw t2.qu(`Document reference is for database ${r.projectId}/${r.database} but should be for database ${n.projectId}/${n.database}`);
+        if (!r.isEqual(n)) throw t2.Wu(`Document reference is for database ${r.projectId}/${r.database} but should be for database ${n.projectId}/${n.database}`);
         return {
           referenceValue: __PRIVATE_toResourceName(e2.firestore._databaseId || t2.databaseId, e2._key.path)
         };
       }
       if (e2 instanceof VectorValue)
         return function __PRIVATE_parseVectorValue(e3, t3) {
-          return {
-            mapValue: {
-              fields: {
-                __type__: {
-                  stringValue: "__vector__"
-                },
-                value: {
-                  arrayValue: {
-                    values: e3.toArray().map((e4) => {
-                      if ("number" != typeof e4) throw t3.qu("VectorValues must only contain numeric values.");
-                      return __PRIVATE_toDouble(t3.serializer, e4);
-                    })
-                  }
+          const n = {
+            fields: {
+              [it]: {
+                stringValue: _t
+              },
+              [at]: {
+                arrayValue: {
+                  values: e3.toArray().map((e4) => {
+                    if ("number" != typeof e4) throw t3.Wu("VectorValues must only contain numeric values.");
+                    return __PRIVATE_toDouble(t3.serializer, e4);
+                  })
                 }
               }
             }
           };
+          return {
+            mapValue: n
+          };
         }(e2, t2);
-      throw t2.qu(`Unsupported field value: ${__PRIVATE_valueDescription(e2)}`);
+      throw t2.Wu(`Unsupported field value: ${__PRIVATE_valueDescription(e2)}`);
     }(e, t);
   }
   function __PRIVATE_parseObject(e, t) {
@@ -13061,7 +13144,7 @@ This typically indicates that your device does not have a healthy Internet conne
       // mask to ensure that the server creates a map entry.
       t.path && t.path.length > 0 && t.fieldMask.push(t.path)
     ) : forEach(e, (e2, r) => {
-      const i = __PRIVATE_parseData(r, t.Ou(e2));
+      const i = __PRIVATE_parseData(r, t.qu(e2));
       null != i && (n[e2] = i);
     }), {
       mapValue: {
@@ -13077,7 +13160,7 @@ This typically indicates that your device does not have a healthy Internet conne
       return "object" == typeof e2 && null !== e2 && (Object.getPrototypeOf(e2) === Object.prototype || null === Object.getPrototypeOf(e2));
     }(n)) {
       const r = __PRIVATE_valueDescription(n);
-      throw "an object" === r ? t.qu(e + " a custom object") : t.qu(e + " " + r);
+      throw "an object" === r ? t.Wu(e + " a custom object") : t.Wu(e + " " + r);
     }
   }
   function __PRIVATE_fieldPathFromArgument$1(e, t, n) {
@@ -13097,9 +13180,9 @@ This typically indicates that your device does not have a healthy Internet conne
       n
     );
   }
-  var De = new RegExp("[~\\*/\\[\\]]");
+  var sn = new RegExp("[~\\*/\\[\\]]");
   function __PRIVATE_fieldPathFromDotSeparatedString(e, t, n) {
-    if (t.search(De) >= 0) throw __PRIVATE_createError(
+    if (t.search(sn) >= 0) throw __PRIVATE_createError(
       `Invalid field path (${t}). Paths must not contain '~', '*', '/', '[', or ']'`,
       e,
       /* hasConverter= */
@@ -13127,7 +13210,7 @@ This typically indicates that your device does not have a healthy Internet conne
     let _ = `Function ${t}() called with invalid data`;
     n && (_ += " (via `toFirestore()`)"), _ += ". ";
     let a = "";
-    return (s || o) && (a += " (found", s && (a += ` in field ${r}`), o && (a += ` in document ${i}`), a += ")"), new FirestoreError(D.INVALID_ARGUMENT, _ + e + a);
+    return (s || o) && (a += " (found", s && (a += ` in field ${r}`), o && (a += ` in document ${i}`), a += ")"), new FirestoreError(C.INVALID_ARGUMENT, _ + e + a);
   }
   function __PRIVATE_fieldMaskContains(e, t) {
     return e.some((e2) => e2.isEqual(t));
@@ -13215,7 +13298,7 @@ This typically indicates that your device does not have a healthy Internet conne
     return "string" == typeof t ? __PRIVATE_fieldPathFromDotSeparatedString(e, t) : t instanceof FieldPath ? t._internalPath : t._delegate._internalPath;
   }
   function __PRIVATE_validateHasExplicitOrderByForLimitToLast(e) {
-    if ("L" === e.limitType && 0 === e.explicitOrderBy.length) throw new FirestoreError(D.UNIMPLEMENTED, "limitToLast() queries require specifying at least one orderBy() clause");
+    if ("L" === e.limitType && 0 === e.explicitOrderBy.length) throw new FirestoreError(C.UNIMPLEMENTED, "limitToLast() queries require specifying at least one orderBy() clause");
   }
   var AbstractUserDataWriter = class {
     convertValue(e, t = "none") {
@@ -13265,7 +13348,7 @@ This typically indicates that your device does not have a healthy Internet conne
      */
     convertVectorValue(e) {
       var t, n, r;
-      const i = null === (r = null === (n = null === (t = e.fields) || void 0 === t ? void 0 : t.value.arrayValue) || void 0 === n ? void 0 : n.values) || void 0 === r ? void 0 : r.map((e2) => __PRIVATE_normalizeNumber(e2.doubleValue));
+      const i = null === (r = null === (n = null === (t = e.fields) || void 0 === t ? void 0 : t[at].arrayValue) || void 0 === n ? void 0 : n.values) || void 0 === r ? void 0 : r.map((e2) => __PRIVATE_normalizeNumber(e2.doubleValue));
       return new VectorValue(i);
     }
     convertGeoPoint(e) {
@@ -13442,7 +13525,7 @@ This typically indicates that your device does not have a healthy Internet conne
      */
     docChanges(e = {}) {
       const t = !!e.includeMetadataChanges;
-      if (t && this._snapshot.excludesMetadataChanges) throw new FirestoreError(D.INVALID_ARGUMENT, "To include metadata changes with your document changes, you must also pass { includeMetadataChanges:true } to onSnapshot().");
+      if (t && this._snapshot.excludesMetadataChanges) throw new FirestoreError(C.INVALID_ARGUMENT, "To include metadata changes with your document changes, you must also pass { includeMetadataChanges:true } to onSnapshot().");
       return this._cachedChanges && this._cachedChangesIncludeMetadataChanges === t || (this._cachedChanges = /** Calculates the array of `DocumentChange`s for a given `ViewSnapshot`. */
       function __PRIVATE_changesFromSnapshot(e2, t2) {
         if (e2._snapshot.oldDocs.isEmpty()) {
@@ -13547,7 +13630,7 @@ This typically indicates that your device does not have a healthy Internet conne
     return function __PRIVATE_firestoreClientListen(e2, t2, n2, r2) {
       const i2 = new __PRIVATE_AsyncObserver(r2), s2 = new __PRIVATE_QueryListener(t2, i2, n2);
       return e2.asyncQueue.enqueueAndForget(async () => __PRIVATE_eventManagerListen(await __PRIVATE_getEventManager(e2), s2)), () => {
-        i2.eu(), e2.asyncQueue.enqueueAndForget(async () => __PRIVATE_eventManagerUnlisten(await __PRIVATE_getEventManager(e2), s2));
+        i2.su(), e2.asyncQueue.enqueueAndForget(async () => __PRIVATE_eventManagerUnlisten(await __PRIVATE_getEventManager(e2), s2));
       };
     }(ensureFirestoreConfigured(u), c, _, a);
   }
@@ -13563,23 +13646,23 @@ This typically indicates that your device does not have a healthy Internet conne
   }
   !function __PRIVATE_registerFirestore(e, t = true) {
     !function __PRIVATE_setSDKVersion(e2) {
-      S = e2;
+      D = e2;
     }(SDK_VERSION), _registerComponent(new Component("firestore", (e2, { instanceIdentifier: n, options: r }) => {
-      const i = e2.getProvider("app").getImmediate(), s = new Firestore(new __PRIVATE_FirebaseAuthCredentialsProvider(e2.getProvider("auth-internal")), new __PRIVATE_FirebaseAppCheckTokenProvider(e2.getProvider("app-check-internal")), function __PRIVATE_databaseIdFromApp(e3, t2) {
-        if (!Object.prototype.hasOwnProperty.apply(e3.options, ["projectId"])) throw new FirestoreError(D.INVALID_ARGUMENT, '"projectId" not provided in firebase.initializeApp.');
+      const i = e2.getProvider("app").getImmediate(), s = new Firestore(new __PRIVATE_FirebaseAuthCredentialsProvider(e2.getProvider("auth-internal")), new __PRIVATE_FirebaseAppCheckTokenProvider(i, e2.getProvider("app-check-internal")), function __PRIVATE_databaseIdFromApp(e3, t2) {
+        if (!Object.prototype.hasOwnProperty.apply(e3.options, ["projectId"])) throw new FirestoreError(C.INVALID_ARGUMENT, '"projectId" not provided in firebase.initializeApp.');
         return new DatabaseId(e3.options.projectId, t2);
       }(i, n), i);
       return r = Object.assign({
         useFetchStreams: t
       }, r), s._setSettings(r), s;
-    }, "PUBLIC").setMultipleInstances(true)), registerVersion(w, "4.7.6", e), // BUILD_TARGET will be replaced by values like esm2017, cjs2017, etc during the compilation
-    registerVersion(w, "4.7.6", "esm2017");
+    }, "PUBLIC").setMultipleInstances(true)), registerVersion(S, b, e), // BUILD_TARGET will be replaced by values like esm2017, cjs2017, etc during the compilation
+    registerVersion(S, b, "esm2017");
   }();
 
   // app/javascripts/vpago/vpago_payments/user_informers/firebase.js
   async function listenToProcessingState({
     firebaseConfigs,
-    orderNumber,
+    documentReferencePath,
     onPaymentIsProcessing,
     onOrderIsProcessing,
     onOrderIsCompleted,
@@ -13590,8 +13673,7 @@ This typically indicates that your device does not have a healthy Internet conne
   }) {
     const app = initializeApp(firebaseConfigs);
     const db = getFirestore(app);
-    const currentDate = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-    const documentRef = doc(db, "statuses", "cart", currentDate, orderNumber);
+    const documentRef = doc(db, documentReferencePath);
     await setDoc(documentRef, { listening: true }, { merge: true });
     onSnapshot(documentRef, (doc2) => {
       let documentData = doc2.data();
@@ -14789,6 +14871,22 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+  (**
+   * @license
+   * Copyright 2021 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law | agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES | CONDITIONS OF ANY KIND, either express | implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
 
 @firebase/firestore/dist/index.esm2017.js:
   (**
@@ -15117,6 +15215,42 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2018 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2019 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
   (**
    * @license
    * Copyright 2023 Google LLC
@@ -15642,6 +15776,24 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
