@@ -10,8 +10,9 @@ on:
   push:
     branches:
       - 112-ci-cd
+      - 245-build-and-publish-gem
 jobs:
-  test:
+  test_and_publish_gem:
     runs-on: ubuntu-latest
 
     services:
@@ -23,7 +24,7 @@ jobs:
           POSTGRES_PASSWORD: mypassword
           POSTGRES_DB: test_db
 
-        ports: ['5432:5432']
+        ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -39,7 +40,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2.0'
+          ruby-version: "3.2.0"
 
           # bundle-cache might cause problem when upgrading ruby. Disable it when upgrading to solve the problem.
           # bundler-cache: true
@@ -68,3 +69,28 @@ jobs:
           DATABASE_URL: postgres://myuser:mypassword@localhost:5432/test_db
         run: |
           bundle exec rake
+
+      - name: Build gem
+        env:
+          DATABASE_URL: postgres://myuser:mypassword@localhost:5432/test_db
+
+        # if: startsWith(github.ref, 'refs/tags/') # Only on tag pushes
+        if: |
+          startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/245-build-and-publish-gem'
+        run: |
+          gem build *.gemspec
+
+      # Publish the gem
+      - name: Publish gem
+        env:
+          DATABASE_URL: postgres://myuser:mypassword@localhost:5432/test_db
+
+        # if: startsWith(github.ref, 'refs/tags/') # Only on tag pushes
+        # (github.event_name == 'push' && github.ref == 'refs/heads/2405-build-and-publish-gem')
+        if: |
+          startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/245-build-and-publish-gem'
+        run: |
+          mkdir -p ~/.gem
+          echo ":rubygems_api_key: ${{ secrets.RUBYGEMS_API_KEY }}" > ~/.gem/credentials
+          chmod 0600 ~/.gem/credentials
+          gem push *.gem
