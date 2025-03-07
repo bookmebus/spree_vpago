@@ -7,8 +7,8 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'spree_vpago'
   s.version     = SpreeVpago.version
-  s.summary     = 'Add extension summary here'
-  s.description = 'Add (optional) extension description here'
+  s.summary     = 'Cambodian Payment Gateway Integration for Spree Commerce'
+  s.description = 'This Spree Commerce extension integrates Cambodian payment gateways, supporting ABA Bank, Acleda Bank, and Wing for secure and seamless transactions.'
   s.required_ruby_version = '>= 3.2.0'
 
   s.author    = 'You'

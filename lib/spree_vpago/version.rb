@@ -1,19 +1,9 @@
 module SpreeVpago
   module_function
 
-  # Returns the version of the currently loaded SpreeVpago as a
-  # <tt>Gem::Version</tt>.
+  VERSION = '1.0.0-spree-4.5'.freeze
+
   def version
-    Gem::Version.new VERSION::STRING
-  end
-
-  module VERSION
-    MAJOR = 0
-    MINOR = 1
-    TINY  = 11
-    # PRE   = 'alpha'.freeze
-
-    # STRING = [MAJOR, MINOR, TINY, PRE].compact.join('.')
-    STRING = [MAJOR, MINOR, TINY].compact.join('.')
+    Gem::Version.new VERSION
   end
 end
