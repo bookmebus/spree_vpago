@@ -1,6 +1,6 @@
 # SpreeVpago
 
-Introduction goes here.
+![Spree Vpago](https://github.com/bookmebus/spree_vpago/actions/workflows/test_and_publish_gem.yml/badge.svg?branch= "Build status")
 
 ## Installation
 
@@ -24,7 +24,29 @@ Introduction goes here.
 
 4. Restart your server
 
-If your server was running, restart it so that it can find the assets properly.
+   If your server was running, restart it so that it can find the assets properly.
+
+## Releasing
+
+To release the gem:
+
+1. Bump new version in the file: lib/spree_vpago/version.rb, for example
+
+   ```ruby
+   VERSION = '1.8.0-beta1'.freeze
+   ```
+
+   to release `1.8.0-beta1`
+
+2. Tag a repo with the same version, for example
+
+   ```sh
+   git tag 1.8.0-beta1
+   ```
+
+3. Push the tag to the repo and github action will build and push the gem to rubygem.org
+
+4. Get the gem version to the project in cm-market-server.
 
 ## Testing
 
@@ -44,7 +66,7 @@ require 'spree_vpago/factories'
 
 Run test
 
-```
+```sh
 rspec spec/
 ```
 
@@ -63,7 +85,7 @@ For desktop
     `
 Payment method configuration:
 
-```
+```env
 Icon Name: acleda
 ```
 
@@ -85,7 +107,7 @@ ENV['PAYWAY_V2_PRE_AUTH_CANCEL_PATH']
 
 Payment method configuration:
 
-```
+```env
 HOST: https://checkout-sandbox.payway.com.kh
 Payment Option: one of the [abapay, cards]
 Merchant: vtenh
