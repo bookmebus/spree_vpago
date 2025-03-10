@@ -39,7 +39,8 @@ module Spree
     def process_payment
       return render json: { status: :ok }, status: :ok if request.method != 'POST'
 
-      @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
+      return_params = sanitize_return_params
+      @payment = Vpago::PaymentFinder.new(return_params).find_and_verify
       return render_not_found unless @payment.present?
 
       unless @payment.order.paid?
@@ -54,7 +55,16 @@ module Spree
       render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
 
-    def record_not_found
+    def sanitize_return_params
+      sanitized_params = params.permit!.to_h
+
+      # In ABA case, it returns params in side return params.
+      sanitized_params.merge!(JSON.parse(sanitized_params.delete(:return_params))) if sanitized_params[:return_params].present?
+
+      sanitized_params
+    end
+
+    def render_not_found
       respond_to do |format|
         format.html { render file: Rails.public_path.join('404.html'), status: :not_found, layout: false }
         format.json { render json: { status: :not_found }, status: :not_found }
