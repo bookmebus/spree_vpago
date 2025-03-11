@@ -3,7 +3,7 @@ module Spree
     module Storefront
       module PaymentSerializerDecorator
         def self.prepended(base)
-          base.attributes :pre_auth_status, :checkout_url
+          base.attributes :pre_auth_status, :checkout_url, :process_payment_url
         end
       end
     end

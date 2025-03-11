@@ -4,11 +4,17 @@
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     let firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
-    let orderNumber = "<%= @order.number %>";
+
+    window.requestProcessPayment({
+      url: "<%= @payment.process_payment_url %>",
+      params: <%= params.except(:action, :controller, :amp).to_json.html_safe %>,
+      maxRetries: 5,
+      retryDelayMs: 1000,
+    })
 
     window.listenToProcessingState({
       firebaseConfigs: firebaseConfigs,
-      orderNumber: orderNumber,
+      documentReferencePath: "<%= payment.user_informer.document_reference_path %>",
       onPaymentIsProcessing: function (orderState, paymentState, logMessage) {
         document.getElementById("status").innerText = "Payment is processing";
         document.getElementById("message").innerText = logMessage;
@@ -39,11 +45,4 @@
       },
     });
   });
-
-  window.requestProcessPayment({
-    url: "<%= @payment.process_payment_url %>",
-    params: <%= params.except(:action, :controller, :amp).to_json.html_safe %>,
-    maxRetries: 5,
-    retryDelayMs: 1000,
-  })
 </script>

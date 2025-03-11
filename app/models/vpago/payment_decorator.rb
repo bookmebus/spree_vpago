@@ -18,6 +18,10 @@ module Vpago
       super
     end
 
+    def user_informer
+      @user_informer ||= ::Vpago::UserInformers::Firebase.new(order)
+    end
+
     def url_constructor
       @url_constructor ||= Vpago::PaymentUrlConstructor.new(self)
     end
