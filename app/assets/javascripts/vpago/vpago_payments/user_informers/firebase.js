@@ -13659,6 +13659,35 @@ This typically indicates that your device does not have a healthy Internet conne
     registerVersion(S, b, "esm2017");
   }();
 
+  // app/javascripts/queue_processor.js
+  var QueueProcessor = class {
+    constructor() {
+      this.queues = [];
+      this.processing = false;
+    }
+    queueStateChange({ callback, minDelayInMs = 1e3 }) {
+      this.queues.push({ callback, minDelayInMs });
+      if (!this.processing) this.#processQueue();
+    }
+    async #processQueue() {
+      if (this.queues.length === 0) {
+        this.processing = false;
+        return;
+      }
+      this.processing = true;
+      const { callback, minDelayInMs } = this.queues.shift();
+      const startTime = Date.now();
+      await callback();
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < minDelayInMs) {
+        await new Promise(
+          (resolve) => setTimeout(resolve, minDelayInMs - elapsedTime)
+        );
+      }
+      this.#processQueue();
+    }
+  };
+
   // app/javascripts/vpago/vpago_payments/user_informers/firebase.js
   async function listenToProcessingState({
     firebaseConfigs,
@@ -13675,6 +13704,7 @@ This typically indicates that your device does not have a healthy Internet conne
     const db = getFirestore(app);
     const documentRef = doc(db, documentReferencePath);
     await setDoc(documentRef, { listening: true }, { merge: true });
+    const queueProcessor = new QueueProcessor();
     onSnapshot(documentRef, (doc2) => {
       let documentData = doc2.data();
       let messageCode = documentData["message_code"];
@@ -13685,63 +13715,103 @@ This typically indicates that your device does not have a healthy Internet conne
       let reasonMessage = documentData["reason_message"];
       let orderCompleted = orderState === "complete";
       if (orderCompleted) {
-        onCompleted(orderState, paymentState, reasonCode, reasonMessage);
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onCompleted(
+              orderState,
+              paymentState,
+              reasonCode,
+              reasonMessage
+            );
+          }
+        });
         return;
       }
       switch (messageCode) {
         case "payment_is_processing":
-          onPaymentIsProcessing(
-            orderState,
-            paymentState,
-            processing,
-            reasonCode,
-            reasonMessage
-          );
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onPaymentIsProcessing(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
           break;
         case "order_is_processing":
-          onOrderIsProcessing(
-            orderState,
-            paymentState,
-            processing,
-            reasonCode,
-            reasonMessage
-          );
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onOrderIsProcessing(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
           break;
         case "order_is_completed":
-          onOrderIsCompleted(
-            orderState,
-            paymentState,
-            processing,
-            reasonCode,
-            reasonMessage
-          );
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onOrderIsCompleted(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
           break;
         case "order_process_failed":
-          onOrderProcessFailed(
-            orderState,
-            paymentState,
-            processing,
-            reasonCode,
-            reasonMessage
-          );
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onOrderProcessFailed(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
           break;
         case "payment_is_refunded":
-          onPaymentIsRefunded(
-            orderState,
-            paymentState,
-            processing,
-            reasonCode,
-            reasonMessage
-          );
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onPaymentIsRefunded(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
           break;
         case "payment_process_failed":
-          onPaymentProcessFailed(
-            orderState,
-            paymentState,
-            processing,
-            reasonCode,
-            reasonMessage
-          );
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onPaymentProcessFailed(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
           break;
         default:
           break;

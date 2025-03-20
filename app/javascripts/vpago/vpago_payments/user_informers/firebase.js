@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, onSnapshot, setDoc } from "firebase/firestore";
+import QueueProcessor from "../../../queue_processor.js";
 
 async function listenToProcessingState({
   firebaseConfigs,
@@ -18,6 +19,8 @@ async function listenToProcessingState({
   const documentRef = doc(db, documentReferencePath);
   await setDoc(documentRef, { listening: true }, { merge: true });
 
+  const queueProcessor = new QueueProcessor();
+
   onSnapshot(documentRef, (doc) => {
     let documentData = doc.data();
 
@@ -30,64 +33,104 @@ async function listenToProcessingState({
 
     let orderCompleted = orderState === "complete";
     if (orderCompleted) {
-      onCompleted(orderState, paymentState, reasonCode, reasonMessage);
+      queueProcessor.queueStateChange({
+        minDelayInMs: 1500,
+        callback: async () => {
+          await onCompleted(
+            orderState,
+            paymentState,
+            reasonCode,
+            reasonMessage
+          );
+        },
+      });
       return;
     }
 
     switch (messageCode) {
       case "payment_is_processing":
-        onPaymentIsProcessing(
-          orderState,
-          paymentState,
-          processing,
-          reasonCode,
-          reasonMessage
-        );
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onPaymentIsProcessing(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage
+            );
+          },
+        });
         break;
       case "order_is_processing":
-        onOrderIsProcessing(
-          orderState,
-          paymentState,
-          processing,
-          reasonCode,
-          reasonMessage
-        );
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onOrderIsProcessing(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage
+            );
+          },
+        });
         break;
       case "order_is_completed":
-        onOrderIsCompleted(
-          orderState,
-          paymentState,
-          processing,
-          reasonCode,
-          reasonMessage
-        );
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onOrderIsCompleted(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage
+            );
+          },
+        });
         break;
       case "order_process_failed":
-        onOrderProcessFailed(
-          orderState,
-          paymentState,
-          processing,
-          reasonCode,
-          reasonMessage
-        );
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onOrderProcessFailed(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage
+            );
+          },
+        });
         break;
       case "payment_is_refunded":
-        onPaymentIsRefunded(
-          orderState,
-          paymentState,
-          processing,
-          reasonCode,
-          reasonMessage
-        );
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onPaymentIsRefunded(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage
+            );
+          },
+        });
         break;
       case "payment_process_failed":
-        onPaymentProcessFailed(
-          orderState,
-          paymentState,
-          processing,
-          reasonCode,
-          reasonMessage
-        );
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onPaymentProcessFailed(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage
+            );
+          },
+        });
         break;
       default:
         break;
