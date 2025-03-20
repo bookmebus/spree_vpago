@@ -37,4 +37,25 @@ RSpec.describe Spree::Payment, type: :model do
       end
     end
   end
+
+  describe '#process!' do
+    let(:order) { create(:order_with_line_items, state: :payment) }
+    let(:payment_method) { create(:payway_v2_gateway, preferred_host: 'https://bad-url') }
+    let(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order, payment_method: payment_method) }
+
+    context 'when faraday connection error raised during process' do
+      it 'capture faraday error and rethow as gateway error (order only rescue gateway error)' do
+        expect(payment).to receive(:gateway_error).and_call_original do |error|
+          expect(error).to be_a(ActiveMerchant::ConnectionError)
+          expect(error.triggering_exception).to be_a(Faraday::ConnectionFailed)
+        end
+
+        VCR.use_cassette("connection_error") do
+          expect {
+            payment.process!
+          }.to raise_error(Spree::Core::GatewayError, Spree.t(:unable_to_connect_to_gateway))
+        end
+      end
+    end
+  end
 end

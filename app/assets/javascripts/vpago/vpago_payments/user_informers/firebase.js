@@ -13677,33 +13677,71 @@ This typically indicates that your device does not have a healthy Internet conne
     await setDoc(documentRef, { listening: true }, { merge: true });
     onSnapshot(documentRef, (doc2) => {
       let documentData = doc2.data();
+      let messageCode = documentData["message_code"];
       let orderState = documentData["order_state"];
       let paymentState = documentData["payment_state"];
-      let messageCode = documentData["message_code"];
-      let logMessage = documentData["log_message"];
+      let processing = documentData["processing"] === true;
+      let reasonCode = documentData["reason_code"];
+      let reasonMessage = documentData["reason_message"];
       let orderCompleted = orderState === "complete";
       if (orderCompleted) {
-        onCompleted(orderState, paymentState);
+        onCompleted(orderState, paymentState, reasonCode, reasonMessage);
         return;
       }
       switch (messageCode) {
         case "payment_is_processing":
-          onPaymentIsProcessing(orderState, paymentState, logMessage);
+          onPaymentIsProcessing(
+            orderState,
+            paymentState,
+            processing,
+            reasonCode,
+            reasonMessage
+          );
           break;
         case "order_is_processing":
-          onOrderIsProcessing(orderState, paymentState, logMessage);
+          onOrderIsProcessing(
+            orderState,
+            paymentState,
+            processing,
+            reasonCode,
+            reasonMessage
+          );
           break;
         case "order_is_completed":
-          onOrderIsCompleted(orderState, paymentState, logMessage);
+          onOrderIsCompleted(
+            orderState,
+            paymentState,
+            processing,
+            reasonCode,
+            reasonMessage
+          );
           break;
         case "order_process_failed":
-          onOrderProcessFailed(orderState, paymentState, logMessage);
+          onOrderProcessFailed(
+            orderState,
+            paymentState,
+            processing,
+            reasonCode,
+            reasonMessage
+          );
           break;
         case "payment_is_refunded":
-          onPaymentIsRefunded(orderState, paymentState, logMessage);
+          onPaymentIsRefunded(
+            orderState,
+            paymentState,
+            processing,
+            reasonCode,
+            reasonMessage
+          );
           break;
         case "payment_process_failed":
-          onPaymentProcessFailed(orderState, paymentState, logMessage);
+          onPaymentProcessFailed(
+            orderState,
+            paymentState,
+            processing,
+            reasonCode,
+            reasonMessage
+          );
           break;
         default:
           break;
