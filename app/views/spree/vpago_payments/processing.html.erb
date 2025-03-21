@@ -1,5 +1,7 @@
 <h1 id="status">THIS IS CURRENT STATE</h1>
-<p id="message"></p>
+<p id="reason_code"></p>
+<p id="processing"></p>
+<p id="reason_message"></p>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -15,31 +17,43 @@
     window.listenToProcessingState({
       firebaseConfigs: firebaseConfigs,
       documentReferencePath: "<%= payment.user_informer.document_reference_path %>",
-      onPaymentIsProcessing: function (orderState, paymentState, logMessage) {
+      onPaymentIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Payment is processing";
-        document.getElementById("message").innerText = logMessage;
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
       },
-      onOrderIsProcessing: function (orderState, paymentState, logMessage) {
+      onOrderIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Order is processing";
-        document.getElementById("message").innerText = logMessage;
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
       },
-      onOrderIsCompleted: function (orderState, paymentState, logMessage) {
+      onOrderIsCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Order is completed";
-        document.getElementById("message").innerText = logMessage;
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
       },
-      onOrderProcessFailed: function (orderState, paymentState, logMessage) {
+      onOrderProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Order process failed";
-        document.getElementById("message").innerText = logMessage;
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
       },
-      onPaymentIsRefunded: function (orderState, paymentState, logMessage) {
+      onPaymentIsRefunded: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Payment is refunded";
-        document.getElementById("message").innerText = logMessage
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage
       },
-      onPaymentProcessFailed: function (orderState, paymentState, logMessage) {
+      onPaymentProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Payment process failed";
-        document.getElementById("message").innerText = logMessage;
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
       },
-      onCompleted: function (orderState, paymentState, logMessage) {
+      onCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         let successPath = "<%= @payment.success_url %>";
         window.location.href = successPath;
       },

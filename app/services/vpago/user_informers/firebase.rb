@@ -9,27 +9,28 @@ module Vpago
         @order = order
       end
 
-      def payment_is_processing(processing:, log_message: nil) = notify(:payment_is_processing, processing, log_message)
-      def order_is_processing(processing:, log_message: nil) = notify(:order_is_processing, processing, log_message)
-      def order_is_completed(processing:, log_message: nil) = notify(:order_is_completed, processing, log_message)
-      def order_process_failed(processing:, log_message: nil) = notify(:order_process_failed, processing, log_message)
-      def payment_is_refunded(processing:, log_message: nil) = notify(:payment_is_refunded, processing, log_message)
-      def payment_process_failed(processing:, log_message: nil) = notify(:payment_process_failed, processing, log_message)
+      def payment_is_processing(processing:) = notify(:payment_is_processing, processing)
+      def order_is_processing(processing:) = notify(:order_is_processing, processing)
+      def order_is_completed(processing:) = notify(:order_is_completed, processing)
+      def order_process_failed(processing:, reason_code:, reason_message: nil) = notify(:order_process_failed, processing, reason_code, reason_message)
+      def payment_is_refunded(processing:, reason_code:, reason_message: nil) = notify(:payment_is_refunded, processing, reason_code, reason_message)
+      def payment_process_failed(processing:, reason_code:, reason_message: nil) = notify(:payment_process_failed, processing, reason_code, reason_message)
 
-      def notify(message, processing, log_message = nil)
+      def notify(message_code, processing, reason_code = nil, reason_message = nil)
         order.reload
 
         data = {
           processing: processing,
-          message_code: message,
-          log_message: log_message,
+          message_code: message_code,
+          reason_code: reason_code,
+          reason_message: reason_message,
           order_state: order.state,
           payment_state: order.payment_state,
           updated_at: Time.current
         }.compact
 
         firestore_reference.set(data, merge: true)
-        firestore_reference.col('histories').doc(message).set(data)
+        firestore_reference.col('histories').doc(message_code).set(data)
       end
 
       def firestore_reference

@@ -11,11 +11,24 @@ module Vpago
                     to: :url_constructor
     end
 
+    # override:
+    # to give payment another chance to re-process, even if it failed.
     def process!
-      # give payment another chance to re-process, even if it failed.
       update!(state: :checkout) if processing? || send(:has_invalid_state?)
 
       super
+    end
+
+    # override:
+    # to allow capture faraday connection error. gateway_error method already write rails log for this.
+    def protect_from_connection_error
+      yield
+    rescue ActiveMerchant::ConnectionError => e
+      failure!
+      gateway_error(e)
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+      failure!
+      gateway_error(ActiveMerchant::ConnectionError.new(e.message, e))
     end
 
     def user_informer
