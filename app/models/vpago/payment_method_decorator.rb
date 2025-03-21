@@ -9,6 +9,7 @@ module Vpago
     def self.prepended(base)
       base.preference :icon_name, :string, default: 'cheque'
       base.belongs_to :vendor, class_name: 'Spree::Vendor', optional: true, inverse_of: :payment_methods
+      base.belongs_to :tenant, class_name: 'SpreeCmCommissioner::Tenant', optional: true, inverse_of: :payment_methods
 
       def base.vpago_payments
         [

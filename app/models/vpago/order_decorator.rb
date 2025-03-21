@@ -48,7 +48,9 @@ module Vpago
 
     # override
     def available_payment_methods(store = nil)
-      payment_methods = if vendor_payment_methods.any?
+      payment_methods = if tenant.present? && tenant.respond_to?(:payment_methods)
+                          tenant.payment_methods
+                        elsif vendor_payment_methods.any?
                           vendor_payment_methods
                         else
                           collect_payment_methods(store)
