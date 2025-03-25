@@ -3,7 +3,15 @@ module Spree
     module PaymentMethodsControllerDecorator
       def scope
         scope = current_store.payment_methods_including_vendor.accessible_by(current_ability, :index)
-        scope = scope.where.not(vendor_id: nil) if params[:tab] == 'vendors'
+
+        if params[:tab] == 'vendors'
+          scope = scope.where.not(vendor_id: nil)
+        elsif params[:tab] == 'tenants'
+          scope = scope.joins(:vendor)
+                       .where.not(vendor_id: nil)
+                       .where.not(spree_vendors: { tenant_id: nil })
+        end
+
         scope
       end
 

@@ -1,0 +1,5 @@
+<!-- insert_before "[data-hook='admin_payment_methods_index_header_actions']" -->
+
+<% if params[:tab] == 'tenants' %>
+  <th class="text-center"><%= Spree.t(:tenant) %></th>
+<% end %>
