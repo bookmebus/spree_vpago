@@ -12,4 +12,11 @@
       admin_payment_methods_url(tab: :vendors),
       class: "nav-link #{'active' if params[:tab] == 'vendors' }" %>
   <% end if can?(:admin, Spree::PaymentMethod) %>
+
+  <%= content_tag :li, class: 'nav-item' do %>
+    <%= link_to_with_icon 'building.svg',
+      Spree.t(:tenants),
+      admin_payment_methods_url(tab: :tenants),
+      class: "nav-link #{'active' if params[:tab] == 'tenants' }" %>
+  <% end if can?(:admin, Spree::PaymentMethod) %>
 <% end %>
