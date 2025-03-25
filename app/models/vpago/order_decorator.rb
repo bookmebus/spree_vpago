@@ -48,7 +48,9 @@ module Vpago
 
     # override
     def available_payment_methods(store = nil)
-      payment_methods = if vendor_payment_methods.any?
+      payment_methods = if respond_to?(:tenant) && tenant.present?
+                          tenant_payment_methods
+                        elsif vendor_payment_methods.any?
                           vendor_payment_methods
                         else
                           collect_payment_methods(store)
@@ -59,6 +61,10 @@ module Vpago
                                      else
                                        payment_methods
                                      end
+    end
+
+    def tenant_payment_methods
+      tenant.tenant_payment_methods
     end
 
     def line_items_count
