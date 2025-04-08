@@ -5,9 +5,6 @@ module Vpago
 
     def self.prepended(base)
       base.has_many :payouts, class_name: 'Spree::Payout', through: :payments
-      base.has_many :vendor_payment_methods, -> { unscope(:order).distinct },
-                    class_name: 'Spree::PaymentMethod',
-                    through: :line_items
 
       base.state_machine.before_transition from: :cart, do: :ensure_valid_vendor_payment_methods
       base.state_machine.after_transition to: :complete, do: :generate_line_items_total_metadata
@@ -44,27 +41,6 @@ module Vpago
 
     def required_payway_payout?
       line_items.any?(&:required_payway_payout?) || shipments.any?(&:required_payway_payout?)
-    end
-
-    # override
-    def available_payment_methods(store = nil)
-      payment_methods = if respond_to?(:tenant) && tenant.present?
-                          tenant_payment_methods
-                        elsif vendor_payment_methods.any?
-                          vendor_payment_methods
-                        else
-                          collect_payment_methods(store)
-                        end
-
-      @available_payment_methods ||= if required_payway_payout?
-                                       payment_methods.select(&:type_payway_v2?)
-                                     else
-                                       payment_methods
-                                     end
-    end
-
-    def tenant_payment_methods
-      tenant.tenant_payment_methods
     end
 
     def line_items_count
