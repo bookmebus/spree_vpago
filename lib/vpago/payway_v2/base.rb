@@ -46,6 +46,7 @@ module Vpago
         @payment.number
       end
 
+      # optional
       def email
         @payment.order.email.presence || ENV.fetch('DEFAULT_EMAIL_FOR_PAYMENT', nil)
       end
@@ -79,12 +80,9 @@ module Vpago
         Vpago::Payway::CARD_TYPES.index(card_option).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : card_option
       end
 
-      def phone_country_code
-        '+855'
-      end
-
+      # optional
       def phone
-        @payment.order.billing_address.phone
+        @payment.order.billing_address&.phone
       end
 
       def api_key
@@ -128,8 +126,10 @@ module Vpago
       end
 
       def hash_data
-        result = "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}#{email}#{phone}"
+        result = "#{req_time}#{merchant_id}#{transaction_id}#{amount}#{first_name}#{last_name}"
 
+        result += email if email.present?
+        result += phone if phone.present?
         result += type if type.present?
         result += payment_option if payment_option.present?
         result += return_url if return_url.present?
