@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe Vpago::PaymentProcessor do
+  include ActiveJob::TestHelper
+
   let(:user_informer) { ::Vpago::UserInformers::Firebase.new(payment.order) }
 
   let(:order) { create(:order_with_line_items, state: :payment) }
@@ -156,17 +158,21 @@ RSpec.describe Vpago::PaymentProcessor do
   describe '#handle_order_process_completed' do
     context 'when pre-auth enabled or payment is authorized' do
       before do
-        allow(payment).to receive(:pending?).and_return(true)
+        allow_any_instance_of(Spree::Payment).to receive(:pending?).and_return(true)
       end
 
-      it 'capture the payment & inform user the order is completed!' do
+      it 'capture the payment in job & inform user the order is completed!' do
         expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#handle_order_process_completed for payment_number: #{payment.number} with args: \[]")).once
         expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#handle_order_process_completed for payment_number: #{payment.number} in")).once
 
-        expect(payment).to receive(:capture!)
+        expect(Vpago::PaymentCapturerJob).to receive(:perform_now).with(payment.id).and_call_original
         expect(user_informer).to receive(:order_is_completed).with(processing: false)
-
-        subject.send(:handle_order_process_completed)
+        
+        perform_enqueued_jobs do
+          expect(payment.state).to eq 'checkout'
+          subject.send(:handle_order_process_completed)
+          expect(payment.reload.state).to eq 'completed'
+        end
       end
     end
 

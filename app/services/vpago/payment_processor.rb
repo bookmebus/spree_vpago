@@ -55,7 +55,7 @@ module Vpago
 
     def handle_order_process_completed
       log_process('handle_order_process_completed') do
-        @payment.capture! if @payment.pending?
+        Vpago::PaymentCapturerJob.perform_now(@payment.id) if @payment.pending?
         user_informer.order_is_completed(processing: false)
       end
     end
