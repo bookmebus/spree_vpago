@@ -11,6 +11,8 @@ on:
     branches:
       - 112-ci-cd
       - 245-build-and-publish-gem
+    tags:
+        - "*"
 jobs:
   test_and_publish_gem:
     runs-on: ubuntu-latest

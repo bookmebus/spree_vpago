@@ -78,6 +78,12 @@ module Vpago
     def order_adjustment_total
       adjustments.eligible.sum(:amount)
     end
+
+    # override this method if you want flexibility
+    # for example, host per payment method or tenant
+    def payment_host
+      ENV.fetch('DEFAULT_URL_HOST')
+    end
   end
 end
 
