@@ -21,7 +21,7 @@ module Vpago
     private
 
     def base_url
-      ENV.fetch('DEFAULT_URL_HOST')
+      order.payment_host
     end
 
     def order_jwt_token
