@@ -1,0 +1,89 @@
+<% @checkout = ::Vpago::VattanacMiniApp::Checkout.new(@payment) %>
+<% @payment.user_informer.payment_is_processing(processing: true) %>
+
+<p id="unsupported-message"
+   style="margin-top: 10px;
+          font-weight: bold;
+          color: red;
+          display: none;">
+</p>
+
+<h1 id="status">THIS IS CURRENT STATE</h1>
+<p id="reason_code"></p>
+<p id="processing"></p>
+<p id="reason_message"></p>
+
+<script>
+
+  function detectMobileOS() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'iOS';
+    if (/Android/i.test(ua)) return 'Android';
+    return 'unknown';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const os = detectMobileOS();
+    const payload = {
+      data: "<%= j @checkout.signed_payload %>",
+      paymentId: "<%= @checkout.payment_id %>"
+    };
+
+    if (os === 'iOS' && window.webkit?.messageHandlers?.startPayment) {
+      window.webkit.messageHandlers.startPayment.postMessage(JSON.stringify(payload));
+    } else if (os === 'Android' && window.AndroidInterface?.startPayment) {
+      window.AndroidInterface.startPayment(JSON.stringify(payload));
+    } else {
+      const unsupported = document.getElementById('unsupported-message');
+      unsupported.style.display = 'block';
+      unsupported.innerText = 'Unsupported OS';
+    }
+
+    const firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
+
+    window.listenToProcessingState({
+      firebaseConfigs: firebaseConfigs,
+      documentReferencePath: "<%= @payment.user_informer.document_reference_path %>",
+      onPaymentIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        document.getElementById("status").innerText = "Payment is processing";
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
+      },
+      onOrderIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        document.getElementById("status").innerText = "Order is processing";
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
+      },
+      onOrderIsCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        document.getElementById("status").innerText = "Order is completed";
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
+      },
+      onOrderProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        document.getElementById("status").innerText = "Order process failed";
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
+      },
+      onPaymentIsRefunded: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        document.getElementById("status").innerText = "Payment is refunded";
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage
+      },
+      onPaymentProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        document.getElementById("status").innerText = "Payment process failed";
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
+      },
+      onCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        let successPath = "<%= @payment.success_url %>";
+        window.location.href = successPath;
+      },
+    });
+  });
+</script>

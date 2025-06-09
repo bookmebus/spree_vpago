@@ -1,0 +1,67 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://dev-pay.vattanacbank.com/api/miniapp/refund
+    body:
+      encoding: UTF-8
+      string: '{"data":"7x7Rh3MU/+ocoDDmdiFgEEF8NTKO0uA0aDFIF1bR+wStSu9BoO3RPMalvZT47a+6nYAFVmJ538NyEGvYRAnELxXKwyVO3skdm21hp9ysIah8XeVtAHrGmiQFb3rISIGld7KwOXPs/as2aETEv5F+LEaWbaDT3g==.C4Ujsr7KQ2BQuWEYJvc4L5Kay7MuxkGevikd26Uv01L3faEVBdXi1mJeMHeHu5H8ejFeIxouR9Rnq949Sw4bpotg2nja2KZMNr1r1FlzXHbE5yjYwjCaOFfsMHd6Za2NARvPnT64JL1dB+KI7j1228tokud2o6IoBja3rawfgiJ+hZGs4JInvFW/kgOUlb3PWwWMc6U7fWtcpF/oFkWOmaqcHzrc+LibXeRWBTHM3gLkYEQWZFg11UClip7HllC066zp4p8RUU3GAk18TmZPXpiBqA4hB+QNVAkq0KhcPzTytaZ6FSyEU4h7ieiarUUE9bF4Z+4niWU7L46swzR0Pg=="}'
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Content-Type:
+      - application/json
+      Partner-Code:
+      - PYM_MINI_APP_BOOKMEPLUS
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      server:
+      - nginx
+      date:
+      - Tue, 03 Jun 2025 04:53:09 GMT
+      content-type:
+      - application/json;charset=UTF-8
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      content-encoding:
+      - gzip
+      expires:
+      - '0'
+      cache-control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      x-xss-protection:
+      - 1; mode=block
+      pragma:
+      - no-cache
+      x-frame-options:
+      - DENY
+      referrer-policy:
+      - strict-origin-when-cross-origin
+      content-security-policy:
+      - 'default-src ''self''; script-src ''self'' ''unsafe-inline'' ''unsafe-eval'';
+        style-src ''self'' ''unsafe-inline''; img-src ''self'' data:'
+      x-content-type-options:
+      - nosniff
+      feature-policy:
+      - geolocation 'none'; midi 'none'; sync-xhr 'none'; microphone 'none'; camera
+        'none'; magnetometer 'none'; gyroscope 'none'; speaker 'none'; fullscreen
+        'self'; payment 'none'
+      access-control-allow-origin:
+      - "*"
+      access-control-allow-methods:
+      - GET, POST, OPTIONS, PUT, DELETE, PATCH
+      access-control-allow-headers:
+      - DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization
+      access-control-allow-credentials:
+      - 'true'
+    body:
+      encoding: UTF-8
+      string: '{"status":"SUCCESS","data":"575StBQMr8MgyqCbdOofJFS/eVIiykZes7a+zLaWrjjYgFLB8Zjc9ZB345Qq/FUNiG72276FzETgNcKLsaUKJ2Zpbq5ajq1xPlRQCCyZf5daFHvOQpbDbKnYgF0BMeiI51lKqJ3ZrxGVL9bXlO5Pa4QWYFzfHb5b++Dqum+yAWYMy3bT/h4XVph95+O2ndbClX8E04LOCDrhnkeTVFkJiBooip2yIzo=.hMGrxEKA8HsMVjnGGnYX5ZzJWgLb//wz7ePPFBPXyklMkYHCCEQHwOlZTzjFC8Sr/ppWo/rToAOAR95hYu/oXI4V9DbWYHq1xxifRfnRpowPVKLrGevZOhDZF8ceyBK7bq2dPPWMSAyTlyjIbA9NWSGogbnfytulpv61q4lTKAB0vCaJYKEyKMxe+Aiu3I7Zv5xA/nztqQHT8SrdYK/jK7Zs8gctoJ//si0ilhzb2vvXQ8vKjR/frPr+ceNV5XkjNF7KlXBXvvJa0Bo3b3d954HiUAEdL58vGODDlFkbyIPzQHqq7PUyKL9TekP2nt8bLwul7nACAzIkkXU57dVwPA==","message":"Refund
+        successful"}'
+  recorded_at: Tue, 03 Jun 2025 04:53:09 GMT
+recorded_with: VCR 6.2.0

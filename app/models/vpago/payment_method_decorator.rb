@@ -5,6 +5,7 @@ module Vpago
     TYPE_WINGSDK = 'Spree::Gateway::WingSdk'.freeze
     TYPE_ACLEDA = 'Spree::Gateway::Acleda'.freeze
     TYPE_ACLEDA_MOBILE = 'Spree::Gateway::AcledaMobile'.freeze
+    TYPE_VATTANAC_MINI_APP = 'Spree::Gateway::VattanacMiniApp'.freeze
 
     def self.prepended(base)
       base.preference :icon_name, :string, default: 'cheque'
@@ -16,7 +17,8 @@ module Vpago
           Spree::PaymentMethod::TYPE_PAYWAY,
           Spree::PaymentMethod::TYPE_WINGSDK,
           Spree::PaymentMethod::TYPE_ACLEDA,
-          Spree::PaymentMethod::TYPE_ACLEDA_MOBILE
+          Spree::PaymentMethod::TYPE_ACLEDA_MOBILE,
+          Spree::PaymentMethod::TYPE_VATTANAC_MINI_APP
         ]
       end
     end
@@ -84,6 +86,10 @@ module Vpago
 
     def type_wingsdk?
       type == Spree::PaymentMethod::TYPE_WINGSDK
+    end
+
+    def type_vattanac_mini_app?
+      type == Spree::PaymentMethod::TYPE_VATTANAC_MINI_APP
     end
   end
 end
