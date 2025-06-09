@@ -55,6 +55,11 @@ module Vpago
     def pre_auth_cancelled?
       pre_auth_status == 'CANCELLED'
     end
+
+    def vattanac_mini_app_payment?
+      payment_method.type_vattanac_mini_app?
+    end
+    
   end
 end
 

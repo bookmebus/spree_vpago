@@ -18,6 +18,7 @@ module Vpago
           cheque
           payway_cards
           wingpay
+          vattanac_mini_app
         ]
       end
 
