@@ -21,7 +21,8 @@ module SpreeVpago
         Spree::Gateway::PaywayV2,
         Spree::Gateway::WingSdk,
         Spree::Gateway::Acleda,
-        Spree::Gateway::AcledaMobile
+        Spree::Gateway::AcledaMobile,
+        Spree::Gateway::VattanacMiniApp
       )
     end
 
