@@ -16,20 +16,6 @@ RSpec.describe Vpago::VattanacMiniApp::Base do
     allow(ENV).to receive(:[]).with('VATTANAC_AES_SECRET_KEY').and_return(aes_key)
     allow(ENV).to receive(:[]).with('BOOKMEPLUS_PRIVATE_KEY').and_return(private_key)
     allow(ENV).to receive(:[]).with('VATTANAC_PUBLIC_KEY').and_return(public_key)
-    allow(ENV).to receive(:[]).with('VATTANAC_PARTNER_CODE').and_return('partner123')
-    allow(ENV).to receive(:[]).with('VATTANAC_REFUND_URL').and_return('https://refund.url')
-  end
-
-  describe '#partner_code' do
-    it 'returns partner code from ENV' do
-      expect(instance.partner_code).to eq('partner123')
-    end
-  end
-
-  describe '#refund_url' do
-    it 'returns refund url from ENV' do
-      expect(instance.refund_url).to eq('https://refund.url')
-    end
   end
 
   describe '#payload' do

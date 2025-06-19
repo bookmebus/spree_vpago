@@ -8,13 +8,7 @@
           display: none;">
 </p>
 
-<h1 id="status">THIS IS CURRENT STATE</h1>
-<p id="reason_code"></p>
-<p id="processing"></p>
-<p id="reason_message"></p>
-
 <script>
-
   function detectMobileOS() {
     const ua = navigator.userAgent || navigator.vendor || window.opera;
     if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'iOS';
@@ -44,43 +38,53 @@
     window.listenToProcessingState({
       firebaseConfigs: firebaseConfigs,
       documentReferencePath: "<%= @payment.user_informer.document_reference_path %>",
+
       onPaymentIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
-        document.getElementById("status").innerText = "Payment is processing";
-        document.getElementById("reason_code").innerText = reasonCode;
-        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
-        document.getElementById("reason_message").innerText = reasonMessage;
+        console.log("Status: Payment is processing");
+        console.log("Reason Code:", reasonCode);
+        console.log("Processing:", processing ? "Processing..." : "No more process.");
+        console.log("Reason Message:", reasonMessage);
       },
+
       onOrderIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
-        document.getElementById("status").innerText = "Order is processing";
-        document.getElementById("reason_code").innerText = reasonCode;
-        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
-        document.getElementById("reason_message").innerText = reasonMessage;
+        console.log("Status: Order is processing");
+        console.log("Reason Code:", reasonCode);
+        console.log("Processing:", processing ? "Processing..." : "No more process.");
+        console.log("Reason Message:", reasonMessage);
       },
+
       onOrderIsCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
-        document.getElementById("status").innerText = "Order is completed";
-        document.getElementById("reason_code").innerText = reasonCode;
-        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
-        document.getElementById("reason_message").innerText = reasonMessage;
+        console.log("Status: Order is completed");
+        console.log("Reason Code:", reasonCode);
+        console.log("Processing:", processing ? "Processing..." : "No more process.");
+        console.log("Reason Message:", reasonMessage);
       },
+
       onOrderProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
-        document.getElementById("status").innerText = "Order process failed";
-        document.getElementById("reason_code").innerText = reasonCode;
-        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
-        document.getElementById("reason_message").innerText = reasonMessage;
+        console.log("Status: Order process failed");
+        console.log("Reason Code:", reasonCode);
+        console.log("Processing:", processing ? "Processing..." : "No more process.");
+        console.log("Reason Message:", reasonMessage);
       },
+
       onPaymentIsRefunded: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
-        document.getElementById("status").innerText = "Payment is refunded";
-        document.getElementById("reason_code").innerText = reasonCode;
-        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
-        document.getElementById("reason_message").innerText = reasonMessage
+        console.log("Status: Payment is refunded");
+        console.log("Reason Code:", reasonCode);
+        console.log("Processing:", processing ? "Processing..." : "No more process.");
+        console.log("Reason Message:", reasonMessage);
       },
+
       onPaymentProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
-        document.getElementById("status").innerText = "Payment process failed";
-        document.getElementById("reason_code").innerText = reasonCode;
-        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
-        document.getElementById("reason_message").innerText = reasonMessage;
+        console.log("Status: Payment process failed");
+        console.log("Reason Code:", reasonCode);
+        console.log("Processing:", processing ? "Processing..." : "No more process.");
+        console.log("Reason Message:", reasonMessage);
       },
+
       onCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        console.log("Status: Completed — redirecting to success URL");
+        console.log("Reason Code:", reasonCode);
+        console.log("Reason Message:", reasonMessage);
         let successPath = "<%= @payment.success_url %>";
         window.location.href = successPath;
       },

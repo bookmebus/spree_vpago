@@ -1,7 +1,6 @@
 module Vpago
   module VattanacMiniApp
     class Base
-      
       def initialize(payment, options = {})
         @options = options
         @payment = payment
@@ -41,11 +40,11 @@ module Vpago
       end
 
       def partner_code
-        ENV['VATTANAC_PARTNER_CODE'].presence
+        @payment.payment_method.preferred_partner_code
       end
 
       def refund_url
-        ENV['VATTANAC_REFUND_URL'].presence
+        @payment.payment_method.preferred_refund_url
       end
     end
   end
