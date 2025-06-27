@@ -165,7 +165,7 @@ RSpec.describe Vpago::PaymentProcessor do
         expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#handle_order_process_completed for payment_number: #{payment.number} with args: \[]")).once
         expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#handle_order_process_completed for payment_number: #{payment.number} in")).once
 
-        expect(Vpago::PaymentCapturerJob).to receive(:perform_now).with(payment.id).and_call_original
+        expect(Vpago::PaymentCapturerJob).to receive(:perform_later).with(payment.id).and_call_original
         expect(user_informer).to receive(:order_is_completed).with(processing: false)
         
         perform_enqueued_jobs do
