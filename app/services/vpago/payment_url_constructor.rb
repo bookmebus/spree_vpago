@@ -14,6 +14,8 @@ module Vpago
     def success_url = "#{base_url}/vpago_payments/success?#{query}"
     def process_payment_url = "#{base_url}/vpago_payments/process_payment?#{query}"
 
+    def processing_app_url = "#{@payment.payment_method.preferred_merchant_scheme}/vpago_payments/processing?#{query}"
+
     def query
       { payment_number: payment.number, order_number: order.number, order_jwt_token: order_jwt_token }.to_query
     end

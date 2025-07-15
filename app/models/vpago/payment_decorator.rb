@@ -8,6 +8,7 @@ module Vpago
                     :processing_url,
                     :success_url,
                     :process_payment_url,
+                    :processing_app_url,
                     to: :url_constructor
     end
 
