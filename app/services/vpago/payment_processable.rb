@@ -16,7 +16,7 @@ module Vpago
     # 2. Pre-auth is enabled, ensuring funds can be released to user if processing fails.
     #    PaymentProcessor is usually called after payment is made, so canceling pre-auth typically works.
     def can_cancel_pre_auth?
-      @payment.pending? || @payment.payment_method.enable_pre_auth? || @payment.vattanac_mini_app_payment?
+      @payment.pending? || @payment.payment_method.enable_pre_auth? || @payment.vattanac_mini_app_payment? || @payment.true_money_payment?
     end
 
     def extract_completer_failure_reason_code(error)

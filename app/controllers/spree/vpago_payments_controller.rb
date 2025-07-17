@@ -5,7 +5,7 @@ module Spree
 
     skip_before_action :verify_authenticity_token, only: [:process_payment]
 
-    rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+    rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
     rescue_from CanCan::AccessDenied, with: :access_denied
 
     # GET
@@ -33,6 +33,12 @@ module Spree
 
       @order = @payment.order
       raise CanCan::AccessDenied unless @order.completed?
+
+      if params[:offsite_payment].present?
+        redirect_to @payment.payment_url, allow_other_host: true
+      else
+        render :success
+      end
     end
 
     # POST

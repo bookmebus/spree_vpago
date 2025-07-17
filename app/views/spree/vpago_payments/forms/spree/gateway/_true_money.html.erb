@@ -1,0 +1,9 @@
+<% @checkout = ::Vpago::TrueMoney::Checkout.new(@payment) %>
+<% redirect_url = @checkout.generate_payment_urls(params[:platform])%>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      window.top.location.href = "<%= j redirect_url %>";
+    });
+  </script>
+
