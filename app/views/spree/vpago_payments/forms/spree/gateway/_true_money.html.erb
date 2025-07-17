@@ -1,10 +1,10 @@
 <% @checkout = ::Vpago::TrueMoney::Checkout.new(@payment) %>
-<% webview_url = @checkout.generate_payment_urls[:deeplink] rescue nil %>
+<% webview_url = @checkout.generate_payment_urls[:webview] rescue nil %>
 
 <% if webview_url.present? %>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      window.location.href = "<%= j webview_url %>";
+      window.top.location.href = "<%= j webview_url %>";
     });
   </script>
 <% else %>

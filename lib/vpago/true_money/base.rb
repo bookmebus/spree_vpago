@@ -69,6 +69,10 @@ module Vpago
         }
       end
 
+      def redirection_type
+        payment_method.preferred_redirection_type
+      end
+
       def check_transaction_url
         "#{payment_method.preferred_check_transaction_url}/#{external_ref_id}"
       end
@@ -125,6 +129,10 @@ module Vpago
 
       def signature_input
         "#{timestamp}#{payload.to_json}"
+      end
+
+      def processing_url
+        "#{@payment.processing_url}&offsite_payment=true"
       end
     end
   end

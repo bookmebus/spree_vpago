@@ -33,6 +33,12 @@ module Spree
 
       @order = @payment.order
       raise CanCan::AccessDenied unless @order.completed?
+
+      if params[:offsite_payment].present?
+        redirect_to @payment.payment_url, allow_other_host: true
+      else
+        render :success
+      end
     end
 
     # POST

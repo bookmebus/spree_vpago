@@ -17,7 +17,19 @@ module Vpago
     def processing_app_url = "#{@payment.payment_method.preferred_merchant_scheme}/vpago_payments/processing?#{query}"
 
     def query
-      { payment_number: payment.number, order_number: order.number, order_jwt_token: order_jwt_token }.to_query
+      params = {
+        payment_number: payment.number,
+        order_number: order.number,
+        order_jwt_token: order_jwt_token
+      }
+
+      params[:offsite_payment] = true if payment.payment_method.type_true_money?
+
+      params.to_query
+    end
+
+    def payment_url
+      "#{base_url}/book/payment?number=#{@payment.order.number}&tk=#{@payment.order.token}"
     end
 
     private

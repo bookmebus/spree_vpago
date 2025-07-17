@@ -9,6 +9,7 @@ module Vpago
                     :success_url,
                     :process_payment_url,
                     :processing_app_url,
+                    :payment_url,
                     to: :url_constructor
     end
 
@@ -60,7 +61,6 @@ module Vpago
     def vattanac_mini_app_payment?
       payment_method.type_vattanac_mini_app?
     end
-    
   end
 end
 

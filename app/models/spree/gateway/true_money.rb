@@ -10,6 +10,7 @@ module Spree
     preference :private_key, :text
     preference :merchant_scheme, :string
     preference :merchant_android_package_name, :string
+    preference :redirection_type, :string
 
     def method_type
       'true_money'
