@@ -5,7 +5,7 @@ module Spree
 
     skip_before_action :verify_authenticity_token, only: [:process_payment]
 
-    rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+    rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
     rescue_from CanCan::AccessDenied, with: :access_denied
 
     # GET

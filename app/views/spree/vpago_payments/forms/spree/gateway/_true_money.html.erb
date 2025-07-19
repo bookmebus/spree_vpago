@@ -1,0 +1,32 @@
+<% @checkout = ::Vpago::TrueMoney::Checkout.new(@payment) %>
+<% redirect_url = @checkout.generate_payment_urls(params[:platform]) %>
+<% @payment.user_informer.payment_is_processing(processing: true) %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const setupConfirmPaymentButton = () => {
+      const confirmButton = document.getElementById("confirm-payment-button");
+      if (!confirmButton) return;
+
+      confirmButton.addEventListener("click", () => {
+        window.open("<%= j redirect_url %>", "_blank");
+      });
+    };
+
+
+    setupConfirmPaymentButton();
+    setupPaymentProcessingListener();
+    
+  });
+</script>
+
+
+
+
+
+
+
+
+
+

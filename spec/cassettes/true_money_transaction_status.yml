@@ -1,0 +1,131 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://local-channel-gateway-staging.dev.truemoney.com.kh/mms-api-gateway/merchants/token
+    body:
+      encoding: US-ASCII
+      string: grant_type=client_credentials&client_id=merchant-book-me-plus-client-id&client_secret=cjgl8yfcAzKnpapd06nvio0mJc16vyBU
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Content-Type:
+      - application/x-www-form-urlencoded
+  response:
+    status:
+      code: 200
+      message: ''
+    headers:
+      date:
+      - Wed, 16 Jul 2025 14:58:17 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      cache-control:
+      - no-cache, no-store, must-revalidate, max-age=0
+      pragma:
+      - no-cache
+      set-cookie:
+      - KC_AUTH_STATE=; Version=1; Expires=Thu, 01-Jan-1970 00:00:10 GMT; Max-Age=0;
+        Path=/auth/realms/mms/, __cf_bm=L5wJkoJUe.yZRrRtiWM26bmJfzvIfn2AFYfR2GF76zo-1752677897-1.0.1.1-jkHfIpzflJH5gJmcTtAN9y1XC8txB6d0GgXQRJLmgT_yyKkfYfue732VA.dMEW6xEA435xkeRzHUxmOsUEV3.m8enA4jk_ljEe5_V7AQoQg;
+        path=/; expires=Wed, 16-Jul-25 15:28:17 GMT; domain=.dev.truemoney.com.kh;
+        HttpOnly; Secure; SameSite=None, _cfuvid=vWUS3jUPCBTEsoP.4YsNBqBFnidmLMLSSqS7YQ_riAw-1752677897863-0.0.1.1-604800000;
+        path=/; domain=.dev.truemoney.com.kh; HttpOnly; Secure; SameSite=None
+      cf-cache-status:
+      - DYNAMIC
+      content-security-policy:
+      - script-src 'self'
+      referrer-policy:
+      - strict-origin
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-content-type-options:
+      - nosniff
+      x-frame-options:
+      - SAMEORIGIN
+      x-xss-protection:
+      - 1; mode=block
+      server:
+      - cloudflare
+      cf-ray:
+      - 96025b5cb9434fdd-PNH
+      content-encoding:
+      - gzip
+      alt-svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"access_token":"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJYNmh3U0VHNU1fWGZvN19LNmJsNDQ2QU50TDlpNjdYZnNTWDBYMjFEbS1NIn0.eyJleHAiOjE3NTI2NzgxOTcsImlhdCI6MTc1MjY3Nzg5NywianRpIjoiYzViNjEwYmItMWFiZS00NGEzLTk2YmItMzM5ZWRhNjkzN2YxIiwiaXNzIjoiaHR0cHM6Ly9tbXMta2V5Y2xvYWstc3RhZ2luZy5wcml2YXRlLWIta2gxbi5hc2NlbmRtb25leS5pby9hdXRoL3JlYWxtcy9tbXMiLCJzdWIiOiJiOWFjNTA2OC1hZmQyLTQzODYtYWQyMi0wYzA2Mzg1NWZhYjQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJtZXJjaGFudC1ib29rLW1lLXBsdXMtY2xpZW50LWlkIiwic2Vzc2lvbl9zdGF0ZSI6ImI3Mjk4ZWNkLWYzZWMtNDQ1MS05MDlhLTgxODJhNzI0YTEwYyIsImFjciI6IjEiLCJzY29wZSI6ImNyZWF0ZSBvcGVuaWQgcHJvZmlsZSIsInNpZCI6ImI3Mjk4ZWNkLWYzZWMtNDQ1MS05MDlhLTgxODJhNzI0YTEwYyIsImNsaWVudEhvc3QiOiIxMC4xNC4zMC4xIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LW1lcmNoYW50LWJvb2stbWUtcGx1cy1jbGllbnQtaWQiLCJjbGllbnRBZGRyZXNzIjoiMTAuMTQuMzAuMSIsImNsaWVudF9pZCI6Im1lcmNoYW50LWJvb2stbWUtcGx1cy1jbGllbnQtaWQifQ.iM7_eY2Wpi7dWe2A6bPcTlTcpqO7wN62g0H4MZkiNMMEV324gi7OfUq4gZRe_SrNLDB_wcOjxFOQmvOld1TWOfs3wrBZMElYjRidzhXEi_QKbdTa3Eo_EhpKozjqSvJ8lIMLXfzXjL3kV4fvzNpHNcbzrHTPTE-gg1dn60S3I7oR5gnHA9glaoPlK-JXxKeIXFXKlvcaFcFXjMWdzt_m3gBtPnZbmxXVQn53evkVjgRrKxS-ktdRoB5ApYKRGmLD3NupMfHdY8csk5g5O8tfsmbW31PeYPxFjXYW4mNeRTvLa3pztozMN5GgsuKRHdKuKlGpn8sVlNaYp0s6ffR-7w","expires_in":300,"refresh_expires_in":0,"refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI0NmU4NTFiZS03MjA0LTRhYzMtYTE2Ny01NDY3ZTJiMzc4N2IifQ.eyJpYXQiOjE3NTI2Nzc4OTcsImp0aSI6IjU2NzFlYTU2LWNhNGQtNGVjOC1hYmJhLWVlNmQ0OGViNjk1OSIsImlzcyI6Imh0dHBzOi8vbW1zLWtleWNsb2FrLXN0YWdpbmcucHJpdmF0ZS1iLWtoMW4uYXNjZW5kbW9uZXkuaW8vYXV0aC9yZWFsbXMvbW1zIiwiYXVkIjoiaHR0cHM6Ly9tbXMta2V5Y2xvYWstc3RhZ2luZy5wcml2YXRlLWIta2gxbi5hc2NlbmRtb25leS5pby9hdXRoL3JlYWxtcy9tbXMiLCJzdWIiOiJiOWFjNTA2OC1hZmQyLTQzODYtYWQyMi0wYzA2Mzg1NWZhYjQiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoibWVyY2hhbnQtYm9vay1tZS1wbHVzLWNsaWVudC1pZCIsInNlc3Npb25fc3RhdGUiOiJiNzI5OGVjZC1mM2VjLTQ0NTEtOTA5YS04MTgyYTcyNGExMGMiLCJzY29wZSI6ImNyZWF0ZSBvcGVuaWQgcHJvZmlsZSIsInNpZCI6ImI3Mjk4ZWNkLWYzZWMtNDQ1MS05MDlhLTgxODJhNzI0YTEwYyJ9.7hIk-UnuoeSv9Wrn9OVlbF4WMB8KVX3_GGQHDH4e44Y","token_type":"Bearer","not-before-policy":0,"session_state":"b7298ecd-f3ec-4451-909a-8182a724a10c","scope":"create
+        openid profile"}'
+  recorded_at: Wed, 16 Jul 2025 14:58:17 GMT
+- request:
+    method: get
+    uri: https://local-channel-gateway-staging.dev.truemoney.com.kh/retail-payment/public/api/merchant/transactions/ext-ref/PTTV6Z2O
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Client-Id:
+      - merchant-book-me-plus-client-id
+      Authorization:
+      - Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJYNmh3U0VHNU1fWGZvN19LNmJsNDQ2QU50TDlpNjdYZnNTWDBYMjFEbS1NIn0.eyJleHAiOjE3NTI2NzgxOTcsImlhdCI6MTc1MjY3Nzg5NywianRpIjoiYzViNjEwYmItMWFiZS00NGEzLTk2YmItMzM5ZWRhNjkzN2YxIiwiaXNzIjoiaHR0cHM6Ly9tbXMta2V5Y2xvYWstc3RhZ2luZy5wcml2YXRlLWIta2gxbi5hc2NlbmRtb25leS5pby9hdXRoL3JlYWxtcy9tbXMiLCJzdWIiOiJiOWFjNTA2OC1hZmQyLTQzODYtYWQyMi0wYzA2Mzg1NWZhYjQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJtZXJjaGFudC1ib29rLW1lLXBsdXMtY2xpZW50LWlkIiwic2Vzc2lvbl9zdGF0ZSI6ImI3Mjk4ZWNkLWYzZWMtNDQ1MS05MDlhLTgxODJhNzI0YTEwYyIsImFjciI6IjEiLCJzY29wZSI6ImNyZWF0ZSBvcGVuaWQgcHJvZmlsZSIsInNpZCI6ImI3Mjk4ZWNkLWYzZWMtNDQ1MS05MDlhLTgxODJhNzI0YTEwYyIsImNsaWVudEhvc3QiOiIxMC4xNC4zMC4xIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LW1lcmNoYW50LWJvb2stbWUtcGx1cy1jbGllbnQtaWQiLCJjbGllbnRBZGRyZXNzIjoiMTAuMTQuMzAuMSIsImNsaWVudF9pZCI6Im1lcmNoYW50LWJvb2stbWUtcGx1cy1jbGllbnQtaWQifQ.iM7_eY2Wpi7dWe2A6bPcTlTcpqO7wN62g0H4MZkiNMMEV324gi7OfUq4gZRe_SrNLDB_wcOjxFOQmvOld1TWOfs3wrBZMElYjRidzhXEi_QKbdTa3Eo_EhpKozjqSvJ8lIMLXfzXjL3kV4fvzNpHNcbzrHTPTE-gg1dn60S3I7oR5gnHA9glaoPlK-JXxKeIXFXKlvcaFcFXjMWdzt_m3gBtPnZbmxXVQn53evkVjgRrKxS-ktdRoB5ApYKRGmLD3NupMfHdY8csk5g5O8tfsmbW31PeYPxFjXYW4mNeRTvLa3pztozMN5GgsuKRHdKuKlGpn8sVlNaYp0s6ffR-7w
+      Signature:
+      - algorithm=rsa-sha256;keyVersion=1;signature=GBZryOMCYBjwyjrLVVjg6//U2huDAUJw5RDcnPRFZ0om2AzpDLA9zskbL66vkcsM0DgpK1nmDOnymHwrayG6jskEPLjtZ4I2j4fzCbPidpRQdY//4ohIuq+f1oug+XfUN3biPDG/mbylU8xXF2GHiVUb4LO1xSVrWt9OqimHWg4=
+      Timestamp:
+      - '1752677897'
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: ''
+    headers:
+      date:
+      - Wed, 16 Jul 2025 14:58:18 GMT
+      content-type:
+      - application/json;charset=UTF-8
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      vary:
+      - Access-Control-Request-Headers
+      cf-cache-status:
+      - DYNAMIC
+      set-cookie:
+      - __cf_bm=1mh0eU0waLMRnMYFZG87J21p_00Zr7lgxubuBGIsH18-1752677898-1.0.1.1-i9a99L4HsYNtGZJFGOmVVVqYqpxt15L_i9BOUuwmRpSkL_qsK2g4u42CEUmvhwEDinHqwN4P8gm_AgsZ0nCtZFcgc.IZEHRgo3KU6HTjl0E;
+        path=/; expires=Wed, 16-Jul-25 15:28:18 GMT; domain=.dev.truemoney.com.kh;
+        HttpOnly; Secure; SameSite=None, _cfuvid=C5w7VHXJH0pq53QoonQOw65DD2U5WEMDHUq4AUXpAas-1752677898169-0.0.1.1-604800000;
+        path=/; domain=.dev.truemoney.com.kh; HttpOnly; Secure; SameSite=None
+      cache-control:
+      - no-cache, no-store, must-revalidate, max-age=0
+      content-security-policy:
+      - script-src 'self'
+      referrer-policy:
+      - strict-origin
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-content-type-options:
+      - nosniff
+      x-frame-options:
+      - SAMEORIGIN
+      x-xss-protection:
+      - 1; mode=block
+      server:
+      - cloudflare
+      cf-ray:
+      - 96025b5dde384997-PNH
+      content-encoding:
+      - gzip
+      alt-svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: UTF-8
+      string: '{"status":{"code":"000001","message":"success","messageKh":"success"},"traceId":"2fe22c317213b2de","data":{"psp_currency":"USD","psp_amount":0.10,"payment_command":"payment","reserved_field1":null,"reserved_field2":null,"psp_system":"TMN_WALLET","reserved_field10":null,"reserved_field7":null,"reserved_field8":null,"reserved_field9":null,"partner_fee":0.00050,"service_type":"01","reserved_field3":null,"psp_transaction_id":"25071610131220207017845","total_refunded_amount":0.00,"reserved_field4":null,"reserved_field5":null,"reserved_field6":null,"partner_commission":0.00000,"id":"01250716101303370R7654468","psp_short_transaction_id":"55CRQFS1","external_ref_id":"PTTV6Z2O","status":2}}'
+  recorded_at: Wed, 16 Jul 2025 14:58:18 GMT
+recorded_with: VCR 6.2.0
