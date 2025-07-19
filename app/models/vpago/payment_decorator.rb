@@ -5,7 +5,9 @@ module Vpago
       base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :should_generate_payouts?
 
       base.delegate :checkout_url,
+                    :web_checkout_url,
                     :processing_url,
+                    :processing_deeplink_url,
                     :success_url,
                     :process_payment_url,
                     to: :url_constructor
@@ -56,10 +58,13 @@ module Vpago
       pre_auth_status == 'CANCELLED'
     end
 
+    def true_money_payment?
+      payment_method.type_true_money?
+    end
+
     def vattanac_mini_app_payment?
       payment_method.type_vattanac_mini_app?
     end
-    
   end
 end
 
