@@ -23,5 +23,11 @@ module Vpago
       signature_bytes = Base64.decode64(signature)
       public_key_object.verify(OpenSSL::Digest.new('SHA256'), signature_bytes, data)
     end
+
+    def generate_signature(payload)
+      sign_hash = OpenSSL::Digest.new('SHA256')
+      private_key = OpenSSL::PKey::RSA.new(@private_key)
+      Base64.strict_encode64(private_key.sign(sign_hash, payload))
+    end
   end
 end

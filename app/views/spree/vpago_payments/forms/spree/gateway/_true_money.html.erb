@@ -1,0 +1,69 @@
+<% @checkout = ::Vpago::TrueMoney::Checkout.new(@payment) %>
+<% redirect_url = @checkout.generate_payment_urls(params[:platform]) %>
+<% @payment.user_informer.payment_is_processing(processing: true) %>
+
+<p id="status-message" class="font-bold text-center my-4 text-primary">xcxcx</p>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
+
+    window.listenToProcessingState({
+      firebaseConfigs: firebaseConfigs,
+      documentReferencePath: "<%= @payment.user_informer.document_reference_path %>",
+
+      onPaymentIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        updateStatusMessage("Payment is processing...");
+      },
+
+      onOrderIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        updateStatusMessage("Order is processing...");
+      },
+
+      onOrderIsCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        updateStatusMessage("Order is completed!");
+      },
+
+      onOrderProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        updateStatusMessage("Order process failed: " + reasonMessage);
+      },
+
+      onPaymentIsRefunded: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        updateStatusMessage("Payment has been refunded.");
+      },
+
+      onPaymentProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        updateStatusMessage("Payment process failed: " + reasonMessage);
+      },
+
+      onCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        updateStatusMessage("Completed — redirecting...");
+        let successPath = "<%= @payment.success_url %>";
+        window.location.href = successPath;
+      },
+    });
+
+    const statusMessageElement = document.getElementById("status-message");
+
+    function updateStatusMessage(message) {
+      if (statusMessageElement) {
+        statusMessageElement.textContent = message;
+      }
+    }
+
+    const setupConfirmPaymentButton = () => {
+      const confirmButton = document.getElementById("confirm-payment-button");
+      if (!confirmButton) return;
+
+      confirmButton.addEventListener("click", () => {
+        window.open("<%= j redirect_url %>", "_blank");
+        updateStatusMessage("Redirected to payment gateway...");
+      });
+    };
+
+    setupConfirmPaymentButton();
+
+
+  });
+</script>
