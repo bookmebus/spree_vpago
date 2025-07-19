@@ -9,13 +9,24 @@ module Vpago
       @order = payment.order
     end
 
-    def checkout_url = "#{base_url}/vpago_payments/checkout?#{query}"
+    def checkout_url = "#{base_url}/vpago_payments/checkout?#{query}&platform=app"
+    def web_checkout_url = "#{base_url}/vpago_payments/checkout?#{query}&platform=web"
     def processing_url = "#{base_url}/vpago_payments/processing?#{query}"
+    def processing_deeplink_url = "#{@payment.payment_method.preferred_return_url_scheme}/vpago_payments/processing?#{query}"
     def success_url = "#{base_url}/vpago_payments/success?#{query}"
     def process_payment_url = "#{base_url}/vpago_payments/process_payment?#{query}"
 
     def query
-      { payment_number: payment.number, order_number: order.number, order_jwt_token: order_jwt_token }.to_query
+      {
+        payment_number: payment.number,
+        order_number: order.number,
+        order_jwt_token: order_jwt_token,
+        offsite_payment: offsite_payment? ? true : nil
+      }.compact.to_query
+    end
+
+    def offsite_payment?
+      payment.payment_method.type_true_money?
     end
 
     private
