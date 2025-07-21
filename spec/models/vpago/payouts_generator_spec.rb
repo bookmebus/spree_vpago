@@ -115,7 +115,7 @@ RSpec.describe Vpago::PayoutsGenerator do
 
       let!(:payment) { create(:payway_v2_payment, order: order, amount: 3.13) }
 
-      it 'round up each payouts & keep remain for platform' do
+      it 'round up all payouts and re-caculate total to payment for user to pay' do
         payouts = subject.call
 
         expect(payouts.size).to eq 4
@@ -135,11 +135,11 @@ RSpec.describe Vpago::PayoutsGenerator do
         expect(payouts[2].payoutable).to eq shipment
         expect(payouts[2].payout_profile).to eq payout_profile3
 
-        expect(payouts[3].amount).to eq 1.24
+        expect(payouts[3].amount).to eq 1.26
         expect(payouts[3].payoutable).to eq nil
         expect(payouts[3].payout_profile).to eq default_payout_profile
 
-        expect(payment.amount).to eq 3.13
+        expect(payment.amount).to eq 3.15
       end
     end
   end
