@@ -102,46 +102,6 @@ RSpec.describe Vpago::PayoutsGenerator do
         expect(payouts[3].payout_profile).to eq default_payout_profile
       end
     end
-
-    context 'when final amount is 3 digit number' do
-      let(:vendor0) { create(:vendor, commission_rate: 50) }
-      let(:product0) { create(:product_in_stock, payout_profiles: [payout_profile1], vendor: vendor0) }
-      let(:product1) { create(:product_in_stock, payout_profiles: [payout_profile2], vendor: vendor0) }
-      let(:line_item0) { create(:line_item, price: 1.25, product: product0) }
-      let(:line_item1) { create(:line_item, price: 1.25, product: product1) }
-
-      # shipment cost will auto set to 0.63 even if we put 0.625 because how its data is stored in db -> precision: 10, scale: 2
-      let(:order) { create(:order_with_line_items, shipment_cost: 0.63, line_items: [line_item0, line_item1], without_line_items: true) }
-
-      let!(:payment) { create(:payway_v2_payment, order: order, amount: 3.13) }
-
-      it 'round up each payouts & keep remain for platform' do
-        payouts = subject.call
-
-        expect(payouts.size).to eq 4
-
-        expect(line_item0.pre_commission_amount).to eq 0.625
-        expect(payouts[0].amount).to eq 0.63
-        expect(payouts[0].payoutable).to eq line_item0
-        expect(payouts[0].payout_profile).to eq payout_profile1
-
-        expect(line_item1.pre_commission_amount).to eq 0.625
-        expect(payouts[1].amount).to eq 0.63
-        expect(payouts[1].payoutable).to eq line_item1
-        expect(payouts[1].payout_profile).to eq payout_profile2
-
-        expect(shipment.cost_with_vendor_adjustment_total).to eq 0.63
-        expect(payouts[2].amount).to eq 0.63
-        expect(payouts[2].payoutable).to eq shipment
-        expect(payouts[2].payout_profile).to eq payout_profile3
-
-        expect(payouts[3].amount).to eq 1.24
-        expect(payouts[3].payoutable).to eq nil
-        expect(payouts[3].payout_profile).to eq default_payout_profile
-
-        expect(payment.amount).to eq 3.13
-      end
-    end
   end
 
   describe '#validated?' do

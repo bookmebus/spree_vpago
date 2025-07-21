@@ -30,15 +30,7 @@ module Vpago
       return [] if payouts.all?(&:default?)
       return [] unless payouts.all? { |payout| validated?(payout) }
 
-      ActiveRecord::Base.transaction do
-        payouts.each(&:save!)
-
-        # If any payouts were rounded, the total may increase slightly.
-        # Update the payment amount to match the sum of payouts to avoid mismatch errors.
-        payment.update(amount: payouts.map(&:amount).sum)
-
-        payouts
-      end
+      ActiveRecord::Base.transaction { payouts.each(&:save!) }
     end
 
     def validated?(payout)
@@ -55,7 +47,7 @@ module Vpago
         total_confirmed_payouts = line_item.confirmed_payouts_for_vendor.sum(:amount)
         next if total_confirmed_payouts >= line_item.pre_commission_amount
 
-        amount_owed_to_vendor = round_up(line_item.pre_commission_amount - total_confirmed_payouts)
+        amount_owed_to_vendor = line_item.pre_commission_amount - total_confirmed_payouts
         payout_amount = [amount_owed_to_vendor, remaining_amount].min
         outstanding_amount = [amount_owed_to_vendor - payout_amount, 0].max
 
@@ -88,7 +80,7 @@ module Vpago
         total_confirmed_payouts = shipment.confirmed_payouts_for_vendor.sum(:amount)
         next if total_confirmed_payouts >= shipment.cost_with_vendor_adjustment_total
 
-        amount_owed_to_shipping_vendor = round_up(shipment.cost_with_vendor_adjustment_total - total_confirmed_payouts)
+        amount_owed_to_shipping_vendor = shipment.cost_with_vendor_adjustment_total - total_confirmed_payouts
         payout_amount = [amount_owed_to_shipping_vendor, remaining_amount].min
         outstanding_amount = [amount_owed_to_shipping_vendor - payout_amount, 0].max
 
@@ -125,33 +117,9 @@ module Vpago
           state: :created,
           payment: payment,
           payout_profile: Spree::PayoutProfiles::PaywayV2.default,
-          amount: round_up(self.remaining_amount)
+          amount: self.remaining_amount
         )
       ]
-    end
-
-    # ABA does not support amounts with more than 2 decimal places.
-    # Therefore, we must round all 3-decimal payouts to 2 decimals beforehand.
-    #
-    # Our rounding strategy:
-    # - We round up for vendors & shipment payouts (to favor external parties).
-    # - The remaining amount is adjusted in the platform's share (may be slightly less).
-    #
-    # Example:
-    # Total amount: $5.00
-    #
-    # Vendor payouts:
-    # - Vendor 1: $0.625 → $0.63
-    # - Vendor 2: $0.625 → $0.63
-    #
-    # Shipment payouts:
-    # - Shipment 1: $0.625 → $0.63
-    # - Shipment 2: $0.625 → $0.63
-    #
-    # Platform payout:
-    # - $2.50 → $2.48 (adjusted to ensure total remains $5.00)
-    def round_up(amount)
-      (amount * 100).ceil / 100.0
     end
   end
 end
