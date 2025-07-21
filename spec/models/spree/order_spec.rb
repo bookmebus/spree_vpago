@@ -191,31 +191,36 @@ RSpec.describe Spree::Order, type: :model do
   end
 
   describe "#available_payment_methods" do
-    let(:payment_method1) { create(:payway_v2_gateway) }
-    let(:payment_method2) { create(:acleda_payment_method) }
+    let(:payment_method1) { create(:payway_v2_gateway, preferred_payment_option: 'cards') }
+    let(:payment_method2) { create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr') }
+    let(:payment_method3) { create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr_deeplink') }
+    let(:payment_method4) { create(:acleda_payment_method) }
 
     let(:order) { create(:order) }
 
     context "when required_payway_payout is true" do
       before do
         allow(order).to receive(:required_payway_payout?).and_return(true)
-        allow(order).to receive(:collect_payment_methods).with(nil).and_return([payment_method1, payment_method2])
+        allow(order).to receive(:collect_payment_methods).with(nil).and_return([payment_method1, payment_method2, payment_method3, payment_method4])
       end
 
-      it "returns payment methods of type payway_v2" do
-        expect(payment_method1.type_payway_v2?).to be true
-        expect(order.available_payment_methods).to eq([payment_method1])
+      it "returns only return payway v2 payment methods that support payout" do
+        expect(payment_method1.support_payout?).to be false
+        expect(payment_method2.support_payout?).to be true
+        expect(payment_method3.support_payout?).to be true
+        expect(payment_method4.support_payout?).to be false
+        expect(order.available_payment_methods).to eq([payment_method2, payment_method3])
       end
     end
 
     context "when required_payway_payout is false" do
       before do
         allow(order).to receive(:required_payway_payout?).and_return(false)
-        allow(order).to receive(:collect_payment_methods).with(nil).and_return([payment_method1, payment_method2])
+        allow(order).to receive(:collect_payment_methods).with(nil).and_return([payment_method1, payment_method2, payment_method3, payment_method4])
       end
       
       it "returns all payment methods" do
-        expect(order.available_payment_methods).to eq([payment_method1, payment_method2])
+        expect(order.available_payment_methods).to eq([payment_method1, payment_method2, payment_method3, payment_method4])
       end
     end
   end

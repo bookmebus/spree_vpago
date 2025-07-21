@@ -12,7 +12,9 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
   end
 
   describe '#support_payout?' do
-    it { expect(create(:payway_v2_gateway).support_payout?).to be true }
+    it { expect(create(:payway_v2_gateway, preferred_payment_option: 'cards').support_payout?).to be false }
+    it { expect(create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr').support_payout?).to be true }
+    it { expect(create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr_deeplink').support_payout?).to be true }
   end
 
   describe '#support_pre_auth?' do
