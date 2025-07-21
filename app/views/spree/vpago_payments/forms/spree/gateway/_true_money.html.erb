@@ -13,9 +13,12 @@
 
     function setupConfirmPaymentButton() {
       if (platform === "app") {
-        if (confirmButton) confirmButton.style.display = "none";
-        window.location.href = redirectUrls.webview; 
-        window.top.location.href = redirectUrls.deeplink;
+          if (confirmButton) confirmButton.style.display = "none";
+              window.location.href = redirectUrls.webview;
+              setTimeout(() => {
+                window.top.location.href = redirectUrls.deeplink;
+              }, 1500);
+    
       } else if (confirmButton) {
         confirmButton.addEventListener("click", () => window.open(redirectUrls.webview , "_blank"));
    
