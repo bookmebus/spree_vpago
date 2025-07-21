@@ -26,7 +26,9 @@ module Spree
     end
 
     # override
-    def support_payout? = true
+    def support_payout?
+      preferred_payment_option.in?(%w[abapay_khqr abapay_khqr_deeplink])
+    end
 
     # override
     def support_pre_auth? = true

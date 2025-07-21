@@ -57,7 +57,7 @@ module Vpago
                         end
 
       @available_payment_methods ||= if required_payway_payout?
-                                       payment_methods.select(&:type_payway_v2?)
+                                       payment_methods.select(&:support_payout?)
                                      else
                                        payment_methods
                                      end
