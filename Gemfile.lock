@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    spree_vpago (2.0.5.pre.beta)
+    spree_vpago (2.0.9.pre.beta4)
       faraday
       google-cloud-firestore
       spree_api (>= 4.5)
@@ -198,7 +198,7 @@ GEM
     flatpickr (4.6.13.1)
     friendly_id (5.5.0)
       activerecord (>= 4.0.0)
-    gapic-common (1.0.0)
+    gapic-common (1.0.1)
       faraday (>= 1.9, < 3.a)
       faraday-retry (>= 1.0, < 3.a)
       google-cloud-env (~> 2.2)
@@ -234,7 +234,7 @@ GEM
       google-cloud-core (~> 1.7)
       google-cloud-firestore-v1 (~> 2.0)
       rbtree (~> 0.4.2)
-    google-cloud-firestore-v1 (2.1.0)
+    google-cloud-firestore-v1 (2.1.1)
       gapic-common (~> 1.0)
       google-cloud-errors (~> 1.0)
       google-cloud-location (~> 1.0)
