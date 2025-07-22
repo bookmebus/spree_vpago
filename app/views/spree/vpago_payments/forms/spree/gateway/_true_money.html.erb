@@ -1,0 +1,74 @@
+<% @checkout = ::Vpago::TrueMoney::Checkout.new(@payment) %>
+<% redirect_urls = @checkout.generate_payment_urls(params[:platform]) %>
+<%= redirect_urls  %>
+<% @payment.user_informer.payment_is_processing(processing: true) %>
+
+<dialog id="custom-dialog" style="padding: 1.5em; border-radius: 8px; border: 1px solid #ccc; max-width: 300px;">
+  <p style="margin-bottom: 1em;">Do you want to open the app?</p>
+  <button id="dialog-confirm" style="margin-right: 1em; padding: 0.5em 1em;">Yes</button>
+  <button id="dialog-cancel" style="padding: 0.5em 1em;">No</button>
+</dialog>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const platform = "<%= params[:platform] %>";
+    const redirectUrls = <%= redirect_urls.to_json.html_safe %>;
+    const confirmButton = document.getElementById("confirm-payment-button");
+    const firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
+    const docRefPath = "<%= @payment.user_informer.document_reference_path %>";
+    const successUrl = "<%= @payment.success_url %>";
+
+    function showDialog(onConfirm) {
+      const dialog = document.getElementById('custom-dialog');
+      const confirmAction = document.getElementById('dialog-confirm');
+      const cancelAction = document.getElementById('dialog-cancel');
+
+      // Clean up old listeners to avoid duplicates
+      confirmAction.onclick = null;
+      cancelAction.onclick = null;
+
+      confirmAction.onclick = () => {
+        dialog.close();
+        onConfirm(true);
+      };
+      cancelAction.onclick = () => {
+        dialog.close();
+        onConfirm(false);
+      };
+
+      dialog.showModal();
+    }
+
+    function setupConfirmPaymentButton() {
+      if (platform === "app") {
+        showDialog((proceed) => {
+          if (proceed) {
+            window.location.href = redirectUrls.deeplink;
+          }
+          window.location.href = redirectUrls.webview;
+        });
+
+      } else if (confirmButton) {
+        confirmButton.addEventListener("click", () => {
+          showDialog((proceed) => {
+            if (proceed) {
+              window.location.href = redirectUrls.deeplink;
+            }
+            window.open(redirectUrls.webview, "_blank");
+          });
+        });
+      }
+    }
+
+    function setupPaymentProcessingListener() {
+      if (window.initPaymentProcessingListener) {
+        window.initPaymentProcessingListener(firebaseConfigs, docRefPath, successUrl);
+      } else {
+        console.warn("initPaymentProcessingListener is not defined");
+      }
+    }
+
+    setupConfirmPaymentButton();
+    setupPaymentProcessingListener();
+  });
+</script>

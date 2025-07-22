@@ -7,7 +7,7 @@ RSpec.describe Vpago::PaymentUrlConstructor do
   subject { described_class.new(payment) }
 
   describe '#checkout_url' do
-    it { expect(subject.checkout_url).to eq "http://localhost:4000/vpago_payments/checkout?order_jwt_token=#{subject.send(:order_jwt_token)}&order_number=R322092410&payment_number=PJ0MYD2Y" }
+    it { expect(subject.checkout_url).to eq "http://localhost:4000/vpago_payments/checkout?order_jwt_token=#{subject.send(:order_jwt_token)}&order_number=R322092410&payment_number=PJ0MYD2Y&platform=app" }
   end
 
   describe '#processing_url' do
