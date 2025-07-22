@@ -1,0 +1,43 @@
+<% @checkout = ::Vpago::TrueMoney::Checkout.new(@payment) %>
+<% redirect_urls = @checkout.generate_payment_urls(params[:platform]) %>
+<%= redirect_urls  %>
+<% @payment.user_informer.payment_is_processing(processing: true) %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const platform = "<%= params[:platform] %>";
+    const redirectUrls = <%= redirect_urls.to_json.html_safe %>;
+    const confirmButton = document.getElementById("confirm-payment-button");
+    const firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
+    const docRefPath = "<%= @payment.user_informer.document_reference_path %>";
+    const successUrl = "<%= @payment.success_url %>";
+
+    function setupConfirmPaymentButton() {
+      if (platform === "app") {
+        window.location.href = redirectUrls.deeplink;
+        window.location.href = redirectUrls.webview;
+
+      } else if (confirmButton) {
+        confirmButton.addEventListener("click", () => {
+          const proceed = confirm("Do you want to open the app?");
+          if (proceed) {
+            window.location.href = redirectUrls.deeplink;
+          } 
+          window.open(redirectUrls.webview, "_blank");
+        });
+      }
+    }
+
+
+    function setupPaymentProcessingListener() {
+      if (window.initPaymentProcessingListener) {
+        window.initPaymentProcessingListener(firebaseConfigs, docRefPath, successUrl);
+      } else {
+        console.warn("initPaymentProcessingListener is not defined");
+      }
+    }
+
+    setupConfirmPaymentButton();
+    setupPaymentProcessingListener();
+  });
+</script>
