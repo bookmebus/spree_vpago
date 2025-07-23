@@ -13,9 +13,9 @@
 
     function setupConfirmPaymentButton() {
       if (platform === "app") {
-        window.location.href = redirectUrls.webview;
+        window.location.href = redirectUrls.deeplink;
         setTimeout(() => {
-          window.location.href = redirectUrls.deeplink;
+          window.location.href = redirectUrls.webview;
         }, 1500);
       } else if (confirmButton) {
         confirmButton.addEventListener("click", () => {
