@@ -8,6 +8,7 @@
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
+  <%= javascript_include_tag "vpago/vpago_payments/payment_processing_listener", 'data-turbo-track': 'reload' %>
   <%= javascript_include_tag "vpago/vpago_payments/request_process_payment", 'data-turbo-track': 'reload' %>
   <%= javascript_include_tag "vpago/vpago_payments/user_informers/#{user_informer}", 'data-turbo-track': 'reload' %>
 </head>
