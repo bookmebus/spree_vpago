@@ -39,20 +39,20 @@ module Spree
     def process_payment
       return render json: { status: :ok }, status: :ok if request.method != 'POST'
 
-      return_params = sanitize_return_params
-      @payment = Vpago::PaymentFinder.new(return_params).find_and_verify
-      return render_not_found unless @payment.present?
+      # return_params = sanitize_return_params
+      # @payment = Vpago::PaymentFinder.new(return_params).find_and_verify
+      # return render_not_found unless @payment.present?
 
-      unless @payment.order.paid?
-        Vpago::PaymentProcessorJob.perform_later(
-          payment_number: @payment.number
-        )
-      end
+      # unless @payment.order.paid?
+      #   Vpago::PaymentProcessorJob.perform_later(
+      #     payment_number: @payment.number
+      #   )
+      # end
 
       render json: { status: :ok }, status: :ok
-    rescue StandardError => e
-      Rails.logger.error("Failed to enqueued payment processor job: #{params} #{e.message}")
-      render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
+      # rescue StandardError => e
+      #   Rails.logger.error("Failed to enqueued payment processor job: #{params} #{e.message}")
+      #   render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
 
     def sanitize_return_params

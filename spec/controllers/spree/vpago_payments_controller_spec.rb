@@ -6,14 +6,14 @@ RSpec.describe Spree::VpagoPaymentsController, type: :request do
   let(:checkout) { Vpago::PaywayV2::Checkout.new(payment) }
 
   describe 'POST #process_payment' do
-    context 'when request from ABA (return)' do
-      let(:params) { { tran_id: payment.number, return_params: checkout.return_params } }
+    # context 'when request from ABA (return)' do
+    #   let(:params) { { tran_id: payment.number, return_params: checkout.return_params } }
 
-      it 'find payment with return params & enqueues the PaymentProcessorJob' do
-        expect {
-          post '/vpago_payments/process_payment', params: params
-        }.to have_enqueued_job(Vpago::PaymentProcessorJob).with(payment_number: payment.number)
-      end
-    end
+    #   it 'find payment with return params & enqueues the PaymentProcessorJob' do
+    #     expect {
+    #       post '/vpago_payments/process_payment', params: params
+    #     }.to have_enqueued_job(Vpago::PaymentProcessorJob).with(payment_number: payment.number)
+    #   end
+    # end
   end
 end
