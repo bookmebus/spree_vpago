@@ -59,7 +59,6 @@ module Vpago
     def vattanac_mini_app_payment?
       payment_method.type_vattanac_mini_app?
     end
-    
   end
 end
 
