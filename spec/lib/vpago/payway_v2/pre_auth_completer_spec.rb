@@ -26,8 +26,9 @@ RSpec.describe Vpago::PaywayV2::PreAuthCompleter do
       response = subject.json_response
 
       expect(subject.success?).to eq true 
+      expect(subject.merchant_auth).not_to include('"payout"')
       expect(response['transaction_status']).to eq 'COMPLETED' 
-      expect(response['status']['message']).to eq 'Success!' 
+      expect(response['status']['message']).to eq 'Success!'
     end
 
     it 'failed when transaction_id is invalid' do 
@@ -50,6 +51,29 @@ RSpec.describe Vpago::PaywayV2::PreAuthCompleter do
 
       expect(subject.success?).to eq false 
       expect(response['status']['message']).to eq 'Unable to complete or cancel Pre Auth' 
+    end
+
+    context 'when payout is enabled' do
+      before do
+        allow_any_instance_of(Vpago::PaywayV2::PayoutsParamsConstructor).to receive(:call).and_return([
+          {:acc=>"002092768", :amt=>"27.00"},
+          {:acc=>"111111111", :amt=>"3.00"}
+        ])
+      end
+
+      it 'successfully collect the amount with payout' do 
+        expect(subject).to receive(:pre_auth_response).and_call_original
+
+        VCR.use_cassette('payway_v2_pre_auth_completer_with_payout') do
+          subject.call
+        end
+
+        response = subject.json_response
+
+        expect(subject.merchant_auth).to include('"payout"') # contains payout params
+        expect(response['transaction_status']).to eq 'COMPLETED' 
+        expect(response['status']['message']).to eq 'Success!' 
+      end
     end
   end
 end
