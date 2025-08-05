@@ -37,10 +37,10 @@ module Vpago
 
       def refund_payload
         {
-          transactionId: @payment.transaction_response["transactionId"],
-          paymentId:     @payment.transaction_response["paymentId"],
-          amount:        @payment.transaction_response["amount"],
-          currency:      'USD'
+          transactionId: @payment.transaction_response['transactionId'],
+          paymentId: @payment.transaction_response['paymentId'],
+          amount: @payment.transaction_response['amount'],
+          currency: 'USD'
         }
       end
 

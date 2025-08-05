@@ -44,7 +44,7 @@ module Vpago
 
         return failure(payment) if payment.errors.any?
 
-        success(order: order)
+        success(order: order, payment: payment)
       end
     end
   end
