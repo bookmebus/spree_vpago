@@ -40,11 +40,14 @@ module Vpago
       end
 
       def merchant_auth
-        {
+        merchant_auth = {
           'mc_id' => merchant_id,
           'tran_id' => transaction_id,
           'complete_amount' => amount.to_s
-        }.to_json
+        }
+
+        merchant_auth['payout'] = payout unless payout.nil?
+        merchant_auth.to_json
       end
 
       def merchant_auth_encryption
