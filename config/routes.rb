@@ -24,6 +24,7 @@ Spree::Core::Engine.add_routes do
       get :success
 
       match :process_payment, via: %i[get post]
+      match :true_money_process_payment, via: %i[get post]
     end
   end
 
