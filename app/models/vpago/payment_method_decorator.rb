@@ -97,6 +97,15 @@ module Vpago
     def type_true_money?
       type == Spree::PaymentMethod::TYPE_TRUE_MONEY
     end
+
+    def type_check?
+      type == 'Spree::PaymentMethod::Check'
+    end
+
+    # @return [String] the image asset path, e.g. "payment_logos/payway-abapay-khqr.png"
+    def payment_icon_path
+      "payment_logos/#{preferred_icon_name.tr('_', ' ').parameterize}.png"
+    end
   end
 end
 

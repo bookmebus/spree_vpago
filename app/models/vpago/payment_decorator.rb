@@ -64,6 +64,10 @@ module Vpago
     def vattanac_mini_app_payment?
       payment_method.type_vattanac_mini_app?
     end
+
+    def check_payment?
+      payment_method.type_check?
+    end
   end
 end
 
