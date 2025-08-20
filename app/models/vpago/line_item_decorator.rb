@@ -52,17 +52,18 @@ module Vpago
     end
 
     def latest_private_metadata
-      private_metadata ||= {}
+      # Preserve existing metadata and merge with new financial data
+      updated_private_metadata = (private_metadata || {}).dup
 
-      private_metadata[:subtotal] = subtotal.to_f
-      private_metadata[:commission_rate] = commission_rate.to_f
-      private_metadata[:commission_amount] = commission_amount.to_f
-      private_metadata[:vendor_pre_tax_amount] = vendor_pre_tax_amount.to_f
-      private_metadata[:pre_commission_amount] = pre_commission_amount.to_f
-      private_metadata[:vendor_tax_total] = vendor_tax_total.to_f
-      private_metadata[:vendor_adjustments_total_excluding_tax] = vendor_adjustments_total_excluding_tax.to_f
+      updated_private_metadata[:subtotal] = subtotal.to_f
+      updated_private_metadata[:commission_rate] = commission_rate.to_f
+      updated_private_metadata[:commission_amount] = commission_amount.to_f
+      updated_private_metadata[:vendor_pre_tax_amount] = vendor_pre_tax_amount.to_f
+      updated_private_metadata[:pre_commission_amount] = pre_commission_amount.to_f
+      updated_private_metadata[:vendor_tax_total] = vendor_tax_total.to_f
+      updated_private_metadata[:vendor_adjustments_total_excluding_tax] = vendor_adjustments_total_excluding_tax.to_f
 
-      private_metadata
+      updated_private_metadata
     end
 
     # generate metadata for financial reports.
