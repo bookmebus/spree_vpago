@@ -39,8 +39,9 @@ module Vpago
           }.compact
 
           payment.source = payment_method.payment_source_class.new(source_attributes)
-          payment.save!
         end
+
+        payment.save!
 
         return failure(payment) if payment.errors.any?
 
