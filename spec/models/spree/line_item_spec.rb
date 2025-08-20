@@ -166,4 +166,128 @@ RSpec.describe Spree::LineItem, type: :model do
       end
     end
   end
+
+  describe '#latest_private_metadata' do
+    let(:line_item) { create(:line_item, price: 100) }
+
+    before do
+      # Mock the financial calculation methods to have predictable values
+      allow(line_item).to receive(:subtotal).and_return(100.0)
+      allow(line_item).to receive(:commission_rate).and_return(10.0)
+      allow(line_item).to receive(:commission_amount).and_return(10.0)
+      allow(line_item).to receive(:vendor_pre_tax_amount).and_return(90.0)
+      allow(line_item).to receive(:pre_commission_amount).and_return(80.0)
+      allow(line_item).to receive(:vendor_tax_total).and_return(5.0)
+      allow(line_item).to receive(:vendor_adjustments_total_excluding_tax).and_return(-10.0)
+    end
+
+    context 'when line item has no existing private metadata' do
+      before do
+        allow(line_item).to receive(:private_metadata).and_return(nil)
+      end
+
+      it 'returns hash with only financial data' do
+        result = line_item.latest_private_metadata
+
+        expect(result).to eq({
+          subtotal: 100.0,
+          commission_rate: 10.0,
+          commission_amount: 10.0,
+          vendor_pre_tax_amount: 90.0,
+          pre_commission_amount: 80.0,
+          vendor_tax_total: 5.0,
+          vendor_adjustments_total_excluding_tax: -10.0
+        })
+      end
+    end
+
+    context 'when line item has existing private metadata' do
+      let(:existing_metadata) do
+        {
+          custom_field: 'custom_value',
+          another_field: 123,
+          subtotal: 50.0  # This should be overwritten
+        }
+      end
+
+      before do
+        allow(line_item).to receive(:private_metadata).and_return(existing_metadata)
+      end
+
+      it 'preserves existing metadata and updates financial fields' do
+        result = line_item.latest_private_metadata
+
+        expect(result).to eq({
+          custom_field: 'custom_value',
+          another_field: 123,
+          subtotal: 100.0,  # Updated financial value
+          commission_rate: 10.0,
+          commission_amount: 10.0,
+          vendor_pre_tax_amount: 90.0,
+          pre_commission_amount: 80.0,
+          vendor_tax_total: 5.0,
+          vendor_adjustments_total_excluding_tax: -10.0
+        })
+      end
+
+      it 'does not modify the original private_metadata' do
+        original_metadata = line_item.private_metadata.dup
+        line_item.latest_private_metadata
+
+        expect(line_item.private_metadata).to eq(original_metadata)
+      end
+    end
+
+    context 'when line item has empty private metadata hash' do
+      before do
+        allow(line_item).to receive(:private_metadata).and_return({})
+      end
+
+      it 'returns hash with only financial data' do
+        result = line_item.latest_private_metadata
+
+        expect(result).to eq({
+          subtotal: 100.0,
+          commission_rate: 10.0,
+          commission_amount: 10.0,
+          vendor_pre_tax_amount: 90.0,
+          pre_commission_amount: 80.0,
+          vendor_tax_total: 5.0,
+          vendor_adjustments_total_excluding_tax: -10.0
+        })
+      end
+    end
+  end
+
+  describe '#update_total_metadata' do
+    let(:line_item) { create(:line_item, price: 100) }
+    let(:expected_metadata) do
+      {
+        subtotal: 100.0,
+        commission_rate: 5.0,
+        commission_amount: 5.0,
+        vendor_pre_tax_amount: 95.0,
+        pre_commission_amount: 90.0,
+        vendor_tax_total: 2.0,
+        vendor_adjustments_total_excluding_tax: -5.0
+      }
+    end
+
+    before do
+      allow(line_item).to receive(:latest_private_metadata).and_return(expected_metadata)
+    end
+
+    it 'updates the private_metadata column with latest metadata' do
+      expect(line_item).to receive(:update_column).with(:private_metadata, expected_metadata)
+      
+      line_item.update_total_metadata
+    end
+
+    it 'calls latest_private_metadata to get updated metadata' do
+      expect(line_item).to receive(:latest_private_metadata).and_return(expected_metadata)
+      allow(line_item).to receive(:update_column)
+      
+      line_item.update_total_metadata
+    end
+  end
 end
