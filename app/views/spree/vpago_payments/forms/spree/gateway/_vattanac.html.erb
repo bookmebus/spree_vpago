@@ -1,0 +1,31 @@
+<%
+  checkout = Vpago::Vattanac::Checkout.new(@payment)
+  result = checkout.create
+  payment_url = params[:platform] == 'app' ? result[:mobile_url] : result[:web_url]
+  open_type = @payment.payment_method.preferred_open_type
+%>
+
+<script>
+  const openType = "<%= open_type %>";
+  const mobileUrl = "<%= raw(result[:mobile_url]) %>";
+  const webUrl = "<%= raw(result[:web_url]) %>";
+
+  if (openType === "both") {
+    if (mobileUrl) {
+      window.location.href = mobileUrl;
+      setTimeout(() => {
+        window.location.href = webUrl;
+      }, 1500);
+    } else {
+      alert("Mobile payment URL not available.");
+    }
+  } else {
+    const paymentUrl = "<%= raw(payment_url) %>";
+    if (paymentUrl) {
+      window.location.href = paymentUrl;
+    } else {
+      alert("Failed to create payment link.");
+    }
+  }
+</script>
+
