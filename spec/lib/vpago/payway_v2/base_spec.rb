@@ -57,22 +57,29 @@ RSpec.describe Vpago::PaywayV2::Base do
   describe "#return_deeplink_url" do
     subject { described_class.new(payment) }
 
-    context 'when override_return_deeplink_url is present' do      
-      let(:method) { create(:payway_v2_gateway) }
+    context 'when app_scheme is present' do      
+      let(:method) { create(:payway_v2_gateway, preferred_app_scheme: 'bookmeplus') }
       let(:payment) { create(:payway_v2_payment, payment_method: method) }
 
-      subject { described_class.new(payment, { override_return_deeplink_url: 'tg://t.me' }) }
+      subject { described_class.new(payment) }
 
-      it 'return override_return_deeplink_url directly' do
-        expect(subject.return_deeplink_url).to eq 'tg://t.me'
+      it 'return continue_success_url but with app_scheme' do
+        continue_success_uri = URI.parse(subject.continue_success_url)
+        return_deeplink_uri = URI.parse(subject.return_deeplink_url)
+
+        expect(continue_success_uri.scheme).to eq 'http'
+        expect(return_deeplink_uri.scheme).to eq 'bookmeplus'
+        expect(return_deeplink_uri.host).to eq continue_success_uri.host
+        expect(return_deeplink_uri.path).to eq continue_success_uri.path
+        expect(return_deeplink_uri.query).to eq continue_success_uri.query
       end
     end
 
-    context 'when override_return_deeplink_url is not present' do
+    context 'when app_scheme is not present' do
       let(:method) { create(:payway_v2_gateway) }
       let(:payment) { create(:payway_v2_payment, payment_method: method) }
 
-      it "return payment" do
+      it "return continue_success_url directly" do
         expect(subject.return_deeplink_url).to eq subject.continue_success_url
       end
     end
