@@ -105,9 +105,15 @@ module Vpago
       # redirect to continue URL, let it handle redirecting to app.
       # allowed override to specific app eg. from tg://t.me
       def return_deeplink_url
-        return @options[:override_return_deeplink_url] if @options[:override_return_deeplink_url].present?
+        app_scheme = @payment.payment_method.preferences[:app_scheme]
 
-        continue_success_url
+        if app_scheme.present?
+          uri = URI.parse(continue_success_url)
+          uri.scheme = app_scheme
+          uri.to_s
+        else
+          continue_success_url
+        end
       end
 
       def return_deeplink

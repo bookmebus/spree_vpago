@@ -4,6 +4,7 @@ module Spree
     preference :api_key, :string
     preference :merchant_id, :string
     preference :payment_option, :string # 'abapay', 'cards', 'abapay_deeplink'
+    preference :app_scheme, :text
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
     preference :public_key, :text
