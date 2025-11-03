@@ -61,6 +61,10 @@ module Vpago
       payment_method.type_true_money?
     end
 
+    def vattanac_payment?
+      payment_method.type_vattanac?
+    end
+
     def vattanac_mini_app_payment?
       payment_method.type_vattanac_mini_app?
     end
