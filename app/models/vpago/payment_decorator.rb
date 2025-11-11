@@ -9,6 +9,7 @@ module Vpago
                     :processing_url,
                     :success_url,
                     :process_payment_url,
+                    :processing_deeplink_url,
                     to: :url_constructor
     end
 
@@ -59,6 +60,10 @@ module Vpago
 
     def true_money_payment?
       payment_method.type_true_money?
+    end
+
+    def vattanac_payment?
+      payment_method.type_vattanac?
     end
 
     def vattanac_mini_app_payment?

@@ -1,0 +1,17 @@
+<%
+  checkout = Vpago::Vattanac::Checkout.new(@payment)
+  result = checkout.create
+%>
+
+<script>
+  const platform = "<%= params[:platform] %>";
+  const mobileUrl = "<%= raw(result[:mobile_url]) %>";
+  const webUrl = "<%= raw(result[:web_url]) %>";
+  if (platform === "app" && mobileUrl) {
+    window.location.href = mobileUrl;
+  } else if (platform === "web" && webUrl) {
+    window.location.href = webUrl;
+  } else {
+    console.error("Failed to create payment link:", { mobileUrl, webUrl });
+  }
+</script>

@@ -14,6 +14,7 @@ module Vpago
     def processing_url = "#{base_url}/vpago_payments/processing?#{query}"
     def success_url = "#{base_url}/vpago_payments/success?#{query}"
     def process_payment_url = "#{base_url}/vpago_payments/process_payment?#{query}"
+    def processing_deeplink_url = "#{app_scheme}#{URI(base_url).host}/vpago_payments/processing?#{query}"
 
     def query
       {
@@ -29,6 +30,10 @@ module Vpago
     end
 
     private
+
+    def app_scheme
+      payment.payment_method.preferred_app_scheme
+    end
 
     def base_url
       order.payment_host
