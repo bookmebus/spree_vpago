@@ -1,6 +1,11 @@
 <%
-  checkout = Vpago::Vattanac::Checkout.new(@payment)
-  result = checkout.create
+checkout = Vpago::Vattanac::Checkout.new(@payment)
+result = begin
+  checkout.create
+rescue => e
+  Rails.logger.error("Vattanac checkout.create failed: #{e.message}")
+  { mobile_url: nil, web_url: nil }
+end
 %>
 
 <script>
@@ -8,7 +13,10 @@
   const mobileUrl = "<%= raw(result[:mobile_url]) %>";
   const webUrl = "<%= raw(result[:web_url]) %>";
   if (platform === "app" && mobileUrl) {
-    window.location.href = mobileUrl;
+       window.location.href = mobileUrl;
+        setTimeout(() => {
+          window.location.href = webUrl
+        }, 1500);
   } else if (platform === "web" && webUrl) {
     window.location.href = webUrl;
   } else {

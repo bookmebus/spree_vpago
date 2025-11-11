@@ -36,9 +36,9 @@ module Spree
       params[:payment_response] = payment.transaction_response
 
       if success
-        ActiveMerchant::Billing::Response.new(true, 'Payway Gateway: Purchased', params)
+        ActiveMerchant::Billing::Response.new(true, 'Vattanac Gateway: Purchased', params)
       else
-        ActiveMerchant::Billing::Response.new(false, 'Payway Gateway: Purchasing Failed', params)
+        ActiveMerchant::Billing::Response.new(false, 'Vattanac Gateway: Purchasing Failed', params)
       end
     end
 
