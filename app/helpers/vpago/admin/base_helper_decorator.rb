@@ -19,6 +19,7 @@ module Vpago
           payway_cards
           wingpay
           vattanac_mini_app
+          vattanac
           true_money
         ]
       end

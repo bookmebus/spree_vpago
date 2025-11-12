@@ -22,6 +22,16 @@ RSpec.describe Vpago::PaymentUrlConstructor do
     it { expect(subject.process_payment_url).to eq "http://localhost:4000/vpago_payments/process_payment?order_jwt_token=#{subject.send(:order_jwt_token)}&order_number=R322092410&payment_number=PJ0MYD2Y" }
   end
 
+  describe '#success_deeplink_url' do
+    before do
+      payment.payment_method.update(preferred_app_scheme: 'bookmeplus')
+    end
+
+    it 'builds deeplink with app scheme and host only' do
+      expect(subject.success_deeplink_url).to eq "bookmeplus://localhost/book/payment?number=R322092410&tk=ry9yYKOGP64e_VVDk8-zZA1705211585402"
+    end
+  end
+
   describe '#query' do
     it { expect(subject.query).to eq "order_jwt_token=#{subject.send(:order_jwt_token)}&order_number=R322092410&payment_number=PJ0MYD2Y" }
   end
