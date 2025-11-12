@@ -11,8 +11,12 @@ module Vpago
 
     def checkout_url = "#{base_url}/vpago_payments/checkout?#{query}&platform=app"
     def web_checkout_url = "#{base_url}/vpago_payments/checkout?#{query}&platform=web"
+
     def processing_url = "#{base_url}/vpago_payments/processing?#{query}"
+
     def success_url = "#{base_url}/vpago_payments/success?#{query}"
+    def success_deeplink_url = "#{app_scheme}://#{URI(base_url).host}/book/payment?number=#{order.number}&tk=#{order.token}"
+
     def process_payment_url = "#{base_url}/vpago_payments/process_payment?#{query}"
 
     def query
@@ -24,11 +28,16 @@ module Vpago
       }.compact.to_query
     end
 
+    # true money use case
     def offsite_payment?
       payment.payment_method.type_true_money?
     end
 
     private
+
+    def app_scheme
+      payment.payment_method.preferred_app_scheme
+    end
 
     def base_url
       order.payment_host
