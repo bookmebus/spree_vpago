@@ -24,6 +24,10 @@ module Vpago
         ]
       end
 
+      def available_vattanac_payment_options
+        %w[khqr deeplink all]
+      end
+
       def preference_field_for(form, field, options)
         case field
         when 'preferred_acleda_type'
@@ -33,6 +37,8 @@ module Vpago
                              class: 'fullwidth select2')
         when 'preferred_icon_name'
           return form.select(:preferred_icon_name, available_payment_icons, {}, class: 'fullwidth select2')
+        when 'preferred_vattanac_payment_option'
+          return form.select(:preferred_vattanac_payment_option, available_vattanac_payment_options, {}, class: 'fullwidth select2')
         end
         super
       end

@@ -8,6 +8,7 @@ module Spree
     preference :password, :string
     preference :merchant_id, :string
     preference :payment_type, :string, default: 'GOLF_TICKET'
+    preference :vattanac_payment_option, :string, default: 'all'
 
     def method_type
       'vattanac'
