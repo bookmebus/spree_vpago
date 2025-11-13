@@ -17,7 +17,7 @@ module Vpago
         response_data = post(generate_payment_url, payload)['data']
         {
           web_url: response_data['webPaymentUrl'],
-          mobile_url: response_data['mobileDeepLink'],
+          deeplink_url: response_data['mobileDeepLink'],
           expires_at: response_data['expiredIn'],
           generated_at: response_data['generatedAt']
         }
