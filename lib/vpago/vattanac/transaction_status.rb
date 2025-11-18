@@ -10,7 +10,7 @@ module Vpago
       end
 
       def success?
-        @response.dig('msgEntity', 'code') == '0'
+        @response.dig('data', 'status') == 'SUCCESS'
       end
 
       private
