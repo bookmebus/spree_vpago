@@ -12,32 +12,29 @@ RSpec.describe Vpago::PaymentCapturerJob, type: :job do
       .on_queue('payment_processing')
   end
 
-  context 'when payment is pending' do
-    before do
-      # Stub `pending?` to return true so `capture!` is called
-      allow_any_instance_of(Spree::Payment).to receive(:pending?).and_return(true)
-      expect(payment.state).to eq 'checkout'
-    end
-  
-    it 'calls capture! on the payment if it is pending' do
-      expect_any_instance_of(Spree::Payment).to receive(:capture!).and_call_original
-      described_class.new.perform(payment.id)
-  
-      expect(payment.reload.state).to eq 'completed'
-    end    
-  end
+  describe '#perform' do
+    context 'when capture action is available' do
+      before do
+        allow(payment).to receive(:actions).and_return(['capture'])
+        allow(Spree::Payment).to receive(:find).with(payment.id).and_return(payment)
+      end
 
-  context 'when payment is not pending' do
-    before do
-      allow_any_instance_of(Spree::Payment).to receive(:pending?).and_return(false)
-      expect(payment.state).to eq 'checkout'
+      it 'calls capture! on the payment' do
+        expect(payment).to receive(:capture!)
+        described_class.new.perform(payment.id)
+      end
     end
 
-    it 'does not call capture!' do
-      expect_any_instance_of(Spree::Payment).not_to receive(:capture!)
-      described_class.new.perform(payment.id)
+    context 'when capture action is not available' do
+      before do
+        allow(payment).to receive(:actions).and_return([])
+        allow(Spree::Payment).to receive(:find).with(payment.id).and_return(payment)
+      end
 
-      expect(payment.reload.state).to eq 'checkout'
+      it 'does not call capture!' do
+        expect(payment).not_to receive(:capture!)
+        described_class.new.perform(payment.id)
+      end
     end
   end
 end

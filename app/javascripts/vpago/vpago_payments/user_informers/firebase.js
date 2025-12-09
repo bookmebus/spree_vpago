@@ -6,10 +6,10 @@ async function listenToProcessingState({
   firebaseConfigs,
   documentReferencePath,
   onPaymentIsProcessing,
+  onPaymentIsRetrying,
   onOrderIsProcessing,
   onOrderIsCompleted,
   onOrderProcessFailed,
-  onPaymentIsRefunded,
   onPaymentProcessFailed,
   onCompleted,
 }) {
@@ -62,6 +62,20 @@ async function listenToProcessingState({
           },
         });
         break;
+      case "payment_is_retrying":
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onPaymentIsRetrying(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage
+            );
+          },
+        });
+        break;
       case "order_is_processing":
         queueProcessor.queueStateChange({
           minDelayInMs: 1500,
@@ -95,20 +109,6 @@ async function listenToProcessingState({
           minDelayInMs: 1500,
           callback: async () => {
             await onOrderProcessFailed(
-              orderState,
-              paymentState,
-              processing,
-              reasonCode,
-              reasonMessage
-            );
-          },
-        });
-        break;
-      case "payment_is_refunded":
-        queueProcessor.queueStateChange({
-          minDelayInMs: 1500,
-          callback: async () => {
-            await onPaymentIsRefunded(
               orderState,
               paymentState,
               processing,

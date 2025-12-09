@@ -1,22 +1,20 @@
 module Vpago
   module PaymentProcessable
-    def cancel_pre_auth(reason_code, reason_message)
-      log_process('cancel_pre_auth') do
-        @payment.void_transaction!
-        user_informer.payment_is_refunded(
-          processing: false,
-          reason_code: reason_code,
-          reason_message: reason_message
-        )
+    def enqueue_capture_payment_if_available!
+      Vpago::PaymentCapturerJob.perform_later(@payment.id) if available_actions.include?('capture')
+    end
+
+    def enqueue_void_or_cancel_payment_if_available!
+      if available_actions.include?('void')
+        Vpago::PaymentVoiderJob.perform_later(@payment.id)
+      elsif available_actions.include?('cancel')
+        Vpago::PaymentCancelerJob.perform_later(@payment.id)
       end
     end
 
-    # Allows canceling pre-authorization if:
-    # 1. The payment is pending or authorized.
-    # 2. Pre-auth is enabled, ensuring funds can be released to user if processing fails.
-    #    PaymentProcessor is usually called after payment is made, so canceling pre-auth typically works.
-    def can_cancel_pre_auth?
-      @payment.pending? || @payment.payment_method.enable_pre_auth? || @payment.vattanac_mini_app_payment? || @payment.true_money_payment?
+    # To check available actions, see app/models/spree/vpago_payment_source.rb
+    def available_actions
+      @payment.actions
     end
 
     def extract_completer_failure_reason_code(error)

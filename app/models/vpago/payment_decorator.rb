@@ -1,3 +1,17 @@
+# Note for process! & capture! method:
+#
+# Original process! & capture! calls started_processing! to move state
+# [:checkout, :pending, :completed, :processing] → :processing.
+#
+# When gateway call fails, handle_response calls send(:failure) which transitions
+# the payment to :failed state. This happens BEFORE the GatewayError is raised,
+# so when Sidekiq retries the job, the payment is already in :failed state.
+#
+# The :started_processing event doesn't allow transition from :failed → :processing,
+# so we need to reset the state back to :checkout first via reset_for_retry!
+#
+# This allows process! or capture! to be retried by Sidekiq or by admin via /fire after connection errors
+# or other transient gateway failures.
 module Vpago
   module PaymentDecorator
     def self.prepended(base)
@@ -11,12 +25,23 @@ module Vpago
                     :process_payment_url,
                     :success_deeplink_url,
                     to: :url_constructor
+
+      # Add state machine event for payment retry
+      base.state_machine.event :reset_for_retry do
+        transition from: %i[failed], to: :checkout
+      end
     end
 
-    # override:
-    # to give payment another chance to re-process, even if it failed.
+    # override
     def process!
-      update!(state: :checkout) if processing? || send(:has_invalid_state?)
+      reset_for_retry! if failed?
+
+      super
+    end
+
+    # override
+    def capture!(amount = nil)
+      reset_for_retry! if failed?
 
       super
     end

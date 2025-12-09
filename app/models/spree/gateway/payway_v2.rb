@@ -58,10 +58,12 @@ module Spree
       checker = check_transaction(payment)
       payment.update(transaction_response: checker.json_response)
 
+      params = { check: { response: checker.json_response } }
+
       if checker.success?
-        ActiveMerchant::Billing::Response.new(true, 'Payway Gateway: Authorized')
+        ActiveMerchant::Billing::Response.new(true, 'Payway Gateway: Authorized', params)
       else
-        ActiveMerchant::Billing::Response.new(false, 'Payway Gateway: Authorization Failed')
+        ActiveMerchant::Billing::Response.new(false, 'Payway Gateway: Authorization Failed', params)
       end
     end
 
@@ -140,14 +142,16 @@ module Spree
       canceler = Vpago::PaywayV2::PreAuthCanceler.new(payment)
       canceler.call
 
-      [canceler.success?, canceler.request_data]
+      data = { request: canceler.request_data, response: canceler.json_response }
+      [canceler.success?, data]
     end
 
     def complete_pre_auth(payment)
       completer = Vpago::PaywayV2::PreAuthCompleter.new(payment)
-
       completer.call
-      [completer.success?, completer.request_data]
+
+      data = { request: completer.request_data, response: completer.json_response }
+      [completer.success?, data]
     end
 
     def confirm_payouts(payment)
