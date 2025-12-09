@@ -15,12 +15,26 @@ RSpec.describe Vpago::PaymentProcessor do
   end
 
   describe '#call' do
-    context 'when payment is completed' do
-      it 'process_payment! then process_order!' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#call! for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#call! for payment_number: #{payment.number} in")).once
-
+    context 'when process action is not available' do
+      it 'skips process_payment! && calls process_order!' do
+        allow_any_instance_of(Spree::VpagoPaymentSource).to receive(:can_process?).and_return(false)
         allow(payment).to receive(:completed?).and_return(true)
+
+        expect(subject).not_to receive(:process_payment!)
+        expect(subject).to receive(:process_order!)
+
+        subject.call
+      end
+    end
+
+    context 'when process action is available and payment becomes completed' do
+      it 'calls process_payment! then process_order!' do
+        allow_any_instance_of(Spree::VpagoPaymentSource).to receive(:can_process?).and_return(true)
+
+        # Simulate process_payment! changing payment state to completed
+        allow(subject).to receive(:process_payment!) do
+          allow(payment).to receive(:completed?).and_return(true)
+        end
 
         expect(subject).to receive(:process_payment!)
         expect(subject).to receive(:process_order!)
@@ -29,13 +43,28 @@ RSpec.describe Vpago::PaymentProcessor do
       end
     end
 
-    context 'when payment is not completed' do
-      it 'did not call process_order!' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#call! for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#call! for payment_number: #{payment.number} in")).once
+    context 'when process action is available and payment becomes pending' do
+      it 'calls process_payment! then process_order!' do
+        allow_any_instance_of(Spree::VpagoPaymentSource).to receive(:can_process?).and_return(true)
+        allow(payment).to receive(:completed?).and_return(false)
+        allow(payment).to receive(:pending?).and_return(false, true)
 
+        allow(subject).to receive(:process_payment!)
+
+        expect(subject).to receive(:process_payment!)
+        expect(subject).to receive(:process_order!)
+
+        subject.call
+      end
+    end
+
+    context 'when process action is available but payment state does not change' do
+      it 'calls process_payment! but does not call process_order!' do
+        allow_any_instance_of(Spree::VpagoPaymentSource).to receive(:can_process?).and_return(true)
         allow(payment).to receive(:completed?).and_return(false)
         allow(payment).to receive(:pending?).and_return(false)
+
+        allow(subject).to receive(:process_payment!)
 
         expect(subject).to receive(:process_payment!)
         expect(subject).not_to receive(:process_order!)
@@ -44,58 +73,51 @@ RSpec.describe Vpago::PaymentProcessor do
       end
     end
 
-    context 'when process_payment! raise Spree::Core::GatewayError or StateMachines::InvalidTransition' do
-      it 'rescue the error & call handle_payment_failure' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#call! for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#call! for payment_number: #{payment.number} in")).once
+    context 'when process_payment! raises Spree::Core::GatewayError with gateway message' do
+      it 'calls payment_is_retrying and re-raises the error' do
+        allow_any_instance_of(Spree::VpagoPaymentSource).to receive(:can_process?).and_return(true)
+        allow(subject).to receive(:process_payment!).and_raise(Spree::Core::GatewayError.new(Spree.t(:unable_to_connect_to_gateway)))
 
-        allow(subject).to receive(:process_payment!).and_raise(Spree::Core::GatewayError.new('This is error'))
+        expect(user_informer).to receive(:payment_is_retrying).with(processing: true)
 
-        expect(subject).to receive(:handle_payment_failure).with(:gateway_error, 'This is error')
+        expect { subject.call }.to raise_error(Spree::Core::GatewayError)
+      end
+    end
+
+    context 'when process_payment! raises Spree::Core::GatewayError with other message' do
+      it 'calls handle_payment_failure with gateway_error' do
+        allow_any_instance_of(Spree::VpagoPaymentSource).to receive(:can_process?).and_return(true)
+        allow(subject).to receive(:process_payment!).and_raise(Spree::Core::GatewayError.new('Some other error'))
+
+        expect(subject).to receive(:handle_payment_failure).with(:gateway_error, 'Some other error')
 
         subject.call
       end
     end
 
-    context 'when process_payment! raise Spree::Core::GatewayError connecting to gateway' do
-      it 'rescue the error & call handle_payment_failure' do
-        expect(user_informer).to receive(:payment_is_processing).with(processing: true)
-        expect(subject).to receive(:handle_payment_failure).with(:unable_to_connect_to_gateway, 'Unable to connect to gateway.')
+    context 'when process_payment! raises StateMachines::InvalidTransition' do
+      it 'calls handle_payment_failure with invalid_state_machine_transition' do
+        allow_any_instance_of(Spree::VpagoPaymentSource).to receive(:can_process?).and_return(true)
 
-        VCR.use_cassette("connection_error") do
-          subject.call
-        end
+        # Mock payment.process! to raise InvalidTransition (simulating invalid state)
+        allow(subject).to receive(:process_payment!).and_raise(StateMachines::InvalidTransition.new(payment, Spree::Payment.state_machines[:state], :void))
+
+        expect(subject).to receive(:handle_payment_failure).with(:invalid_state_machine_transition, anything)
+
+        subject.call
       end
     end
   end
 
   describe '#process_payment!' do
-    context 'when payment is completed?' do
-      it 'inform user that payment is processing & trigger payment.process!' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#process_payment! for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#process_payment! for payment_number: #{payment.number} in")).once
+    it 'informs user that payment is processing & triggers payment.process!' do
+      expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#process_payment! for payment_number: #{payment.number} with args: \[]")).once
+      expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#process_payment! for payment_number: #{payment.number} in")).once
 
-        expect(user_informer).to receive(:payment_is_processing).with(processing: true)
-        expect(payment).to receive(:process!)
+      expect(user_informer).to receive(:payment_is_processing).with(processing: true)
+      expect(payment).to receive(:process!)
 
-        allow(payment).to receive(:completed?).and_return(true)
-
-        subject.send(:process_payment!)
-      end
-    end
-
-    context 'when payment is pending?' do
-      it 'inform user that payment is processing & trigger payment.process!' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#process_payment! for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#process_payment! for payment_number: #{payment.number} in")).once
-
-        expect(user_informer).to receive(:payment_is_processing).with(processing: true)
-        expect(payment).to receive(:process!)
-
-        allow(payment).to receive(:pending?).and_return(true)
-
-        subject.send(:process_payment!)
-      end
+      subject.send(:process_payment!)
     end
   end
 
@@ -156,191 +178,40 @@ RSpec.describe Vpago::PaymentProcessor do
   end
 
   describe '#handle_order_process_completed' do
-    context 'when pre-auth enabled or payment is authorized' do
-      before do
-        allow_any_instance_of(Spree::Payment).to receive(:pending?).and_return(true)
-      end
+    it 'enqueues capture payment if available and informs user order is completed' do
+      expect(subject).to receive(:enqueue_capture_payment_if_available!)
+      expect(user_informer).to receive(:order_is_completed).with(processing: false)
 
-      it 'capture the payment in job & inform user the order is completed!' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#handle_order_process_completed for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#handle_order_process_completed for payment_number: #{payment.number} in")).once
-
-        expect(Vpago::PaymentCapturerJob).to receive(:perform_later).with(payment.id).and_call_original
-        expect(user_informer).to receive(:order_is_completed).with(processing: false)
-        
-        perform_enqueued_jobs do
-          expect(payment.state).to eq 'checkout'
-          subject.send(:handle_order_process_completed)
-          expect(payment.reload.state).to eq 'completed'
-        end
-      end
-    end
-
-    context 'when pre-auth is disabled' do
-      before do
-        allow(payment).to receive(:pending?).and_return(false)
-      end
-
-      it 'inform user the order is completed directly' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#handle_order_process_completed for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#handle_order_process_completed for payment_number: #{payment.number} in")).once
-
-        expect(payment).not_to receive(:capture!)
-        expect(user_informer).to receive(:order_is_completed).with(processing: false)
-
-        subject.send(:handle_order_process_completed)
-        expect(subject.success?).to be true
-      end
+      subject.send(:handle_order_process_completed)
+      expect(subject.success?).to be true
     end
   end
 
   describe '#handle_order_process_failure' do
-    context 'when can_cancel_pre_auth (pre-auth is enabled)' do
-      before do
-        allow(subject).to receive(:can_cancel_pre_auth?).and_return(true)
-      end
+    it 'informs user of failure, enqueues cancel/release, and marks as failure' do
+      expect(user_informer).to receive(:order_process_failed).with(
+        processing: false,
+        reason_code: :some_line_items_are_out_of_stock,
+        reason_message: 'Out of stock'
+      )
+      expect(subject).to receive(:enqueue_void_or_cancel_payment_if_available!)
 
-      it 'inform user that process order failed & call cancel_pre_auth' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#handle_order_process_failure for payment_number: #{payment.number} with args: [:some_line_items_are_out_of_stock, \"My error message\"]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#handle_order_process_failure for payment_number: #{payment.number} in")).once
-
-        expect(user_informer).to receive(:order_process_failed).with(processing: true, reason_code: :some_line_items_are_out_of_stock, reason_message: 'My error message')
-        expect(subject).to receive(:cancel_pre_auth).with(:some_line_items_are_out_of_stock, 'My error message')
-
-        subject.send(:handle_order_process_failure, :some_line_items_are_out_of_stock, 'My error message')
-        expect(subject.success?).to be false
-      end
-    end
-
-    context 'when can_cancel_pre_auth? false (pre-auth is disabled)' do
-      before do
-        allow(subject).to receive(:can_cancel_pre_auth?).and_return(false)
-      end
-
-      it 'inform user that process order failed & not calling cancel_pre_auth' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#handle_order_process_failure for payment_number: #{payment.number} with args: [:some_line_items_are_out_of_stock, \"Out of stock\"]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#handle_order_process_failure for payment_number: #{payment.number} in")).once
-
-        expect(user_informer).to receive(:order_process_failed).with(processing: false, reason_code: :some_line_items_are_out_of_stock, reason_message: 'Out of stock')
-        expect(subject).not_to receive(:cancel_pre_auth)
-
-        subject.send(:handle_order_process_failure, :some_line_items_are_out_of_stock, 'Out of stock')
-        expect(subject.success?).to be false
-      end
+      subject.send(:handle_order_process_failure, :some_line_items_are_out_of_stock, 'Out of stock')
+      expect(subject.success?).to be false
     end
   end
 
   describe '#handle_payment_failure' do
-    context 'when can_cancel_pre_auth (pre-auth is enabled)' do
-      before do
-        allow(subject).to receive(:can_cancel_pre_auth?).and_return(true)
-      end
+    it 'informs user of failure, enqueues cancel/release, and marks as failure' do
+      expect(user_informer).to receive(:payment_process_failed).with(
+        processing: false,
+        reason_code: :gateway_error,
+        reason_message: 'Payment gateway error'
+      )
+      expect(subject).to receive(:enqueue_void_or_cancel_payment_if_available!)
 
-      it 'inform user that payment process failed & call cancel_pre_auth' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#handle_payment_failure for payment_number: #{payment.number} with args: [:some_line_items_are_out_of_stock, \"My error message\"]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#handle_payment_failure for payment_number: #{payment.number} in")).once
-
-        expect(user_informer).to receive(:payment_process_failed).with(processing: true, reason_code: :some_line_items_are_out_of_stock, reason_message: 'My error message')
-        expect(subject).to receive(:cancel_pre_auth).with(:some_line_items_are_out_of_stock, 'My error message')
-
-        subject.send(:handle_payment_failure, :some_line_items_are_out_of_stock, 'My error message')
-        expect(subject.success?).to be false
-      end
-    end
-
-    context 'when can_cancel_pre_auth? false (pre-auth is disabled)' do
-      before do
-        allow(subject).to receive(:can_cancel_pre_auth?).and_return(false)
-      end
-
-      it 'inform user that payment process failed & not calling cancel_pre_auth' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#handle_payment_failure for payment_number: #{payment.number} with args: [:some_line_items_are_out_of_stock, \"My error message\"]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#handle_payment_failure for payment_number: #{payment.number} in")).once
-
-        expect(user_informer).to receive(:payment_process_failed).with(processing: false, reason_code: :some_line_items_are_out_of_stock, reason_message: 'My error message')
-        expect(subject).not_to receive(:cancel_pre_auth)
-
-        subject.send(:handle_payment_failure, :some_line_items_are_out_of_stock, 'My error message')
-        expect(subject.success?).to be false
-      end
-    end
-  end
-
-  describe '#cancel_pre_auth' do
-    it 'call void_transaction! & alert to user that payment is refunded' do
-      expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#cancel_pre_auth for payment_number: #{payment.number} with args: \[]")).once
-      expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#cancel_pre_auth for payment_number: #{payment.number} in")).once
-
-      expect(payment).to receive(:void_transaction!)
-      expect(user_informer).to receive(:payment_is_refunded).with(processing: false, reason_code: :some_line_items_are_out_of_stock, reason_message: 'My error message')
-
-      subject.send(:cancel_pre_auth, :some_line_items_are_out_of_stock, 'My error message')
-    end
-  end
-
-  describe '#can_cancel_pre_auth?' do
-    context 'when payment is pending (which mean pre-auth enabled & money is authorized)' do
-      let(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order, state: :pending) }
-
-      it 'return true' do
-        expect(payment.pending?).to be true
-        expect(subject.send(:can_cancel_pre_auth?)).to be true
-      end
-    end
-
-    context 'pre-auth is enabled' do
-      let(:payment_method) { create(:payway_v2_gateway, enable_pre_auth: true, preferred_public_key: 'THIS IS PRE-AUTH KEY') }
-      let(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order, state: :checkout, payment_method: payment_method) }
-
-      it 'return true' do
-        expect(payment.pending?).to be false
-        expect(payment.payment_method.enable_pre_auth?).to be true
-        expect(subject.send(:can_cancel_pre_auth?)).to be true
-      end
-    end
-
-    context 'pre-auth is disable and payment is not authroized' do
-      let(:payment_method) { create(:payway_v2_gateway, enable_pre_auth: false) }
-      let(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order, state: :checkout, payment_method: payment_method) }
-
-      it 'return false' do
-        expect(payment.pending?).to be false
-        expect(payment.payment_method.enable_pre_auth?).to be false
-        expect(subject.send(:can_cancel_pre_auth?)).to be false
-      end
-    end
-  end
-
-  describe '#extract_completer_failure_reason_code' do
-    context 'when some items are out of stock' do      
-      before do
-        allow_any_instance_of(Spree::LineItem).to receive(:sufficient_stock?).and_return(false)
-      end
-
-      it 'return reason code :some_line_items_are_out_of_stock' do
-        completer = Spree::Checkout::Complete.new.call(order: order)
-        expect(subject.send(:extract_completer_failure_reason_code, completer.error)).to eq :some_line_items_are_out_of_stock
-      end
-    end
-
-    context 'when some items are discontinued' do      
-      before do
-        allow_any_instance_of(Spree::Variant).to receive(:discontinued?).and_return(true)
-      end
-
-      it 'return reason code :some_line_items_are_out_of_stock' do
-        completer = Spree::Checkout::Complete.new.call(order: order)
-        expect(subject.send(:extract_completer_failure_reason_code, completer.error)).to eq :some_variants_are_discontinued
-      end
-    end
-
-    context 'when error message is neither of above cases' do
-      it 'return reason code :some_line_items_are_out_of_stock' do
-        expect(subject.send(:extract_completer_failure_reason_code, { :base => nil })).to eq :unable_to_complete_order
-        expect(subject.send(:extract_completer_failure_reason_code, '')).to eq :unable_to_complete_order
-        expect(subject.send(:extract_completer_failure_reason_code, {})).to eq :unable_to_complete_order
-        expect(subject.send(:extract_completer_failure_reason_code, nil)).to eq :unable_to_complete_order
-      end
+      subject.send(:handle_payment_failure, :gateway_error, 'Payment gateway error')
+      expect(subject.success?).to be false
     end
   end
 end

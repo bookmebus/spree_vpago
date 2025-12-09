@@ -14,11 +14,11 @@ RSpec.describe Vpago::PaymentProcessorJob, type: :job do
 
   describe '#perform' do
     it 'find payment & call process payment' do
-      expect(Spree::Payment).to receive(:find_by).with(number: payment.number).and_return(payment)
+      expect(Spree::Payment).to receive(:find_by!).with({ number: payment.number }).and_return(payment)
       expect(Vpago::PaymentProcessor).to receive(:new).with(payment: payment).and_return(processor)
       expect(processor).to receive(:call)
 
-      Vpago::PaymentProcessorJob.perform_now(payment_number: payment.number)
+      Vpago::PaymentProcessorJob.perform_now({ payment_number: payment.number })
     end
   end
 end
