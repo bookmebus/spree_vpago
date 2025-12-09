@@ -301,13 +301,48 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
   describe '#cancel_pre_auth' do
     let(:canceler) { Vpago::PaywayV2::PreAuthCanceler.new(payment) }
 
-    it 'execute .call and returns success & request_data' do
+    it 'execute .call and returns success with both request & response data' do
       expect(Vpago::PaywayV2::PreAuthCanceler).to receive(:new).with(payment).and_return(canceler)
       expect(canceler).to receive(:call)
       expect(canceler).to receive(:success?).and_return(true)
-      expect(canceler).to receive(:request_data).and_return({'merchant_id': 'any-merchant-id'})
+      expect(canceler).to receive(:request_data).and_return({ 'merchant_id' => 'any-merchant-id' })
+      expect(canceler).to receive(:json_response).and_return({ 'status' => { 'code' => '00' } })
 
-      expect(payment_method.send(:cancel_pre_auth, payment)).to eq([true, {'merchant_id': 'any-merchant-id'}])
+      success, data = payment_method.send(:cancel_pre_auth, payment)
+      expect(success).to be true
+      expect(data[:request]).to eq({ 'merchant_id' => 'any-merchant-id' })
+      expect(data[:response]).to eq({ 'status' => { 'code' => '00' } })
+    end
+
+    context 'with VCR integration' do
+      before do
+        allow_any_instance_of(Vpago::PaywayV2::PreAuthCanceler).to receive(:cancel_url).and_return('https://checkout-sandbox.payway.com.kh/api/merchant-portal/merchant-access/online-transaction/pre-auth-cancellation')
+        allow_any_instance_of(Vpago::PaywayV2::PreAuthCanceler).to receive(:merchant_auth_encryption).and_return('mocked_encrypted_value')
+      end
+
+      it 'returns both request and response data on success' do
+        VCR.use_cassette('payway_v2_pre_auth_canceler_status_0') do
+          success, data = payment_method.send(:cancel_pre_auth, payment)
+
+          expect(success).to be true
+          expect(data[:request]).to be_a(Hash)
+          expect(data[:request]).to have_key(:merchant_id)
+          expect(data[:response]).to be_a(Hash)
+          expect(data[:response]['status']['code']).to eq('00')
+          expect(data[:response]['transaction_status']).to eq('CANCELLED')
+        end
+      end
+
+      it 'returns both request and response data on failure' do
+        VCR.use_cassette('payway_v2_pre_auth_canceler_invalid_transaction') do
+          success, data = payment_method.send(:cancel_pre_auth, payment)
+
+          expect(success).to be false
+          expect(data[:request]).to be_a(Hash)
+          expect(data[:response]).to be_a(Hash)
+          expect(data[:response]['status']['message']).to eq('Invalid Transaction')
+        end
+      end
     end
   end
 
@@ -315,13 +350,48 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
   describe '#complete_pre_auth' do
     let(:completer) { Vpago::PaywayV2::PreAuthCompleter.new(payment) }
 
-    it 'execute .call and returns success & request_data' do
+    it 'execute .call and returns success with both request & response data' do
       expect(Vpago::PaywayV2::PreAuthCompleter).to receive(:new).with(payment).and_return(completer)
       expect(completer).to receive(:call)
       expect(completer).to receive(:success?).and_return(true)
-      expect(completer).to receive(:request_data).and_return({'merchant_id': 'any-merchant-id'})
+      expect(completer).to receive(:request_data).and_return({ 'merchant_id' => 'any-merchant-id' })
+      expect(completer).to receive(:json_response).and_return({ 'status' => { 'code' => '00' }, 'transaction_status' => 'COMPLETED' })
 
-      expect(payment_method.send(:cancel_pre_auth, payment)).to eq([true, {'merchant_id': 'any-merchant-id'}])
+      success, data = payment_method.send(:complete_pre_auth, payment)
+      expect(success).to be true
+      expect(data[:request]).to eq({ 'merchant_id' => 'any-merchant-id' })
+      expect(data[:response]).to eq({ 'status' => { 'code' => '00' }, 'transaction_status' => 'COMPLETED' })
+    end
+
+    context 'with VCR integration' do
+      before do
+        allow_any_instance_of(Vpago::PaywayV2::PreAuthCompleter).to receive(:complete_url).and_return('https://checkout-sandbox.payway.com.kh/api/merchant-portal/merchant-access/online-transaction/pre-auth-completion')
+        allow_any_instance_of(Vpago::PaywayV2::PreAuthCompleter).to receive(:merchant_auth_encryption).and_return('mocked_encrypted_value')
+      end
+
+      it 'returns both request and response data on success' do
+        VCR.use_cassette('payway_v2_pre_auth_completer_status_0') do
+          success, data = payment_method.send(:complete_pre_auth, payment)
+
+          expect(success).to be true
+          expect(data[:request]).to be_a(Hash)
+          expect(data[:request]).to have_key(:merchant_id)
+          expect(data[:response]).to be_a(Hash)
+          expect(data[:response]['status']['code']).to eq('00')
+          expect(data[:response]['transaction_status']).to eq('COMPLETED')
+        end
+      end
+
+      it 'returns both request and response data on failure' do
+        VCR.use_cassette('payway_v2_pre_auth_completer_invalid_transaction') do
+          success, data = payment_method.send(:complete_pre_auth, payment)
+
+          expect(success).to be false
+          expect(data[:request]).to be_a(Hash)
+          expect(data[:response]).to be_a(Hash)
+          expect(data[:response]['status']['message']).to eq('Invalid Transaction')
+        end
+      end
     end
   end
 
