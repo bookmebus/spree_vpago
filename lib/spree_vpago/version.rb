@@ -1,7 +1,7 @@
 module SpreeVpago
   module_function
 
-  VERSION = '2.1.3'.freeze
+  VERSION = '2.1.7-pre3'.freeze
 
   def version
     Gem::Version.new VERSION
