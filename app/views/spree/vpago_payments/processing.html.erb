@@ -23,6 +23,12 @@
         document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
         document.getElementById("reason_message").innerText = reasonMessage;
       },
+      onPaymentIsRetrying: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        document.getElementById("status").innerText = "Payment is retrying";
+        document.getElementById("reason_code").innerText = reasonCode;
+        document.getElementById("processing").innerText = processing ? "Retrying..." : "No more process.";
+        document.getElementById("reason_message").innerText = reasonMessage;
+      },
       onOrderIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Order is processing";
         document.getElementById("reason_code").innerText = reasonCode;
@@ -40,12 +46,6 @@
         document.getElementById("reason_code").innerText = reasonCode;
         document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
         document.getElementById("reason_message").innerText = reasonMessage;
-      },
-      onPaymentIsRefunded: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
-        document.getElementById("status").innerText = "Payment is refunded";
-        document.getElementById("reason_code").innerText = reasonCode;
-        document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
-        document.getElementById("reason_message").innerText = reasonMessage
       },
       onPaymentProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Payment process failed";
