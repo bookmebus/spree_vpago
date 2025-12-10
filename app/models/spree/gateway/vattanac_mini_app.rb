@@ -34,10 +34,12 @@ module Spree
     end
 
     # override
-    def void(_response_code, gateway_options)
-      _, payment_number = gateway_options[:order_id].split('-')
-      payment = Spree::Payment.find_by(number: payment_number)
+    def void(_response_code, _gateway_options)
+      ActiveMerchant::Billing::Response.new(true, 'Vattanac order has been voided.')
+    end
 
+    # override
+    def cancel(_response_code, payment)
       if payment.vattanac_mini_app_payment?
         params = {}
         success, params[:refund_response] = vattanac_mini_app_refund(payment)
@@ -57,14 +59,6 @@ module Spree
       refund_issuer.call
 
       [refund_issuer.success?, refund_issuer.response]
-    end
-
-    def cancel(_response_code, _payment)
-      # we can use this to send request to payment gateway api to cancel the payment ( void )
-      # currently Payway does not support to cancel the gateway
-
-      # in our case don't do anything
-      ActiveMerchant::Billing::Response.new(true, 'Vattanac order has been cancelled.')
     end
   end
 end
