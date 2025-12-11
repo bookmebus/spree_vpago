@@ -40,17 +40,18 @@ module Spree
       params[:payment_response] = payment.transaction_response
 
       if success
-        ActiveMerchant::Billing::Response.new(true, 'Payway Gateway: Purchased', params)
+        ActiveMerchant::Billing::Response.new(true, 'True money Gateway: Purchased', params)
       else
-        ActiveMerchant::Billing::Response.new(false, 'Payway Gateway: Purchasing Failed', params)
+        ActiveMerchant::Billing::Response.new(false, 'True money Gateway: Purchasing Failed', params)
       end
     end
 
     # override
-    def void(_response_code, gateway_options)
-      _, payment_number = gateway_options[:order_id].split('-')
-      payment = Spree::Payment.find_by(number: payment_number)
+    def void(_response_code, _gateway_options)
+      ActiveMerchant::Billing::Response.new(true, 'True money Gateway: Payment has been voided.')
+    end
 
+    def cancel(_response_code, payment)
       if payment.true_money_payment?
         params = {}
         success, params[:refund_response] = true_money_refund(payment)
@@ -70,14 +71,6 @@ module Spree
       refund_issuer.call
 
       [refund_issuer.success?, refund_issuer.parsed_response]
-    end
-
-    def cancel(_response_code, _payment)
-      # we can use this to send request to payment gateway api to cancel the payment ( void )
-      # currently True money does not support to cancel the gateway
-
-      # in our case don't do anything
-      ActiveMerchant::Billing::Response.new(true, '')
     end
 
     private
