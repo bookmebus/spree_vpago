@@ -19,10 +19,15 @@ module Vpago
     end
 
     def call!
-      process_payment!
+      process_payment! if available_actions.include?('process')
       process_order! if @payment.completed? || @payment.pending?
     rescue Spree::Core::GatewayError => e
-      return handle_payment_failure(:unable_to_connect_to_gateway, e.message) if e.message == Spree.t(:unable_to_connect_to_gateway)
+      if e.message == Spree.t(:unable_to_connect_to_gateway)
+        user_informer.payment_is_retrying(processing: true)
+
+        # Re-raise to trigger Sidekiq retry mechanism.
+        raise
+      end
 
       handle_payment_failure(:gateway_error, e.message)
     rescue StateMachines::InvalidTransition => e
@@ -39,6 +44,9 @@ module Vpago
       end
     end
 
+    # If this job retries, we run this method/completer again even if the order is already completed.
+    # This ensures flow consistency. The completer will return success & this method will call handle_order_process_completed,
+    # which will enqueue a capture payment if available.
     def process_order!
       log_process('process_order!') do
         user_informer.order_is_processing(processing: true)
@@ -55,7 +63,7 @@ module Vpago
 
     def handle_order_process_completed
       log_process('handle_order_process_completed') do
-        Vpago::PaymentCapturerJob.perform_later(@payment.id) if @payment.pending?
+        enqueue_capture_payment_if_available!
         user_informer.order_is_completed(processing: false)
       end
     end
@@ -63,12 +71,12 @@ module Vpago
     def handle_order_process_failure(reason_code, reason_message = nil)
       log_process('handle_order_process_failure', reason_code, reason_message) do
         user_informer.order_process_failed(
-          processing: can_cancel_pre_auth?,
+          processing: false,
           reason_code: reason_code,
           reason_message: reason_message
         )
 
-        cancel_pre_auth(reason_code, reason_message) if can_cancel_pre_auth?
+        enqueue_void_or_cancel_payment_if_available!
         failure(reason_message)
       end
     end
@@ -76,12 +84,12 @@ module Vpago
     def handle_payment_failure(reason_code, reason_message)
       log_process('handle_payment_failure', reason_code, reason_message) do
         user_informer.payment_process_failed(
-          processing: can_cancel_pre_auth?,
+          processing: false,
           reason_code: reason_code,
           reason_message: reason_message
         )
 
-        cancel_pre_auth(reason_code, reason_message) if can_cancel_pre_auth?
+        enqueue_void_or_cancel_payment_if_available!
         failure(reason_message)
       end
     end

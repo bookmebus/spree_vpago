@@ -10,10 +10,10 @@ module Vpago
       end
 
       def payment_is_processing(processing:) = notify(:payment_is_processing, processing)
+      def payment_is_retrying(processing:) = notify(:payment_is_retrying, processing)
       def order_is_processing(processing:) = notify(:order_is_processing, processing)
       def order_is_completed(processing:) = notify(:order_is_completed, processing)
       def order_process_failed(processing:, reason_code:, reason_message: nil) = notify(:order_process_failed, processing, reason_code, reason_message)
-      def payment_is_refunded(processing:, reason_code:, reason_message: nil) = notify(:payment_is_refunded, processing, reason_code, reason_message)
       def payment_process_failed(processing:, reason_code:, reason_message: nil) = notify(:payment_process_failed, processing, reason_code, reason_message)
 
       def notify(message_code, processing, reason_code = nil, reason_message = nil)
