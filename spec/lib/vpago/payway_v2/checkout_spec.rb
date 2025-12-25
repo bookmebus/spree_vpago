@@ -24,5 +24,18 @@ RSpec.describe Vpago::PaywayV2::Checkout do
         expect(subject.gateway_params).not_to have_key(:view_type)
       end
     end
+
+    context 'skip_success_page' do
+      subject { described_class.new(payment) }
+
+      before do
+        allow(subject).to receive(:hash_hmac).and_return "fake_hash_hmac"
+      end
+
+      it 'always includes skip_success_page with value 1' do
+        expect(subject.gateway_params[:skip_success_page]).to eq 1
+        expect(subject.gateway_params).to have_key(:skip_success_page)
+      end
+    end
   end
 end
