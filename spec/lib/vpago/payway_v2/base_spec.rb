@@ -7,7 +7,7 @@ RSpec.describe Vpago::PaywayV2::Base do
     it "return its first_name if there is no space surrounding it" do
       bill_address = create(:bill_address, first_name: 'Joe', last_name: 'Ann')
       order = create(:order, billing_address: bill_address)
-      payment = create(:payment, order: order) 
+      payment = create(:payment, order: order)
 
       subject = described_class.new(payment, {})
       expect(subject.first_name).to eq 'Joe'
@@ -17,7 +17,7 @@ RSpec.describe Vpago::PaywayV2::Base do
     it 'trim the space if there are spaces surrounding the first_name' do
       bill_address = create(:bill_address, first_name: ' Joe with ', last_name: 'Ann')
       order = create(:order, billing_address: bill_address)
-      payment = create(:payment, order: order) 
+      payment = create(:payment, order: order)
 
       subject = described_class.new(payment, {})
       expect(subject.first_name).to eq 'Joe with'
@@ -28,7 +28,7 @@ RSpec.describe Vpago::PaywayV2::Base do
     it "return its last_name if there is no spaces surrounding the last_name" do
       bill_address = create(:bill_address, first_name: 'Joe', last_name: 'Ann')
       order = create(:order, billing_address: bill_address)
-      payment = create(:payment, order: order) 
+      payment = create(:payment, order: order)
 
       subject = described_class.new(payment, {})
       expect(subject.last_name).to eq 'Ann'
@@ -38,7 +38,7 @@ RSpec.describe Vpago::PaywayV2::Base do
     it 'trim the space if there are spaces surrounding the last_name' do
       bill_address = create(:bill_address, first_name: ' Joe with ', last_name: ' Awesome Ann ')
       order = create(:order, billing_address: bill_address)
-      payment = create(:payment, order: order) 
+      payment = create(:payment, order: order)
 
       subject = described_class.new(payment, {})
       expect(subject.last_name).to eq 'Awesome Ann'
@@ -57,7 +57,7 @@ RSpec.describe Vpago::PaywayV2::Base do
   describe "#return_deeplink_url" do
     subject { described_class.new(payment) }
 
-    context 'when app_scheme is present' do      
+    context 'when app_scheme is present' do
       let(:method) { create(:payway_v2_gateway, preferred_app_scheme: 'bookmeplus') }
       let(:payment) { create(:payway_v2_payment, payment_method: method) }
 
@@ -187,7 +187,7 @@ RSpec.describe Vpago::PaywayV2::Base do
       allow(subject).to receive(:return_params).and_return(return_params)
     end
 
-    context 'when payout is nil' do      
+    context 'when payout is nil' do
       it 'constuct without payout' do
         allow(subject).to receive(:payout).and_return(nil)
 
@@ -205,7 +205,8 @@ RSpec.describe Vpago::PaywayV2::Base do
           return_url,
           continue_success_url,
           return_deeplink,
-          return_params
+          return_params,
+          '1'
         ].join(""))
       end
     end
@@ -231,9 +232,48 @@ RSpec.describe Vpago::PaywayV2::Base do
           continue_success_url,
           return_deeplink,
           return_params,
-          payout
+          payout,
+          '1'
         ].join(""))
       end
+    end
+  end
+
+  describe '#skip_success_page' do
+    let(:payment) { create(:payway_payment) }
+    subject { described_class.new(payment) }
+
+    it 'returns 1 by default' do
+      expect(subject.skip_success_page).to eq 1
+    end
+  end
+
+  describe '#hash_data with skip_success_page' do
+    let(:payment_method) { create(:payway_v2_gateway) }
+    let(:payment) { create(:payway_payment, payment_method: payment_method) }
+    subject { described_class.new(payment) }
+
+    before do
+      allow(subject).to receive(:req_time).and_return('20240516113705')
+      allow(subject).to receive(:merchant_id).and_return('contingo')
+      allow(subject).to receive(:transaction_id).and_return('PFSG7VBE')
+      allow(subject).to receive(:amount).and_return('29.99')
+      allow(subject).to receive(:type).and_return('purchase')
+      allow(subject).to receive(:first_name).and_return('John')
+      allow(subject).to receive(:last_name).and_return('Doe')
+      allow(subject).to receive(:email).and_return('john@example.com')
+      allow(subject).to receive(:phone).and_return('123456789')
+      allow(subject).to receive(:payment_option).and_return('abapay')
+      allow(subject).to receive(:return_url).and_return('https://contigo.asia/webhook/payways/return')
+      allow(subject).to receive(:continue_success_url).and_return('https://contigo.asia/webhook/payways/v2_continue?app_checkout=no&order_number=R127975733&tran_id=PFSG7VBE')
+      allow(subject).to receive(:return_deeplink).and_return('deeplink')
+      allow(subject).to receive(:return_params).and_return('{"tran_id":"PFSG7VBE"}')
+      allow(subject).to receive(:payout).and_return(nil)
+      allow(subject).to receive(:skip_success_page).and_return(1)
+    end
+
+    it 'includes skip_success_page in hash_data' do
+      expect(subject.hash_data).to end_with('1')
     end
   end
 end

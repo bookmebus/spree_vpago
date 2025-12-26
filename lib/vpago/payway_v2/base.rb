@@ -143,6 +143,7 @@ module Vpago
         result += return_deeplink if return_deeplink.present?
         result += return_params if return_params.present?
         result += payout if payout.present?
+        result += skip_success_page.to_s if skip_success_page.present?
 
         log_hash_data = "Hash data: #{result}"
         Rails.logger.info(log_hash_data)
@@ -153,6 +154,10 @@ module Vpago
       def order_jwt_token
         payload = { order_number: @payment.order.number, order_id: @payment.order.id }
         JWT.encode(payload, @payment.order.token, 'HS256')
+      end
+
+      def skip_success_page
+        1
       end
     end
   end

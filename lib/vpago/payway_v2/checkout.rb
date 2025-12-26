@@ -14,6 +14,7 @@ module Vpago
           return_url: return_url,
           continue_success_url: continue_success_url,
           return_params: return_params,
+          skip_success_page: skip_success_page,
           hash: hash_hmac
         }
 
