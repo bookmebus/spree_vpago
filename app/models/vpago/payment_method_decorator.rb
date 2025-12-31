@@ -8,6 +8,7 @@ module Vpago
     TYPE_TRUE_MONEY = 'Spree::Gateway::TrueMoney'.freeze
     TYPE_VATTANAC = 'Spree::Gateway::Vattanac'.freeze
     TYPE_VATTANAC_MINI_APP = 'Spree::Gateway::VattanacMiniApp'.freeze
+    TYPE_CASH_ON = 'Spree::PaymentMethod::CashOn'.freeze
 
     def self.prepended(base)
       base.preference :icon_name, :string, default: 'cheque'
@@ -23,7 +24,8 @@ module Vpago
           Spree::PaymentMethod::TYPE_ACLEDA_MOBILE,
           Spree::PaymentMethod::TYPE_VATTANAC,
           Spree::PaymentMethod::TYPE_VATTANAC_MINI_APP,
-          Spree::PaymentMethod::TYPE_TRUE_MONEY
+          Spree::PaymentMethod::TYPE_TRUE_MONEY,
+          Spree::PaymentMethod::TYPE_CASH_ON
         ]
       end
     end
@@ -99,6 +101,10 @@ module Vpago
 
     def type_true_money?
       type == Spree::PaymentMethod::TYPE_TRUE_MONEY
+    end
+
+    def type_cash_on?
+      type == Spree::PaymentMethod::TYPE_CASH_ON
     end
 
     def type_check?

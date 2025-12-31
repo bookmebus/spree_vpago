@@ -24,7 +24,8 @@ module SpreeVpago
         Spree::Gateway::AcledaMobile,
         Spree::Gateway::Vattanac,
         Spree::Gateway::VattanacMiniApp,
-        Spree::Gateway::TrueMoney
+        Spree::Gateway::TrueMoney,
+        Spree::PaymentMethod::CashOn
       )
     end
 
