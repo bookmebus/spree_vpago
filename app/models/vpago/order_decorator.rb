@@ -15,10 +15,13 @@ module Vpago
 
     # override
     def process_payments!
-      super if insufficient_processed_payment?
+      super
 
       # Prevent from reaching :complete state if payment is insufficient
-      errors.add(:base, Spree.t(:insufficient_payment_amount_to_cover_the_total)) if insufficient_processed_payment?
+      return unless insufficient_processed_payment?
+
+      errors.add(:base, Spree.t(:insufficient_payment_amount_to_cover_the_total))
+      false
     end
 
     def insufficient_processed_payment?

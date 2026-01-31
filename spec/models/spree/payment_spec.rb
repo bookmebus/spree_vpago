@@ -90,16 +90,19 @@ RSpec.describe Spree::Payment, type: :model do
 
     context 'when faraday connection error raised during process' do
       it 'captures faraday error and rethrows as gateway error (order only rescues gateway error)' do
+        # Mock the payment method's purchase to raise a Faraday connection error
+        allow(payment.payment_method).to receive(:purchase).and_raise(
+          ActiveMerchant::ConnectionError.new('Connection failed', Faraday::ConnectionFailed.new('Failed'))
+        )
+
         expect(payment).to receive(:gateway_error).and_call_original do |error|
           expect(error).to be_a(ActiveMerchant::ConnectionError)
           expect(error.triggering_exception).to be_a(Faraday::ConnectionFailed)
         end
 
-        VCR.use_cassette("connection_error") do
-          expect {
-            payment.process!
-          }.to raise_error(Spree::Core::GatewayError, Spree.t(:unable_to_connect_to_gateway))
-        end
+        expect {
+          payment.process!
+        }.to raise_error(Spree::Core::GatewayError, Spree.t(:unable_to_connect_to_gateway))
       end
     end
   end
