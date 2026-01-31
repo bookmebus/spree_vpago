@@ -122,11 +122,14 @@ RSpec.describe Vpago::PaymentProcessor do
   end
 
   describe '#process_order!' do
-    let(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order, state: :completed) }
+    let(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order, state: :completed, amount: order.total) }
     let(:completer) { Spree::Checkout::Complete.new }
 
     before do
       allow(Spree::Checkout::Complete).to receive(:new).and_return(completer)
+      # CRITICAL: Set payment_total to match the completed payment amount
+      # This is what happens in production when payment.process! succeeds
+      order.update_columns(payment_total: payment.amount)
     end
     
     context 'when completer success' do
