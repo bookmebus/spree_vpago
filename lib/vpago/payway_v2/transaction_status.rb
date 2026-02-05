@@ -1,4 +1,5 @@
 require 'faraday'
+require 'vpago/timing_helper'
 
 module Vpago
   module PaywayV2
@@ -35,6 +36,8 @@ module Vpago
       end
 
       def check_remote_status
+        started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
         conn = Faraday::Connection.new do |faraday|
           faraday.request :url_encoded
         end
@@ -46,7 +49,33 @@ module Vpago
           hash: checker_hmac
         }
 
-        conn.post(check_transaction_url, data)
+        response = conn.post(check_transaction_url, data)
+
+        runtime_ms = Vpago::TimingHelper.elapsed_ms(started_at)
+        Rails.logger.info(
+          {
+            event: 'vpago.payway.check_transaction',
+            version: 'v2',
+            payment_number: transaction_id,
+            http_status: response.status,
+            runtime_ms: runtime_ms
+          }
+        )
+
+        response
+      rescue StandardError => e
+        runtime_ms = Vpago::TimingHelper.elapsed_ms(started_at)
+        Rails.logger.error(
+          {
+            event: 'vpago.payway.check_transaction.error',
+            version: 'v2',
+            payment_number: transaction_id,
+            runtime_ms: runtime_ms,
+            error_class: e.class.name,
+            error_message: e.message
+          }
+        )
+        raise
       end
 
       def payout_total

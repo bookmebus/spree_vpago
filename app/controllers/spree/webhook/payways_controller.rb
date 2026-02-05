@@ -4,7 +4,7 @@ module Spree
       skip_before_action :verify_authenticity_token, only: %i[return v2_return continue v2_continue]
 
       # match via: [:get, :post]
-      # {"response"=>"{\"tran_id\":\"PE13LXT1\",\"status\":0"}"}
+      # {"response"=>"{\"tran_id\":\"PE13LXT1\",\"status\":0}"}
       def v2_return
         handler_service = v2_request_updater_service
 
@@ -48,7 +48,7 @@ module Spree
         request_updater.call
 
         order = payment.order
-        order = order.reload
+        order.reload
 
         if order.paid? || payment.pending?
           render plain: :success

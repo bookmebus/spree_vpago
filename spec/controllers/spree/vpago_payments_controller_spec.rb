@@ -12,7 +12,9 @@ RSpec.describe Spree::VpagoPaymentsController, type: :request do
       it 'find payment with return params & enqueues the PaymentProcessorJob' do
         expect {
           post '/vpago_payments/process_payment', params: params
-        }.to have_enqueued_job(Vpago::PaymentProcessorJob).with(payment_number: payment.number)
+        }.to have_enqueued_job(Vpago::PaymentProcessorJob).with(
+          hash_including(payment_number: payment.number, enqueued_at: a_kind_of(Float))
+        )
       end
     end
   end
