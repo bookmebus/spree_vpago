@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    spree_vpago (2.1.9)
+    spree_vpago (2.1.9.pre.add.pre.payment.pre.processor.pre.job.pre.logging)
       faraday
       google-cloud-firestore
       spree_api (>= 4.5)
@@ -188,7 +188,7 @@ GEM
     faraday-http-cache (2.5.0)
       faraday (>= 0.8)
     faraday-net_http (3.0.2)
-    faraday-retry (2.3.2)
+    faraday-retry (2.4.0)
       faraday (~> 2.0)
     ffaker (2.21.0)
     ffi (1.15.5)
