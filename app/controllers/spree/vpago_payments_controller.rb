@@ -44,14 +44,15 @@ module Spree
       return render_not_found unless @payment.present?
 
       unless @payment.order.paid?
-        Vpago::PaymentProcessorJob.perform_later(
-          payment_number: @payment.number
-        )
+        enqueued_at = Time.now.to_f
+        log_enqueue_start(@payment, enqueued_at, return_params)
+
+        Vpago::PaymentProcessorJob.perform_later(payment_number: @payment.number, enqueued_at: enqueued_at)
       end
 
       render json: { status: :ok }, status: :ok
     rescue StandardError => e
-      Rails.logger.error("Failed to enqueued payment processor job: #{params} #{e.message}")
+      log_enqueue_error(e)
       render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
 
@@ -62,13 +63,20 @@ module Spree
       @payment = Spree::Payment.find_by(number: params.dig(:data, :external_ref_id))
       return render_not_found unless @payment
 
-      Vpago::PaymentProcessorJob.perform_later(payment_number: @payment.number) unless @payment.order.paid?
+      unless @payment.order.paid?
+        enqueued_at = Time.now.to_f
+        log_enqueue_start(@payment, enqueued_at)
+
+        Vpago::PaymentProcessorJob.perform_later(payment_number: @payment.number, enqueued_at: enqueued_at)
+      end
 
       render json: { status: { code: '000001', message: 'success' }, data: nil }, status: :ok
     rescue StandardError => e
-      Rails.logger.error("Payment error: #{e.message}")
+      log_enqueue_error(e)
       render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
+
+    private
 
     def sanitize_return_params
       sanitized_params = params.permit!.to_h
@@ -91,6 +99,42 @@ module Spree
         format.html { render file: Rails.public_path.join('422.html'), status: :not_found, layout: false }
         format.json { render json: { status: :unauthorized }, status: :unauthorized }
       end
+    end
+
+    def log_enqueue_start(payment, enqueued_at, return_params = {})
+      Rails.logger.info(
+        {
+          event: 'vpago.payment_processor_job.enqueue',
+          payment_number: payment.number,
+          order_number: payment.order&.number,
+          request_id: request.request_id,
+          payment_method_type: payment.payment_method&.type,
+          payment_method_name: payment.payment_method&.name,
+          gateway: detect_payway_gateway_version(payment.payment_method),
+          tran_id: (return_params[:tran_id] || return_params['tran_id']),
+          enqueued_at: enqueued_at
+        }
+      )
+    end
+
+    def log_enqueue_error(error)
+      Rails.logger.error(
+        {
+          event: 'vpago.payment_processor_job.enqueue.error',
+          request_id: request.request_id,
+          payment_number: @payment&.number,
+          error_class: error.class.name,
+          error_message: error.message
+        }
+      )
+    end
+
+    def detect_payway_gateway_version(payment_method)
+      return nil unless payment_method
+      return 'payway_v2' if payment_method.type_payway_v2?
+      return 'payway_v1' if payment_method.type_payway?
+
+      nil
     end
   end
 end
