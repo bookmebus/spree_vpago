@@ -24,13 +24,21 @@ module Vpago
         payment_number: payment.number,
         order_number: order.number,
         order_jwt_token: order_jwt_token,
-        offsite_payment: offsite_payment? ? true : nil
+        offsite_payment: offsite_payment? ? true : nil,
+        check_in_app_browser: aba_khqr_payment? ? true : nil
       }.compact.to_query
     end
 
     # true money use case
     def offsite_payment?
       payment.payment_method.type_true_money?
+    end
+
+    def aba_khqr_payment?
+      return false unless payment.payment_method.is_a?(Spree::Gateway::PaywayV2)
+
+      payment_option = payment.payment_method.preferred_payment_option
+      payment_option.in?(%w[abapay_khqr abapay_khqr_deeplink])
     end
 
     private
