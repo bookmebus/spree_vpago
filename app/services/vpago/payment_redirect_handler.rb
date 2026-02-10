@@ -66,7 +66,7 @@ module Vpago
     def process_aba_v2_gateway
       payment_option = @payment.payment_method.preferences[:payment_option]
 
-      if %w[abapay abapay_khqr_deeplink].include?(payment_option)
+      if payment_option == 'abapay'
         process_abapay_v2_deeplink
       else
         # construct web url for render web view.
