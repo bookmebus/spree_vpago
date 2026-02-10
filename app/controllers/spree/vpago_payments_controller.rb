@@ -16,6 +16,12 @@ module Spree
       return redirect_to @payment.processing_url, allow_other_host: true unless @payment.checkout?
 
       @order = @payment.order
+
+      # Set offsite_payment flag based on payment method and browser
+      # True Money: always true (from params)
+      # ABA KHQR: only true when in in-app browsers
+      @offsite_payment = params[:offsite_payment] == 'true' ||
+                         (params[:check_in_app_browser] == 'true' && in_app_browser?)
     end
 
     # GET
@@ -77,6 +83,17 @@ module Spree
       sanitized_params.merge!(JSON.parse(sanitized_params.delete(:return_params))) if sanitized_params[:return_params].present?
 
       sanitized_params
+    end
+
+    private
+
+    def in_app_browser?
+      user_agent = request.user_agent.to_s
+      user_agent.include?('FBAN') || user_agent.include?('FBAV') || # Facebook
+      user_agent.include?('Telegram') || # Telegram
+      user_agent.include?('MicroMessenger') || # WeChat
+      user_agent.include?('Line') || # Line
+      user_agent.include?('WhatsApp') # WhatsApp
     end
 
     def render_not_found
