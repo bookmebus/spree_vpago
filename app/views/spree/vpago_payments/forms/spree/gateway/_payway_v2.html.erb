@@ -30,8 +30,8 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       if (data.abapay_deeplink) {
         setTimeout(() => {
-          window.location.href = data.abapay_deeplink;
-        }, 1000);
+          window.open(data.abapay_deeplink, '_blank');
+        }, 1500);
       }
       if (!data.checkout_qr_url && !data.abapay_deeplink) {
         console.error("checkout_qr_url and abapay_deeplink both missing", data);
