@@ -8,32 +8,50 @@ rescue => e
   Rails.logger.error("Vattanac checkout.create failed: #{e.message}")
   { deeplink_url: nil, web_url: nil }
 end
+
+@payment.user_informer.payment_is_processing(processing: true)
 %>
 
 <script>
-  const platform = "<%= params[:platform] %>";
-  const deeplinkUrl = "<%= raw(result[:deeplink_url]) %>";
-  const webUrl = "<%= raw(result[:web_url]) %>";
-  const paymentOption = "<%= payment_option %>";
+  document.addEventListener("DOMContentLoaded", () => {
+    const platform = "<%= params[:platform] %>";
+    const deeplinkUrl = "<%= raw(result[:deeplink_url]) %>";
+    const webUrl = "<%= raw(result[:web_url]) %>";
+    const paymentOption = "<%= payment_option %>";
 
-  const redirectTo = (url) => { if (url) window.location.href = url; };
+    const redirectTo = (url) => { if (url) window.location.href = url; };
 
-  switch (paymentOption) {
-    case "khqr":
-      redirectTo(webUrl);
-      break;
+    const setupPaymentProcessingListener = () => {
+      const firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
+      const documentReferencePath = "<%= @payment.user_informer.document_reference_path %>";
+      const successUrl = "<%= @payment.success_url %>";
 
-    case "deeplink":
-      redirectTo(deeplinkUrl);
-      break;
+      if (window.initPaymentProcessingListener) {
+        window.initPaymentProcessingListener(firebaseConfigs, documentReferencePath, successUrl);
+      } else {
+        console.log("initPaymentProcessingListener is not defined");
+      }
+    };
 
-    case "all":
-      if (platform === "app") redirectTo(deeplinkUrl);
-      else if (platform === "web") redirectTo(webUrl);
-      else console.error("Unknown platform:", platform);
-      break;
+    switch (paymentOption) {
+      case "khqr":
+        redirectTo(webUrl);
+        break;
 
-    default:
-      console.error("Invalid payment option:", paymentOption);
-  }
+      case "deeplink":
+        redirectTo(deeplinkUrl);
+        break;
+
+      case "all":
+        if (platform === "app") redirectTo(deeplinkUrl);
+        else if (platform === "web") redirectTo(webUrl);
+        else console.error("Unknown platform:", platform);
+        break;
+
+      default:
+        console.error("Invalid payment option:", paymentOption);
+    }
+
+    setupPaymentProcessingListener();
+  });
 </script>
