@@ -13,35 +13,32 @@
 </form>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("aba_merchant_request");
-  const paymentOption = form.dataset.paymentOption;
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("aba_merchant_request");
+    const paymentOption = form.dataset.paymentOption;
 
-  // 🔹 CASE 1: ABA KHQR Deeplink → fetch JSON then redirect
-  if (paymentOption === "abapay_khqr_deeplink") {
-    fetch(form.action, {
-      method: "POST",
-      body: new FormData(form)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.checkout_qr_url) {
-        window.location.href = data.checkout_qr_url;
-      }
-      if (data.abapay_deeplink) {
-        setTimeout(() => {
+    // 🔹 CASE 1: ABA KHQR Deeplink → fetch JSON then redirect
+    if (paymentOption === "abapay_khqr_deeplink") {
+      fetch(form.action, {
+        method: "POST",
+        body: new FormData(form)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.abapay_deeplink) {
           window.location.href = data.abapay_deeplink;
-        }, 1500);
-      }
-      if (!data.checkout_qr_url && !data.abapay_deeplink) {
-        console.error("checkout_qr_url and abapay_deeplink both missing", data);
-      }
-    })
-    .catch(err => console.error("ABA Deeplink Error:", err));
+        } else if (data.checkout_qr_url) {
+          window.location.href = data.checkout_qr_url;
+        }
+        if (!data.checkout_qr_url && !data.abapay_deeplink) {
+          console.error("checkout_qr_url and abapay_deeplink both missing", data);
+        }
+      })
+      .catch(err => console.error("ABA Deeplink Error:", err));
 
-  // 🔹 CASE 2: Normal ABA KHQR → regular redirect form post
-  } else {
-    form.submit();
-  }
-});
+    // 🔹 CASE 2: Normal ABA KHQR → regular redirect form post
+    } else {
+      form.submit();
+    }
+  });
 </script>
