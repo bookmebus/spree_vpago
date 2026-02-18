@@ -1,13 +1,111 @@
-<% @checkout = ::Vpago::PaywayV2::Checkout.new(@payment) %>
+<% @checkout = ::Vpago::PaywayV2::Checkout.new(@payment, request.user_agent) %>
+<% payment_option = @payment.payment_method.preferences[:payment_option] %>
 
-<form method="POST" action="<%= @checkout.checkout_url %>" id="aba_merchant_request">
+<form method="POST"
+      action="<%= @checkout.checkout_url %>"
+      id="aba_merchant_request"
+      data-payment-option="<%= payment_option %>"
+      style="<%= 'display:none;' if payment_option == 'abapay_khqr_deeplink' %>">
+
   <% @checkout.gateway_params.each do |key, value| %>
-    <input type='hidden' name='<%= key %>' value='<%= value %>' />
+    <input type="hidden" name="<%= key %>" value="<%= value %>">
   <% end %>
 </form>
 
+<!-- WebView Container -->
+<div id="webViewContainer" style="display:none;"></div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("aba_merchant_request").submit()
-  })
+    const form = document.getElementById("aba_merchant_request");
+    const paymentOption = form.dataset.paymentOption;
+    const webViewContainer = document.getElementById("webViewContainer");
+
+    // CASE 1: ABA KHQR Deeplink → fetch JSON then redirect
+    if (paymentOption === "abapay_khqr_deeplink") {
+
+      fetch(form.action, {
+        method: "POST",
+        body: new FormData(form)
+      })
+      .then(res => {
+        // Check if response is OK and has JSON content
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Response is not JSON");
+        }
+        
+        return res.json();
+      })
+      .then(data => {
+        // Validate required fields
+        if (!data.checkout_qr_url && !data.abapay_deeplink) {
+          throw new Error("Missing checkout_qr_url and abapay_deeplink");
+        }
+
+        // Setup container
+        webViewContainer.style.display = "block";
+        webViewContainer.style.position = "fixed";
+        webViewContainer.style.top = "0";
+        webViewContainer.style.left = "0";
+        webViewContainer.style.width = "100%";
+        webViewContainer.style.height = "100%";
+        webViewContainer.style.zIndex = "9999";
+
+        const checkoutIframe = document.createElement("iframe");
+        checkoutIframe.src = data.checkout_qr_url;
+        checkoutIframe.style.width = "100%";
+        checkoutIframe.style.height = "100%";
+        checkoutIframe.style.border = "none";
+
+        webViewContainer.appendChild(checkoutIframe);
+
+        // WAIT until checkout fully loads
+        checkoutIframe.onload = function () {
+
+          if (!data.abapay_deeplink) return;
+
+          console.log("Checkout loaded, attempting ABA deeplink...");
+
+          const deeplinkFrame = document.createElement("iframe");
+          deeplinkFrame.style.display = "none";
+          deeplinkFrame.src = data.abapay_deeplink;
+          document.body.appendChild(deeplinkFrame);
+
+          // Detect if user leaves browser (app opened)
+          let appOpened = false;
+
+          const visibilityHandler = () => {
+            appOpened = true;
+          };
+
+          document.addEventListener("visibilitychange", visibilityHandler);
+
+          setTimeout(() => {
+            document.removeEventListener("visibilitychange", visibilityHandler);
+
+            if (!appOpened) {
+              console.log("ABA app not installed, staying on checkout page.");
+            }
+          }, 2000);
+        };
+      })
+      .catch(err => {
+        console.error("ABA Deeplink Error:", err);
+        console.log("Falling back to regular form submission...");
+        
+        // Fallback: show form and submit normally
+        form.style.display = "block";
+        form.submit();
+      });
+
+    // CASE 2: Normal ABA KHQR → regular redirect form post
+    } else {
+      form.submit();
+    }
+  });
 </script>

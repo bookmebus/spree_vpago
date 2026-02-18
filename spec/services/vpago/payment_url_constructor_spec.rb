@@ -33,7 +33,90 @@ RSpec.describe Vpago::PaymentUrlConstructor do
   end
 
   describe '#query' do
-    it { expect(subject.query).to eq "order_jwt_token=#{subject.send(:order_jwt_token)}&order_number=R322092410&payment_number=PJ0MYD2Y" }
+    context 'with PaywayV2 payment' do
+      let!(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order) }
+
+      context 'when payment_option is abapay_khqr' do
+        before do
+          payment.payment_method.update(preferred_payment_option: 'abapay_khqr')
+        end
+
+        it 'includes check_in_app_browser=true' do
+          query = subject.query
+          expect(query).to include('check_in_app_browser=true')
+          expect(query).to include("order_jwt_token=#{subject.send(:order_jwt_token)}")
+          expect(query).to include('order_number=R322092410')
+          expect(query).to include('payment_number=PJ0MYD2Y')
+        end
+      end
+
+      context 'when payment_option is abapay_khqr_deeplink' do
+        before do
+          payment.payment_method.update(preferred_payment_option: 'abapay_khqr_deeplink')
+        end
+
+        it 'includes check_in_app_browser=true' do
+          query = subject.query
+          expect(query).to include('check_in_app_browser=true')
+          expect(query).to include("order_jwt_token=#{subject.send(:order_jwt_token)}")
+          expect(query).to include('order_number=R322092410')
+          expect(query).to include('payment_number=PJ0MYD2Y')
+        end
+      end
+
+      context 'when payment_option is other value' do
+        before do
+          payment.payment_method.update(preferred_payment_option: 'abapay_qr')
+        end
+
+        it 'excludes check_in_app_browser parameter' do
+          query = subject.query
+          expect(query).not_to include('check_in_app_browser')
+          expect(query).to include("order_jwt_token=#{subject.send(:order_jwt_token)}")
+          expect(query).to include('order_number=R322092410')
+          expect(query).to include('payment_number=PJ0MYD2Y')
+        end
+      end
+
+      context 'when payment_option is nil' do
+        before do
+          payment.payment_method.update(preferred_payment_option: nil)
+        end
+
+        it 'excludes check_in_app_browser parameter' do
+          query = subject.query
+          expect(query).not_to include('check_in_app_browser')
+          expect(query).to include("order_jwt_token=#{subject.send(:order_jwt_token)}")
+          expect(query).to include('order_number=R322092410')
+          expect(query).to include('payment_number=PJ0MYD2Y')
+        end
+      end
+    end
+
+    context 'with non-PaywayV2 payment' do
+      let!(:payment) { create(:acleda_mobile_payment, number: 'PJ0MYD2Y', order: order) }
+
+      it 'excludes check_in_app_browser parameter' do
+        query = subject.query
+        expect(query).not_to include('check_in_app_browser')
+        expect(query).to include("order_jwt_token=#{subject.send(:order_jwt_token)}")
+        expect(query).to include('order_number=R322092410')
+        expect(query).to include('payment_number=PJ0MYD2Y')
+      end
+    end
+
+    context 'with True Money payment' do
+      let!(:payment) { create(:true_money_payment, number: 'PJ0MYD2Y', order: order) }
+
+      it 'includes offsite_payment=true but excludes check_in_app_browser' do
+        query = subject.query
+        expect(query).to include('offsite_payment=true')
+        expect(query).not_to include('check_in_app_browser')
+        expect(query).to include("order_jwt_token=#{subject.send(:order_jwt_token)}")
+        expect(query).to include('order_number=R322092410')
+        expect(query).to include('payment_number=PJ0MYD2Y')
+      end
+    end
   end
 
   describe '#order_jwt_token' do
