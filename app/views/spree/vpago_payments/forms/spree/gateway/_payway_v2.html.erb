@@ -25,14 +25,40 @@ document.addEventListener("DOMContentLoaded", function () {
     })
     .then(res => res.json())
     .then(data => {
+      // 🔹 Create webview container for better control
+      const webviewContainer = document.createElement('div');
+      webviewContainer.style.position = 'fixed';
+      webviewContainer.style.top = '0';
+      webviewContainer.style.left = '0';
+      webviewContainer.style.width = '100%';
+      webviewContainer.style.height = '100%';
+      webviewContainer.style.zIndex = '9999';
+      webviewContainer.style.backgroundColor = 'white';
+      
+      // 🔹 Load QR page in webview
       if (data.checkout_qr_url) {
-        window.open(data.checkout_qr_url, "_blank");
+        const qrFrame = document.createElement('iframe');
+        qrFrame.src = data.checkout_qr_url;
+        qrFrame.style.width = '100%';
+        qrFrame.style.height = '100%';
+        qrFrame.style.border = 'none';
+        webviewContainer.appendChild(qrFrame);
+        document.body.appendChild(webviewContainer);
       }
 
+      // 🔹 Attempt ABA deeplink after QR page loads
       if (data.abapay_deeplink) {
         setTimeout(() => {
+          // Try direct navigation first (more reliable for deeplinks)
           window.location.href = data.abapay_deeplink;
-        }, 1500);
+          
+          // Fallback: try opening in new tab if direct fails
+          setTimeout(() => {
+            if (document.body.contains(webviewContainer)) {
+              window.open(data.abapay_deeplink, '_blank');
+            }
+          }, 500);
+        }, 2000);
       }
 
       if (!data.checkout_qr_url && !data.abapay_deeplink) {
