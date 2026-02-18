@@ -25,14 +25,19 @@ document.addEventListener("DOMContentLoaded", function () {
     })
     .then(res => res.json())
     .then(data => {
+      // 🔹 Load checkout page in current tab
       if (data.checkout_qr_url) {
-        window.open(data.checkout_qr_url, "_blank");
+        window.location.href = data.checkout_qr_url;
       }
 
+      // 🔹 Attempt ABA deeplink in background
       if (data.abapay_deeplink) {
         setTimeout(() => {
-          window.location.href = data.abapay_deeplink;
-        }, 1500);
+          const iframe = document.createElement("iframe");
+          iframe.style.display = "none";
+          iframe.src = data.abapay_deeplink;
+          document.body.appendChild(iframe);
+        }, 2000); // wait 1s to allow checkout to start loading
       }
 
       if (!data.checkout_qr_url && !data.abapay_deeplink) {
