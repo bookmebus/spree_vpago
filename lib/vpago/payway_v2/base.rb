@@ -1,9 +1,10 @@
 module Vpago
   module PaywayV2
     class Base
-      def initialize(payment, options = {})
+      def initialize(payment, user_agent = nil, options = {})
         @options = options
         @payment = payment
+        @user_agent = user_agent
       end
 
       def req_time
@@ -112,8 +113,30 @@ module Vpago
           uri.scheme = app_scheme
           uri.to_s
         else
-          continue_success_url
+          # For in-app browsers, use appropriate deeplink scheme
+          if in_app_browser_payment?
+            case @user_agent
+            when /FBAN|FBAV/
+              'fb://'
+            when /Telegram/
+              'tg://'
+            when /FB_Messenger|Messenger/
+              'fb-messenger://'
+            else
+              continue_success_url
+            end
+          else
+            continue_success_url
+          end
         end
+      end
+
+      # Check if payment is from in-app browser
+      def in_app_browser_payment?
+        return false unless @user_agent.present?
+
+        in_app_browsers = %w[FBAN FBAV Telegram FB_Messenger Messenger]
+        in_app_browsers.any? { |browser| @user_agent.include?(browser) }
       end
 
       def return_deeplink
