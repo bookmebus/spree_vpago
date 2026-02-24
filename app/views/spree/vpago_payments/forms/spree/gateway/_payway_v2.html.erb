@@ -12,101 +12,39 @@
   <% end %>
 </form>
 
-<!-- WebView Container -->
-<div id="webViewContainer" style="display:none;"></div>
-
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("aba_merchant_request");
-    const paymentOption = form.dataset.paymentOption;
-    const webViewContainer = document.getElementById("webViewContainer");
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("aba_merchant_request");
+  const paymentOption = form.dataset.paymentOption;
 
-    // CASE 1: ABA KHQR Deeplink → fetch JSON then render checkout + optional deeplink
-    // 1. Check if response is OK and has JSON content
-    // 2. Validate required fields
-    // 3. WAIT until checkout fully loads before attempting deeplink
-    // 4. Detect if user leaves browser (app opened)
-    // 5. Fallback: show form and submit normally
+  if (paymentOption === "abapay_khqr_deeplink") {
 
-    if (paymentOption === "abapay_khqr_deeplink") {
-      fetch(form.action, {
-        method: "POST",
-        body: new FormData(form)
-      })
-        .then(res => {
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          }
+    fetch(form.action, {
+      method: "POST",
+      body: new FormData(form)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.checkout_qr_url && data.abapay_deeplink) {
+        // 1) Show checkout QR in this tab
+        window.location.href = data.checkout_qr_url;
 
-          const contentType = res.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            throw new Error("Response is not JSON");
-          }
+        // 2) Try to open the deeplink in a new tab
+        setTimeout(() => {
+          window.open(data.abapay_deeplink, "_blank");
+        }, 5000);
+      } else if (data.checkout_qr_url) {
+        window.location.href = data.checkout_qr_url;
+      } else if (data.abapay_deeplink) {
+        window.location.href = data.abapay_deeplink;
+      }
+    })
+    .catch(err => {
+      console.error("Error:", err);
+    });
 
-          return res.json();
-        })
-        .then(data => {
-          // Validate required fields
-          if (!data.checkout_qr_url && !data.abapay_deeplink) {
-            throw new Error("Missing checkout_qr_url and abapay_deeplink");
-          }
-
-          // Setup container as full-screen overlay
-          webViewContainer.style.display = "block";
-          webViewContainer.style.position = "fixed";
-          webViewContainer.style.top = "0";
-          webViewContainer.style.left = "0";
-          webViewContainer.style.width = "100%";
-          webViewContainer.style.height = "100%";
-          webViewContainer.style.zIndex = "9999";
-          webViewContainer.style.backgroundColor = "#fff";
-
-          const checkoutIframe = document.createElement("iframe");
-          checkoutIframe.src = data.checkout_qr_url;
-          checkoutIframe.style.width = "100%";
-          checkoutIframe.style.height = "100%";
-          checkoutIframe.style.border = "none";
-
-          webViewContainer.appendChild(checkoutIframe);
-
-          checkoutIframe.onload = function () {
-            if (!data.abapay_deeplink) return;
-
-            console.log("Checkout loaded, attempting ABA deeplink...");
-
-            const deeplinkFrame = document.createElement("iframe");
-            deeplinkFrame.style.display = "none";
-            deeplinkFrame.src = data.abapay_deeplink;
-            document.body.appendChild(deeplinkFrame);
-
-            let appOpened = false;
-
-            const visibilityHandler = () => {
-              appOpened = true;
-            };
-
-            document.addEventListener("visibilitychange", visibilityHandler);
-
-            setTimeout(() => {
-              document.removeEventListener("visibilitychange", visibilityHandler);
-
-              if (!appOpened) {
-                console.log("ABA app not installed, staying on checkout page.");
-              }
-            }, 2000);
-          };
-        })
-        .catch(err => {
-          console.error("ABA Deeplink Error:", err);
-          console.log("Falling back to regular form submission...");
-
-          form.style.display = "block";
-          form.submit();
-        });
-
-    // CASE 2: Normal ABA KHQR → regular redirect form post
-    } else {
-      form.submit();
-    }
-  });
+  } else {
+    form.submit();
+  }
+});
 </script>
