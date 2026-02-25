@@ -1,0 +1,35 @@
+<%# This partial listens to payment status changes and does not process the payment. %>
+<%# When it detects a status change, it automatically redirects to the processing URL for actual processing. %>
+<%# Designed to be used in checkout.html.erb %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    let firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
+
+    window.listenToProcessingState({
+      firebaseConfigs: firebaseConfigs,
+      documentReferencePath: "<%= @payment.user_informer.document_reference_path %>",
+      onPaymentIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        window.location.href = "<%= @payment.processing_url %>";
+      },
+      onPaymentIsRetrying: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        window.location.href = "<%= @payment.processing_url %>";
+      },
+      onOrderIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        window.location.href = "<%= @payment.processing_url %>";
+      },
+      onOrderIsCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        window.location.href = "<%= @payment.processing_url %>";
+      },
+      onOrderProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        window.location.href = "<%= @payment.processing_url %>";
+      },
+      onPaymentProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        window.location.href = "<%= @payment.processing_url %>";
+      },
+      onCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
+        window.location.href = "<%= @payment.success_url %>";
+      },
+    });
+  });
+</script>

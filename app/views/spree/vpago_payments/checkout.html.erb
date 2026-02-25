@@ -1,3 +1,9 @@
 <h1>Checkout...</h1>
 
+<%# Primary action button fixed at bottom of screen %>
+<%# Each payment method can customize this button (title, onclick) for their specific action. %>
+<%# See: app/views/spree/vpago_payments/forms/spree/gateway/_payway_v2.html.erb for example %>
+<button id="vpago_primary_button" style="display: none;"></button>
+
+<%= render_payment_status_listener %>
 <%= render_form %>
