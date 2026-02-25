@@ -20,6 +20,7 @@ Spree::Core::Engine.add_routes do
   resource :vpago_payments do
     collection do
       get :checkout
+      get :check_transaction
       get :processing
       get :success
 
