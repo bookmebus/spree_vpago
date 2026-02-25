@@ -1,13 +1,70 @@
-<% @checkout = ::Vpago::PaywayV2::Checkout.new(@payment) %>
+<% @checkout_options = { custom_return_deeplink_url: custom_return_deeplink_url } %>
+<% @checkout = ::Vpago::PaywayV2::Checkout.new(@payment, @checkout_options) %>
 
 <form method="POST" action="<%= @checkout.checkout_url %>" id="aba_merchant_request">
   <% @checkout.gateway_params.each do |key, value| %>
-    <input type='hidden' name='<%= key %>' value='<%= value %>' />
+    <input type="hidden" name="<%= key %>" value="<%= value %>">
   <% end %>
 </form>
 
 <script>
+  const abapayKhqrDeeplink = "<%= @payment.payment_method.abapay_khqr_deeplink? %>";
+  const shouldOpenAbaPayDeeplink = <%= @payment.payment_method.open_abapay_deeplink? %>;
+  const shouldOpenCheckoutUrl = <%= @payment.payment_method.open_checkout_url? %>;
+
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+
+  function openAbapayDeeplink(abapay_deeplink) {
+    document.getElementById("vpago_primary_button").style.display = "block";
+    document.getElementById("vpago_primary_button").innerText = "Open ABA Pay";
+    document.getElementById("vpago_primary_button").addEventListener("click", function() {
+      window.open(abapay_deeplink, "_blank");
+    });
+
+    window.open(abapay_deeplink, "_blank");
+  }
+
+  function openCheckoutUrl(checkout_qr_url, delay = 0) {
+    if(delay > 0) {
+      setTimeout(function() {
+        window.location.href = checkout_qr_url;
+      }, delay);
+    } else {
+      window.location.href = checkout_qr_url;
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("aba_merchant_request").submit()
+    if (abapayKhqrDeeplink) {
+      var formData = new FormData(document.getElementById("aba_merchant_request"));
+      var checkoutUrl = document.getElementById("aba_merchant_request").action;
+
+      fetch(checkoutUrl, {
+        method: "POST",
+        body: formData
+      })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        var shouldDelayBeforeOpenCheckoutUrl = false;
+
+        if (data.abapay_deeplink && shouldOpenAbaPayDeeplink) {
+          openAbapayDeeplink(data.abapay_deeplink);
+          shouldDelayBeforeOpenCheckoutUrl = true;
+        }
+
+        if (data.checkout_qr_url && shouldOpenCheckoutUrl) {
+          openCheckoutUrl(data.checkout_qr_url, shouldDelayBeforeOpenCheckoutUrl ? 3000 : 0);
+        }
+      })
+      .catch(function(error) {
+        console.error("Payment request failed:", error);
+      });
+    } else {
+      document.getElementById("aba_merchant_request").submit();
+    }
   })
 </script>
