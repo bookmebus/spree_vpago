@@ -20,6 +20,7 @@ module Vpago
 
       base.delegate :checkout_url,
                     :web_checkout_url,
+                    :check_transaction_url,
                     :processing_url,
                     :success_url,
                     :process_payment_url,

@@ -19,6 +19,22 @@ module Spree
     end
 
     # GET
+    def check_transaction
+      @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
+      raise ActiveRecord::RecordNotFound unless @payment.present?
+
+      checker = @payment.payment_method.check_transaction(@payment)
+
+      if checker.success?
+        render json: { status: :success }, status: :ok
+      elsif checker.failed?
+        render json: { status: :failed }, status: :payment_required
+      else
+        render json: { status: :pending }, status: :accepted
+      end
+    end
+
+    # GET
     def processing
       @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
       raise ActiveRecord::RecordNotFound unless @payment.present?

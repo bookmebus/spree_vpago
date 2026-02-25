@@ -12,6 +12,7 @@ module Vpago
     def checkout_url = "#{base_url}/vpago_payments/checkout?#{query}&platform=app"
     def web_checkout_url = "#{base_url}/vpago_payments/checkout?#{query}&platform=web"
 
+    def check_transaction_url = "#{base_url}/vpago_payments/check_transaction?#{query}"
     def processing_url = "#{base_url}/vpago_payments/processing?#{query}"
 
     def success_url = "#{base_url}/vpago_payments/success?#{query}"

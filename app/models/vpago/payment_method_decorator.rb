@@ -35,6 +35,13 @@ module Vpago
     def support_payout? = false
     def support_pre_auth? = false
 
+    # Must be explicitly overridden to true by each payment method.
+    # Payment method must implement check_transaction(payment), and its response
+    # must provide: success?, failed?, pending?.
+    def support_check_transaction_api?
+      false
+    end
+
     # TODO: we have already implement purchase for payway_v2.
     # make sure to implement this on other payment method as well.
     def purchase(_amount, _source, _gateway_options = {})

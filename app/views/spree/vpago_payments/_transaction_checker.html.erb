@@ -1,0 +1,40 @@
+<%# This partial listens to payment status changes from bank and does not process the payment. %>
+<%# When it detects a status change, it automatically redirects to the processing URL for actual processing. %>
+<%# Designed to be used in checkout.html.erb %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var checkTransactionUrl = "<%= j @payment.check_transaction_url %>";
+    var processingUrl = "<%= j @payment.processing_url %>";
+    var pollIntervalMs = 5000;
+    var hasRedirected = false;
+    var intervalId;
+
+    var pollStatus = function() {
+      if (hasRedirected) return;
+
+      fetch(checkTransactionUrl, {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        credentials: "same-origin"
+      })
+        .then(function(response) {
+          return response.json().then(function(body) {
+            return { ok: response.ok, body: body };
+          });
+        })
+        .then(function(result) {
+          var status = result.body && result.body.status ? String(result.body.status) : "pending";
+
+          if (status === "success" || status === "failed") {
+            hasRedirected = true;
+            if (intervalId) clearInterval(intervalId);
+            window.location.replace(processingUrl);
+          }
+        })
+        .catch(function() {});
+    };
+
+    intervalId = window.setInterval(pollStatus, pollIntervalMs);
+  });
+</script>
