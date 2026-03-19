@@ -58,7 +58,7 @@ module Vpago
       end
 
       def complete_url
-        "#{host}#{ENV.fetch('PAYWAY_V2_PRE_AUTH_COMPLETE_PATH')}"
+        "#{host}/api/merchant-portal/merchant-access/online-transaction/pre-auth-completion"
       end
 
       def success?

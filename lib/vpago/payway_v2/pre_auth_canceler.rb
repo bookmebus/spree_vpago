@@ -36,7 +36,7 @@ module Vpago
       end
 
       def cancel_url
-        "#{host}#{ENV.fetch('PAYWAY_V2_PRE_AUTH_CANCEL_PATH')}"
+        "#{host}/api/merchant-portal/merchant-access/online-transaction/pre-auth-cancellation"
       end
     end
   end
