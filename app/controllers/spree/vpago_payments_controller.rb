@@ -35,6 +35,29 @@ module Spree
       raise CanCan::AccessDenied unless @order.completed?
     end
 
+    # GET
+    def check_transaction
+      @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
+      raise ActiveRecord::RecordNotFound unless @payment.present?
+      
+      return render json: { status: :success }, status: :ok if @payment.completed?
+      return render json: { status: :failed }, status: :ok if @payment.failed?
+
+      if @payment.payment_method.support_check_transaction_api?
+        checker = @payment.payment_method.check_transaction(@payment)
+
+        if checker.success?
+          render json: { status: :success }, status: :ok
+        elsif checker.try(:failed?) == true
+          render json: { status: :failed }, status: :ok
+        else
+          render json: { status: :pending }, status: :ok
+        end
+      else
+        render json: { status: :pending }, status: :ok
+      end
+    end
+
     # POST
     def process_payment
       return render json: { status: :ok }, status: :ok if request.method != 'POST'

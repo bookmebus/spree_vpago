@@ -3,6 +3,7 @@ FactoryBot.define do
     name { 'Payway Payment Gateway' }
     preferred_merchant_id { 'contigoasia' }
     preferred_api_key { 'ec****40-****-****-****-fd1d****324b' }
+    preferred_payment_option { 'abapay_khqr' }
 
     before(:create) do |payway_gateway|
       if payway_gateway.stores.empty?

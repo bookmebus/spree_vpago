@@ -11,6 +11,18 @@ end
 %>
 
 <script>
+  function showRedirectContainer(buttonLabel, onClick) {
+    const loadingContainer = document.getElementById('vpago_loading_container');
+    const redirectContainer = document.getElementById('vpago_redirect_container');
+    const redirectButton = document.getElementById('vpago_redirect_button');
+
+    redirectButton.textContent = buttonLabel;
+    redirectButton.addEventListener('click', onClick);
+
+    loadingContainer.style.display = 'none';
+    redirectContainer.style.removeProperty('display');
+  }
+
   const platform = "<%= params[:platform] %>";
   const deeplinkUrl = "<%= raw(result[:deeplink_url]) %>";
   const webUrl = "<%= raw(result[:web_url]) %>";
@@ -25,12 +37,14 @@ end
 
     case "deeplink":
       redirectTo(deeplinkUrl);
+      showRedirectContainer("Continue", () => redirectTo(deeplinkUrl));
       break;
 
     case "all":
-      if (platform === "app") redirectTo(deeplinkUrl);
-      else if (platform === "web") redirectTo(webUrl);
-      else console.error("Unknown platform:", platform);
+      redirectTo(deeplinkUrl);
+      setTimeout(() => {
+        redirectTo(webUrl);
+      }, 1500);
       break;
 
     default:
