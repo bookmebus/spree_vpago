@@ -76,9 +76,9 @@ module Vpago
         # somehow php counter part are not able to decode if the \n present.
         hash.delete("\n")
       end
-
+      
       def check_transaction_url
-        "#{host}#{ENV.fetch('PAYWAY_CHECK_TRANSACTION_PATH', nil)}"
+        "#{host}/api/payment-gateway/v1/payments/check-transaction-2"
       end
     end
   end

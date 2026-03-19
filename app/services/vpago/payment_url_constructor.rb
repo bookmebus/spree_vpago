@@ -17,6 +17,7 @@ module Vpago
     def success_url = "#{base_url}/vpago_payments/success?#{query}"
     def success_deeplink_url = "#{app_scheme}://#{URI(base_url).host}/book/payment?number=#{order.number}&tk=#{order.token}"
 
+    def check_transaction_url = "#{base_url}/vpago_payments/check_transaction?#{query}"
     def process_payment_url = "#{base_url}/vpago_payments/process_payment?#{query}"
 
     def query

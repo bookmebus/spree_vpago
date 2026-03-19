@@ -1,18 +1,39 @@
 module Spree
   class Gateway::PaywayV2 < PaymentMethod
+    ABAPAY_KHQR_DEEPLINK_OPTIONS = %w[open_both open_deeplink_only open_checkout_url_only].freeze
+    PAYMENT_OPTIONS = %w[abapay_khqr_deeplink abapay_khqr cards wechat alipay].freeze
+
     preference :host, :string
     preference :api_key, :string
     preference :merchant_id, :string
-    preference :payment_option, :string # 'abapay', 'cards', 'abapay_deeplink'
+    preference :payment_option, :string
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
     preference :public_key, :text
+    preference :abapay_khqr_deeplink_option, :string, default: 'open_both'
+
+    # For reviewing purpose, not used in actual flow
+    preference :reviewing, :boolean, default: false
 
     validates :preferred_public_key, presence: true, if: :enable_pre_auth?
+    validates :preferred_abapay_khqr_deeplink_option, inclusion: { in: ABAPAY_KHQR_DEEPLINK_OPTIONS }, if: :abapay_khqr_deeplink?
+    validates :preferred_payment_option, inclusion: { in: PAYMENT_OPTIONS }
 
     # override: partial to render in admin
     def method_type
       'payway_v2'
+    end
+
+    def abapay_khqr_deeplink?
+      preferred_payment_option == 'abapay_khqr_deeplink'
+    end
+
+    def open_abapay_deeplink?
+      preferred_abapay_khqr_deeplink_option.in?(%w[open_both open_deeplink_only])
+    end
+
+    def open_checkout_url?
+      preferred_abapay_khqr_deeplink_option.in?(%w[open_both open_checkout_url_only])
     end
 
     # override
@@ -130,13 +151,13 @@ module Spree
       ActiveMerchant::Billing::Response.new(true, 'Payway Gateway: Payment has been canceled.')
     end
 
-    private
-
     def check_transaction(payment)
       checker = Vpago::PaywayV2::TransactionStatus.new(payment)
       checker.call
       checker
     end
+
+    private
 
     def cancel_pre_auth(payment)
       canceler = Vpago::PaywayV2::PreAuthCanceler.new(payment)

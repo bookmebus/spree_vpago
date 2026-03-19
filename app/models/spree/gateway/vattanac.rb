@@ -51,8 +51,6 @@ module Spree
       ActiveMerchant::Billing::Response.new(true, '')
     end
 
-    private
-
     def check_transaction(payment)
       checker = Vpago::Vattanac::TransactionStatus.new(payment)
       checker.call
