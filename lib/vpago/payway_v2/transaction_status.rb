@@ -1,37 +1,52 @@
 require 'faraday'
 
+# API documentation:
+# https://developer.payway.com.kh/check-transaction-14530826e0
 module Vpago
   module PaywayV2
     class TransactionStatus < Base
-      # status:
-      # 0 – Approved, PRE_AUTH, PREAUTH_APPROVED
-      # 1 – Created
-      # 2 – Pending
-      # 3 – Declined
-      # 4 – Refunded
-      # 5 – Wrong Hash
-      # 7 - Cancelled
-      # 11 – Other Server-side Error
       def call
         @response = check_remote_status
       end
 
-      def status
-        json_response['status']&.to_s
+      # 00 : Success!
+      # 5 : Invalid hash
+      # 6 : Transaction not found
+      # 8 : Invalid merchant profile
+      # 11 : Internal server error
+      # 429 : Reach request limit
+      def status_code
+        status_data = json_response['status']
+        return nil unless status_data.is_a?(Hash)
+
+        status_data['code']
+      end
+
+      # APPROVED : Transaction successfully completed with the full purchase amount.
+      # PRE-AUTH : Transaction successfully processed with a pre-authorization hold on funds pending final capture.
+      # REFUNDED : Transaction has been fully or partially refunded.
+      # PENDING : Transaction is awaiting payment completion by the payer.
+      # DECLINED : Transaction has been declined.
+      # CANCELLED : Merchant canceled the pre-authorization or closed the transaction.
+      def payment_status
+        data = json_response['data']
+        return nil unless data.is_a?(Hash)
+
+        data['payment_status']
       end
 
       def success?
-        status == '0'
+        %w[APPROVED PRE-AUTH].include?(payment_status)
       end
 
       # request failed does not mean payment failed.
       # but it failed when status is failed.
       def pending?
-        %w[1 2].include?(status)
+        %w[PENDING].include?(payment_status)
       end
 
       def failed?
-        %w[3 4 5 7].include?(status)
+        %w[5 6 8].include?(status_code) || %w[DECLINED CANCELLED].include?(payment_status)
       end
 
       def check_remote_status
@@ -78,7 +93,7 @@ module Vpago
       end
 
       def check_transaction_url
-        "#{host}#{ENV.fetch('PAYWAY_CHECK_TRANSACTION_PATH', nil)}"
+        "#{host}/api/payment-gateway/v1/payments/check-transaction-2"
       end
     end
   end
