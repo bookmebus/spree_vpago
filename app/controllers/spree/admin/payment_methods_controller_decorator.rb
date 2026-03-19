@@ -10,12 +10,14 @@ module Spree
           scope = scope.joins(:vendor)
                        .where.not(vendor_id: nil)
                        .where.not(spree_vendors: { tenant_id: nil })
+        else
+          scope = scope.where(vendor_id: nil)
         end
 
         scope
       end
 
-      # overrdie
+      # override
       # handling error response
       def create
         @payment_method = params[:payment_method].delete(:type).constantize.new(payment_method_params)
@@ -35,7 +37,7 @@ module Spree
         end
       end
 
-      # overrdie
+      # override
       # handling error response
       def update
         invoke_callbacks(:update, :before)
