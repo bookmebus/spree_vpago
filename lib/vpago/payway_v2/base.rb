@@ -4,6 +4,7 @@ module Vpago
       def initialize(payment, options = {})
         @options = options
         @payment = payment
+        @custom_return_deeplink_url = options[:custom_return_deeplink_url]
       end
 
       def req_time
@@ -76,8 +77,7 @@ module Vpago
       end
 
       def payment_option
-        card_option = @payment.payment_method.preferences[:payment_option]
-        Vpago::Payway::CARD_TYPES.index(card_option).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : card_option
+        @payment.payment_method.preferences[:payment_option]
       end
 
       # optional
@@ -105,6 +105,8 @@ module Vpago
       # redirect to continue URL, let it handle redirecting to app.
       # allowed override to specific app eg. from tg://t.me
       def return_deeplink_url
+        return @custom_return_deeplink_url if @custom_return_deeplink_url.present?
+
         app_scheme = @payment.payment_method.preferences[:app_scheme]
 
         if app_scheme.present?
