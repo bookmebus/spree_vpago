@@ -133,7 +133,14 @@ module Spree
     private
 
     def check_transaction(payment)
-      checker = Vpago::PaywayV2::TransactionStatus.new(payment)
+      # ABA requires the use of the v2 API, but it does not yet support payout responses.
+      # Until v2 fully supports payouts, we fall back to v1 when payouts are enabled.
+      # Otherwise, we use v2 by default.
+      checker = if enable_payout?
+                  Vpago::PaywayV2::TransactionStatus.new(payment)
+                else
+                  Vpago::PaywayV2::TransactionStatusV2.new(payment)
+                end
       checker.call
       checker
     end
@@ -174,7 +181,7 @@ module Spree
 
       return nil if payouts_response.nil? || !payouts_response.is_a?(Array) || payouts_response.empty?
 
-      payouts_response.map { |payout| payout['amt'].to_f || 0 }.sum
+      payouts_response.map { |payout| payout['amt'].to_f }.sum
     end
   end
 end

@@ -27,7 +27,7 @@ module Vpago
       end
 
       def checkout_url
-        "#{host}#{ENV.fetch('PAYWAY_CHECKOUT_PATH', nil)}"
+        "#{host}/api/payment-gateway/v1/payments/purchase"
       end
 
       alias action_url checkout_url
