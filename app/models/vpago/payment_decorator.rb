@@ -22,8 +22,9 @@ module Vpago
                     :web_checkout_url,
                     :processing_url,
                     :success_url,
-                    :process_payment_url,
                     :success_deeplink_url,
+                    :check_transaction_url,
+                    :process_payment_url,
                     to: :url_constructor
 
       # Add state machine event for payment retry

@@ -4,6 +4,7 @@ module Vpago
       def initialize(payment, options = {})
         @options = options
         @payment = payment
+        @disable_return_deeplink = options[:disable_return_deeplink] || false
       end
 
       def req_time
@@ -76,8 +77,7 @@ module Vpago
       end
 
       def payment_option
-        card_option = @payment.payment_method.preferences[:payment_option]
-        Vpago::Payway::CARD_TYPES.index(card_option).nil? ? Vpago::Payway::CARD_TYPE_ABAPAY : card_option
+        @payment.payment_method.preferences[:payment_option]
       end
 
       # optional
@@ -102,9 +102,18 @@ module Vpago
         end
       end
 
-      # redirect to continue URL, let it handle redirecting to app.
-      # allowed override to specific app eg. from tg://t.me
       def return_deeplink_url
+        # In Telegram, Facebook, and Messenger webviews, there is no reliable way for
+        # ABA to detect the originating app. Using `continue_success_url` may open the
+        # default browser instead of the intended app (e.g., Telegram or Facebook),
+        # resulting in a poor user experience.
+        #
+        # To prevent ABA from returning to the wrong app, we allow returning nil by
+        # setting `disable_return_deeplink: true`:
+        # - Android: ABA app automatically returns to the previous app (expected behavior)
+        # - iOS: no automatic redirect occurs, but users can tap "Back to <App>" at the top of ABA
+        return nil if @disable_return_deeplink
+
         app_scheme = @payment.payment_method.preferences[:app_scheme]
 
         if app_scheme.present?

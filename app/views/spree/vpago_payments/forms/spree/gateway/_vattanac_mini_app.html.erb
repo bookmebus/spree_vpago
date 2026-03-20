@@ -1,13 +1,23 @@
 <% @checkout = ::Vpago::VattanacMiniApp::Checkout.new(@payment) %>
-<% @payment.user_informer.payment_is_processing(processing: true) %>
 
 <p id="unsupported-message"
    style="margin-top: 10px; font-weight: bold; color: red; display: none;">
 </p>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
+  function showRedirectContainer(buttonLabel, onClick) {
+    const loadingContainer = document.getElementById('vpago_loading_container');
+    const redirectContainer = document.getElementById('vpago_redirect_container');
+    const redirectButton = document.getElementById('vpago_redirect_button');
 
+    redirectButton.textContent = buttonLabel;
+    redirectButton.addEventListener('click', onClick);
+
+    loadingContainer.style.display = 'none';
+    redirectContainer.style.removeProperty('display');
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
     const setupMiniAppPayment = () => {
       const detectMobileOS = () => {
         const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -24,8 +34,10 @@
 
       if (os === 'iOS' && window.webkit?.messageHandlers?.startPayment) {
         window.webkit.messageHandlers.startPayment.postMessage(JSON.stringify(payload));
+        showRedirectContainer("Continue", () => window.webkit.messageHandlers.startPayment.postMessage(JSON.stringify(payload)));
       } else if (os === 'Android' && window.AndroidInterface?.startPayment) {
         window.AndroidInterface.startPayment(JSON.stringify(payload));
+        showRedirectContainer("Continue", () => window.AndroidInterface.startPayment(JSON.stringify(payload)));
       } else {
         const unsupported = document.getElementById('unsupported-message');
         unsupported.style.display = 'block';
@@ -33,20 +45,6 @@
       }
     };
 
-    const setupPaymentProcessingListener = () => {
-      const firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
-      const documentReferencePath = "<%= @payment.user_informer.document_reference_path %>";
-      const successUrl = "<%= @payment.success_url %>";
-
-      if (window.initPaymentProcessingListener) {
-        window.initPaymentProcessingListener(firebaseConfigs, documentReferencePath, successUrl);
-      } else {
-        console.log("initPaymentProcessingListener is not defined");
-      }
-    };
-    
-    setupMiniAppPayment();
-    setupPaymentProcessingListener();
-    
+    setupMiniAppPayment();    
   });
 </script>
