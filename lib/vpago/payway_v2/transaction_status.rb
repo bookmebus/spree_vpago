@@ -54,7 +54,7 @@ module Vpago
 
         return nil if payouts_response.nil? || !payouts_response.is_a?(Array) || payouts_response.empty?
 
-        payouts_response.map { |payout| payout['amt'].to_f || 0 }.sum
+        payouts_response.map { |payout| payout['amt'].to_f }.sum
       end
 
       def error_message
@@ -78,7 +78,7 @@ module Vpago
       end
 
       def check_transaction_url
-        "#{host}#{ENV.fetch('PAYWAY_CHECK_TRANSACTION_PATH', nil)}"
+        "#{host}/api/payment-gateway/v1/payments/check-transaction"
       end
     end
   end

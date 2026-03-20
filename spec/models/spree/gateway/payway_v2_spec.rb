@@ -290,11 +290,26 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
   describe '#check_transaction' do
     let(:checker) { Vpago::PaywayV2::TransactionStatus.new(payment) }
 
-    it 'execute .call and returns checker itself' do
-      expect(Vpago::PaywayV2::TransactionStatus).to receive(:new).with(payment).and_return(checker)
-      expect(checker).to receive(:call)
+    context 'when payout is enabled' do
+      it 'initialize TransactionStatus and call .call' do
+        allow(payment_method).to receive(:enable_payout?).and_return(true)
 
-      expect(payment_method.send(:check_transaction, payment)).to eq(checker)
+        expect(Vpago::PaywayV2::TransactionStatus).to receive(:new).with(payment).and_return(checker)
+        expect(checker).to receive(:call)
+
+        payment_method.send(:check_transaction, payment)
+      end
+    end
+
+    context 'when payout is disabled' do
+      it 'initialize TransactionStatusV2 and call .call' do
+        allow(payment_method).to receive(:enable_payout?).and_return(false)
+
+        expect(Vpago::PaywayV2::TransactionStatusV2).to receive(:new).with(payment).and_return(checker)
+        expect(checker).to receive(:call)
+
+        payment_method.send(:check_transaction, payment)
+      end
     end
   end
 
