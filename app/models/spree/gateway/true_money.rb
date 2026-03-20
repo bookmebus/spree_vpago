@@ -73,8 +73,6 @@ module Spree
       [refund_issuer.success?, refund_issuer.parsed_response]
     end
 
-    private
-
     def check_transaction(payment)
       checker = Vpago::TrueMoney::TransactionStatus.new(payment)
       checker.call
