@@ -1,13 +1,88 @@
-<% @checkout = ::Vpago::PaywayV2::Checkout.new(@payment) %>
+<% @checkout_options = { disable_return_deeplink: params[:platform] == 'web' } %>
+<% @checkout = ::Vpago::PaywayV2::Checkout.new(@payment, @checkout_options) %>
+
+<% content_for :head do %>
+  <link rel="preconnect" href="<%= @payment.payment_method.preferred_host %>" crossorigin>
+  <link rel="dns-prefetch" href="<%= @payment.payment_method.preferred_host %>">
+<% end %>
 
 <form method="POST" action="<%= @checkout.checkout_url %>" id="aba_merchant_request">
   <% @checkout.gateway_params.each do |key, value| %>
-    <input type='hidden' name='<%= key %>' value='<%= value %>' />
+    <input type="hidden" name="<%= key %>" value="<%= value %>">
   <% end %>
 </form>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("aba_merchant_request").submit()
-  })
+  const isMobile = <%= mobile_user_agent? %>;
+
+  const abapayKhqrDeeplink = <%= @payment.payment_method.abapay_khqr_deeplink? %>;
+  const shouldOpenAbaPayDeeplink = isMobile && <%= @payment.payment_method.open_abapay_deeplink? %>;
+  const shouldOpenCheckoutUrl = <%= @payment.payment_method.open_checkout_url? %>;
+
+  function showRedirectContainer(buttonLabel = null, onClick = null) {
+    const loadingContainer = document.getElementById('vpago_loading_container');
+    const redirectContainer = document.getElementById('vpago_redirect_container');
+    const redirectButton = document.getElementById('vpago_redirect_button');
+
+    if (buttonLabel && onClick) {
+      redirectButton.textContent = buttonLabel;
+      redirectButton.addEventListener('click', onClick);
+    } else {
+      redirectButton.style.display = 'none';
+    }
+
+    loadingContainer.style.display = 'none';
+    redirectContainer.style.removeProperty('display');
+  }
+
+  function submitForm() {
+    document.getElementById("aba_merchant_request").submit();
+  }
+
+  function submitFormViaJs(){
+    var formData = new FormData(document.getElementById("aba_merchant_request"));
+    var checkoutUrl = document.getElementById("aba_merchant_request").action;
+
+    fetch(checkoutUrl, {
+      method: "POST",
+      body: formData
+    })
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(data) {
+      console.log("[Vpago] checkout response data:", JSON.stringify(data));
+
+      // When status code is 4 (duplicated transaction),
+      // Possibly user refresh the checkout page even after the transaction is completed.
+      // So in this case, we should hide loading spinner and show redirect container UI
+      // While it check transaction status in the background. It will automatically redirect user to the result page after checking.
+      if (data.status.code === 4){
+        showRedirectContainer();
+        return;
+      }
+
+      if (data.abapay_deeplink && shouldOpenAbaPayDeeplink) {
+        window.location.href = data.abapay_deeplink;
+      }
+
+      if (data.checkout_qr_url && shouldOpenCheckoutUrl) {
+        window.location.href = data.checkout_qr_url;
+      }
+
+      shouldShowRedirectContainer = !shouldOpenCheckoutUrl && shouldOpenAbaPayDeeplink;
+      if(shouldShowRedirectContainer){
+        showRedirectContainer("Open ABA Mobile", () => openDeeplinkUrl(data.abapay_deeplink));
+      }
+    })
+    .catch(function(error) {
+      console.error("Payment request failed:", error);
+    });
+  }
+
+  if (abapayKhqrDeeplink) {
+    submitFormViaJs();
+  } else {
+    submitForm();
+  }
 </script>

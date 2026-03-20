@@ -88,7 +88,7 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
     end
 
     context 'when transaction checker response unpaid' do
-      let(:checker) { Vpago::PaywayV2::TransactionStatus.new(payment) }
+      let(:checker) { Vpago::PaywayV2::TransactionStatusV2.new(payment) }
 
       before do
         allow(checker).to receive(:success?).and_return(false)
@@ -105,10 +105,10 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
     end
 
     context 'when transaction checker raise Faraday errors' do
-      let(:checker) { Vpago::PaywayV2::TransactionStatus.new(payment) }
+      let(:checker) { Vpago::PaywayV2::TransactionStatusV2.new(payment) }
 
       it 'rethrow the error' do
-        allow(Vpago::PaywayV2::TransactionStatus).to receive(:new).and_return(checker)
+        allow(Vpago::PaywayV2::TransactionStatusV2).to receive(:new).and_return(checker)
         allow(checker).to receive(:check_remote_status).and_raise(Faraday::ConnectionFailed.new)
         expect { payment_method.authorize(nil, nil, payment.gateway_options) }.to raise_error(Faraday::ConnectionFailed)
 
@@ -177,10 +177,10 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
     end
 
     context 'when transaction checker raise Faraday errors' do
-      let(:checker) { Vpago::PaywayV2::TransactionStatus.new(payment) }
+      let(:checker) { Vpago::PaywayV2::TransactionStatusV2.new(payment) }
 
       it 'rethrow the error' do
-        allow(Vpago::PaywayV2::TransactionStatus).to receive(:new).and_return(checker)
+        allow(Vpago::PaywayV2::TransactionStatusV2).to receive(:new).and_return(checker)
         allow(checker).to receive(:check_remote_status).and_raise(Faraday::ConnectionFailed.new)
         expect { payment_method.purchase(nil, nil, payment.gateway_options) }.to raise_error(Faraday::ConnectionFailed)
 
@@ -292,10 +292,11 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
 
     context 'when payout is enabled' do
       it 'initialize TransactionStatus and call .call' do
-        allow(payment_method).to receive(:enable_payout?).and_return(true)
+        payment.update(preload_payout_ids: [1, 2, 3])
 
         expect(Vpago::PaywayV2::TransactionStatus).to receive(:new).with(payment).and_return(checker)
         expect(checker).to receive(:call)
+        expect(payment.reload.preload_payout_ids).to eq([1, 2, 3])
 
         payment_method.send(:check_transaction, payment)
       end
@@ -303,10 +304,9 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
 
     context 'when payout is disabled' do
       it 'initialize TransactionStatusV2 and call .call' do
-        allow(payment_method).to receive(:enable_payout?).and_return(false)
-
         expect(Vpago::PaywayV2::TransactionStatusV2).to receive(:new).with(payment).and_return(checker)
         expect(checker).to receive(:call)
+        expect(payment.preload_payout_ids).to eq([])
 
         payment_method.send(:check_transaction, payment)
       end
