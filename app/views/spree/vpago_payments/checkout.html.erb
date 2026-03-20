@@ -1,3 +1,15 @@
-<h1>Checkout...</h1>
+<div id="vpago_loading_container">
+  Loading...
+</div>
 
-<%= render_form %>
+<div id="vpago_redirect_container" style="display: none;">
+  <h1>We're redirecting you to your bank</h1>
+  <p>You'll be returned here after confirming your <strong><%= @payment.display_amount %></strong> payment.</p>
+
+  <button id="vpago_redirect_button">
+    <!-- Use JS to modify button label and callback -->
+  </button>
+</div>
+
+<%= render_checkout_form %>
+<%= render_transaction_checker %>
