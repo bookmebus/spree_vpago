@@ -37,6 +37,12 @@ module Vpago
                              class: 'fullwidth select2')
         when 'preferred_icon_name'
           return form.select(:preferred_icon_name, available_payment_icons, {}, class: 'fullwidth select2')
+        when 'preferred_payment_option'
+          return form.select(:preferred_payment_option, Spree::Gateway::PaywayV2::PAYMENT_OPTIONS, {}, class: 'fullwidth select2')
+        when 'preferred_abapay_khqr_deeplink_option'
+          return ''.html_safe unless form.object.abapay_khqr_deeplink?
+
+          return form.select(:preferred_abapay_khqr_deeplink_option, Spree::Gateway::PaywayV2::ABAPAY_KHQR_DEEPLINK_OPTIONS, {}, class: 'fullwidth select2')
         when 'preferred_vattanac_payment_option'
           return form.select(:preferred_vattanac_payment_option, available_vattanac_payment_options, {}, class: 'fullwidth select2')
         end

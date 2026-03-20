@@ -16,7 +16,7 @@
 
     window.listenToProcessingState({
       firebaseConfigs: firebaseConfigs,
-      documentReferencePath: "<%= payment.user_informer.document_reference_path %>",
+      documentReferencePath: "<%= @payment.user_informer.document_reference_path %>",
       onPaymentIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Payment is processing";
         document.getElementById("reason_code").innerText = reasonCode;
