@@ -22,14 +22,26 @@ module Vpago
                     :web_checkout_url,
                     :processing_url,
                     :success_url,
-                    :process_payment_url,
                     :success_deeplink_url,
+                    :check_transaction_url,
+                    :process_payment_url,
                     to: :url_constructor
 
       # Add state machine event for payment retry
       base.state_machine.event :reset_for_retry do
         transition from: %i[failed], to: :checkout
       end
+    end
+
+    # Stores preloaded payout IDs in private_metadata to avoid N+1 queries
+    # when checking whether payouts exist for this payment.
+    def preload_payout_ids=(ids)
+      self.private_metadata ||= {}
+      self.private_metadata['preload_payout_ids'] = ids
+    end
+
+    def preload_payout_ids
+      self.private_metadata&.fetch('preload_payout_ids', []) || []
     end
 
     # override
@@ -105,4 +117,4 @@ module Vpago
   end
 end
 
-Spree::Payment.prepend(Vpago::PaymentDecorator) unless Spree::Payment.included_modules.include?(Vpago::PaymentDecorator)
+Spree::Payment.prepend(Vpago::PaymentDecorator) unless Spree::Payment.include?(Vpago::PaymentDecorator)

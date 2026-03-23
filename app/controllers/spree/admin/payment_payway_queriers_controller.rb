@@ -2,11 +2,11 @@ module Spree
   module Admin
     class PaymentPaywayQueriersController < PaymentPaywayBaseController
       include Spree::Backend::Callbacks
+
       around_action :set_writing_role, only: %i[show]
 
       def show
-        tran_status = transaction_status_service.new(@payment)
-        tran_status.call
+        tran_status = @payment.payment_method.check_transaction(@payment)
 
         if tran_status.success?
           @payment.update_column(:gateway_status, true)
@@ -17,14 +17,6 @@ module Spree
         end
 
         redirect_to admin_order_payment_path(order_id: @payment.order.number, id: @payment.number)
-      end
-
-      def transaction_status_service
-        if @payment.payment_method.type_payway_v2?
-          Vpago::PaywayV2::TransactionStatus
-        elsif @payment.payment_method.type_payway?
-          Vpago::Payway::TransactionStatus
-        end
       end
 
       private

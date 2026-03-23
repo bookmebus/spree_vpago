@@ -52,13 +52,11 @@ module Vpago
       end
 
       def check_payway_status
-        trans_status = Vpago::PaywayV2::TransactionStatus.new(@payment)
-        trans_status.call
-        trans_status
+        @payment.payment_method.check_transaction(@payment)
       end
 
       def items_eligible?
-        @payment&.order&.line_items&.all?(&:sufficient_stock?) == true
+        @payment&.order&.line_items&.all?(&:sufficient_stock?) == true # rubocop:disable Style/SafeNavigationChainLength
       end
     end
   end
