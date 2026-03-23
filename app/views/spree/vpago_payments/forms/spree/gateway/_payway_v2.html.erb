@@ -19,9 +19,13 @@
   }
 
   function openUrl(url, delay = 0) {
-    setTimeout(function() {
+    if(delay > 0) {
+      setTimeout(function() {
+        window.location.href = url;
+      }, delay);
+    } else {
       window.location.href = url;
-    }, delay);
+    }
   }
 
   function showRedirectContainer(buttonLabel = null, onClick = null) {
@@ -53,6 +57,7 @@
         return response.json();
       })
       .then(function(data) {
+        var shouldDelayBeforeOpenCheckoutUrl = false;
         var shouldShowRedirectContainer = false;
 
         console.log("[Vpago] checkout response data:", JSON.stringify(data));
@@ -69,11 +74,12 @@
 
         if (data.abapay_deeplink && shouldOpenAbaPayDeeplink) {
           openDeeplinkUrl(data.abapay_deeplink);
+          shouldDelayBeforeOpenCheckoutUrl = true;
           shouldShowRedirectContainer = true;
         }
 
         if (data.checkout_qr_url && shouldOpenCheckoutUrl) {
-          openUrl(data.checkout_qr_url);
+          openUrl(data.checkout_qr_url, shouldDelayBeforeOpenCheckoutUrl ? 50 : 0);
           shouldShowRedirectContainer = false;
         }
 

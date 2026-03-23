@@ -24,7 +24,7 @@ module Vpago
       end
 
       def amount
-        format('%.2f', (@payment.amount + transaction_fee))
+        format('%.2f', @payment.amount + transaction_fee)
       end
 
       def transaction_fee_fix
