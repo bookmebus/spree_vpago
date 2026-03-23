@@ -35,6 +35,10 @@
     redirectContainer.style.removeProperty('display');
   }
 
+  function submitForm() {
+    document.getElementById("aba_merchant_request").submit();
+  }
+
   function submitFormViaJs(){
     var formData = new FormData(document.getElementById("aba_merchant_request"));
     var checkoutUrl = document.getElementById("aba_merchant_request").action;
@@ -74,10 +78,6 @@
     .catch(function(error) {
       console.error("Payment request failed:", error);
     });
-  }
-
-  function submitForm() {
-    document.getElementById("aba_merchant_request").submit();
   }
 
   if (abapayKhqrDeeplink) {

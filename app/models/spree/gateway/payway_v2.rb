@@ -12,9 +12,16 @@ module Spree
     preference :public_key, :text
     preference :abapay_khqr_deeplink_option, :string, default: 'open_both'
 
+    # For reviewing purpose, not used in actual flow
+    preference :reviewing_mode, :boolean, default: false
+
     validates :preferred_public_key, presence: true, if: :enable_pre_auth?
     validates :preferred_abapay_khqr_deeplink_option, inclusion: { in: ABAPAY_KHQR_DEEPLINK_OPTIONS }, if: :abapay_khqr_deeplink?
     validates :preferred_payment_option, inclusion: { in: PAYMENT_OPTIONS }
+
+    def reviewing_mode?
+      preferred_reviewing_mode
+    end
 
     # override: partial to render in admin
     def method_type
@@ -152,7 +159,7 @@ module Spree
       # ABA requires the use of the v2 API, but it does not yet support payout responses.
       # Until v2 fully supports payouts, we fall back to v1 when payouts are enabled.
       # Otherwise, we use v2 by default.
-      checker = if enable_payout?
+      checker = if payment.payouts.any?
                   Vpago::PaywayV2::TransactionStatus.new(payment)
                 else
                   Vpago::PaywayV2::TransactionStatusV2.new(payment)
