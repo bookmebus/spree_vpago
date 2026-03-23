@@ -57,9 +57,6 @@
         return response.json();
       })
       .then(function(data) {
-        var shouldDelayBeforeOpenCheckoutUrl = false;
-        var shouldShowRedirectContainer = false;
-
         console.log("[Vpago] checkout response data:", JSON.stringify(data));
 
         // When status code is 4 (duplicated transaction),
@@ -67,10 +64,12 @@
         // So in this case, we should hide loading spinner and show redirect container UI
         // While it check transaction status in the background. It will automatically redirect user to the result page after checking.
         if (data.status.code === 4){
-          shouldShowRedirectContainer = true;
           showRedirectContainer();
           return;
         }
+
+        var shouldDelayBeforeOpenCheckoutUrl = false;
+        var shouldShowRedirectContainer = false;
 
         if (data.abapay_deeplink && shouldOpenAbaPayDeeplink) {
           openDeeplinkUrl(data.abapay_deeplink);
