@@ -66,6 +66,13 @@ module Spree
       @payment = Vpago::PaymentFinder.new(return_params).find_and_verify
       return render_not_found unless @payment.present?
 
+      # for ABA reviewing mode, we can disable pushback from bank, and only process it from our app UI instead.
+      # This will give ABA team to know that we don't rely on just pushback and have fallback to process payment.
+      if @payment.payment_method.type_payway_v2? && @payment.payment_method.reviewing_mode? && request_from_bank?
+        Rails.logger.info("[Vpago] Processing payment in reviewing mode: #{params}")
+        return render json: { status: :ok }, status: :ok
+      end
+
       unless @payment.order.paid?
         Vpago::PaymentProcessorJob.perform_later(
           payment_number: @payment.number
@@ -74,7 +81,7 @@ module Spree
 
       render json: { status: :ok }, status: :ok
     rescue StandardError => e
-      Rails.logger.error("Failed to enqueued payment processor job: #{params} #{e.message}")
+      Rails.logger.error("[Vpago] Failed to enqueue payment processor job: #{params} #{e.message}")
       render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
 
@@ -89,7 +96,7 @@ module Spree
 
       render json: { status: { code: '000001', message: 'success' }, data: nil }, status: :ok
     rescue StandardError => e
-      Rails.logger.error("Payment error: #{e.message}")
+      Rails.logger.error("[Vpago] Failed to enqueue payment processor job: #{params} #{e.message}")
       render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
 
@@ -114,6 +121,10 @@ module Spree
         format.html { render file: Rails.public_path.join('422.html'), status: :not_found, layout: false }
         format.json { render json: { status: :unauthorized }, status: :unauthorized }
       end
+    end
+
+    def request_from_bank?
+      request.headers['X-CSRF-Token'].nil?
     end
   end
 end
