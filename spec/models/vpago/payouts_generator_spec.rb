@@ -84,6 +84,7 @@ RSpec.describe Vpago::PayoutsGenerator do
         payouts = subject.call
   
         expect(payouts.size).to eq 4
+        expect(payment.preload_payout_ids.size).to eq 4
   
         expect(payouts[0].amount).to eq 5.0
         expect(payouts[0].payoutable).to eq line_item0
@@ -119,6 +120,7 @@ RSpec.describe Vpago::PayoutsGenerator do
         payouts = subject.call
 
         expect(payouts.size).to eq 4
+        expect(payment.preload_payout_ids.size).to eq 4
 
         expect(line_item0.pre_commission_amount).to eq 0.625
         expect(payouts[0].amount).to eq 0.63
