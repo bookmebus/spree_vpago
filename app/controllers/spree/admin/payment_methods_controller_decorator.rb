@@ -5,17 +5,17 @@ module Spree
         scope = current_store.payment_methods_including_vendor.accessible_by(current_ability, :index)
 
         if params[:tab] == 'vendors'
-          scope = scope.where.not(vendor_id: nil)
+          scope.where.not(vendor_id: nil)
         elsif params[:tab] == 'tenants'
-          scope = scope.joins(:vendor)
-                       .where.not(vendor_id: nil)
-                       .where.not(spree_vendors: { tenant_id: nil })
+          scope.joins(:vendor)
+               .where.not(vendor_id: nil)
+               .where.not(spree_vendors: { tenant_id: nil })
+        else
+          scope.where(vendor_id: nil)
         end
-
-        scope
       end
 
-      # overrdie
+      # override
       # handling error response
       def create
         @payment_method = params[:payment_method].delete(:type).constantize.new(payment_method_params)
@@ -35,7 +35,7 @@ module Spree
         end
       end
 
-      # overrdie
+      # override
       # handling error response
       def update
         invoke_callbacks(:update, :before)
@@ -49,7 +49,7 @@ module Spree
         end
 
         attributes = payment_method_params.merge(preferences_params)
-        attributes.each do |k, _v|
+        attributes.each_key do |k|
           attributes.delete(k) if k.include?('password') && attributes[k].blank?
         end
 
