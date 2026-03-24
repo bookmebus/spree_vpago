@@ -39,7 +39,7 @@ module Vpago
 
         # If any payouts were rounded, the total may increase slightly.
         # Update the payment amount to match the sum of payouts to avoid mismatch errors.
-        payment.update(amount: payouts.map(&:amount).sum)
+        payment.update(amount: payouts.map(&:amount).sum, preload_payout_ids: payouts.map(&:id))
 
         payouts
       end
