@@ -12,7 +12,7 @@ on:
       - 112-ci-cd
       - 245-build-and-publish-gem
     tags:
-        - "*"
+      - "*"
 jobs:
   test_and_publish_gem:
     runs-on: ubuntu-latest
@@ -66,7 +66,10 @@ jobs:
       #   run: |
       #     bundle exec brakeman
 
+      # Run all tests except for pre-release tags (e.g., *-pre)
+      # to keep those builds fast and allow faster deployment to our testing server.
       - name: Run test
+        if: ${{ !startsWith(github.ref, 'refs/tags/') || !contains(github.ref_name, '-pre') }}
         env:
           DATABASE_URL: postgres://myuser:mypassword@localhost:5432/test_db
         run: |
