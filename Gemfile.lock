@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    spree_vpago (2.2.2.pre.pre29)
+    spree_vpago (2.3.0)
       faraday
       google-cloud-firestore
       spree_api (>= 4.5)
