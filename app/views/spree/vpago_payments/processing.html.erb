@@ -3,6 +3,8 @@
 <p id="processing"></p>
 <p id="reason_message"></p>
 
+<%= render_additional_processing_script(@payment) %>
+
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     let firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
@@ -16,7 +18,7 @@
 
     window.listenToProcessingState({
       firebaseConfigs: firebaseConfigs,
-      documentReferencePath: "<%= payment.user_informer.document_reference_path %>",
+      documentReferencePath: "<%= @payment.user_informer.document_reference_path %>",
       onPaymentIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Payment is processing";
         document.getElementById("reason_code").innerText = reasonCode;
