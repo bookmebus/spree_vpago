@@ -18,7 +18,7 @@ async function requestProcessPayment({
             .querySelector('meta[name="csrf-token"]')
             .getAttribute("content"),
         },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ ...params, internal_client: "true" }),
       });
 
       if (!response.ok) {
