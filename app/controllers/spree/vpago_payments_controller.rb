@@ -84,6 +84,13 @@ module Spree
 
       Rails.logger.info("[Vpago][#{@payment.number}] Payment found: #{@payment&.number}, order: #{@payment&.order&.number}")
 
+      # for ABA reviewing mode, we can disable pushback from bank, and only process it from our app UI instead.
+      # This will give ABA team to know that we don't rely on just pushback and have fallback to process payment.
+      if @payment.payment_method.type_payway_v2? && @payment.payment_method.reviewing_mode? && request_from_external_server?
+        Rails.logger.info("[Vpago][#{@payment.number}] Received payment notification from bank in reviewing mode, skipping processing")
+        return render json: { status: :ok }, status: :ok
+      end
+
       unless @payment.order.paid?
         Rails.logger.info("[Vpago][#{@payment.number}] Enqueuing payment processor job for payment #{@payment.number}")
         Vpago::PaymentProcessorJob.perform_later(
@@ -135,6 +142,10 @@ module Spree
         format.html { render file: Rails.public_path.join('422.html'), status: :not_found, layout: false }
         format.json { render json: { status: :unauthorized }, status: :unauthorized }
       end
+    end
+
+    def request_from_external_server?
+      params[:internal_client].blank? || params[:internal_client] == 'false'
     end
   end
 end
