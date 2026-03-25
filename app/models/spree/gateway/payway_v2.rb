@@ -6,7 +6,7 @@ module Spree
     preference :host, :string
     preference :api_key, :string
     preference :merchant_id, :string
-    preference :payment_option, :string
+    preference :payment_option, :string, default: 'abapay_khqr_deeplink'
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
     preference :public_key, :text
@@ -17,6 +17,8 @@ module Spree
 
     validates :preferred_public_key, presence: true, if: :enable_pre_auth?
     validates :preferred_abapay_khqr_deeplink_option, inclusion: { in: ABAPAY_KHQR_DEEPLINK_OPTIONS }, if: :abapay_khqr_deeplink?
+
+    # For initial save, there is no preferences yet, so validating them would failed. Only validate along with host or api key.
     validates :preferred_payment_option, inclusion: { in: PAYMENT_OPTIONS }
 
     def reviewing_mode?

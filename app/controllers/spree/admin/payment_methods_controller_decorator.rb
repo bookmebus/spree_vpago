@@ -6,10 +6,12 @@ module Spree
 
         if params[:tab] == 'vendors'
           scope.where.not(vendor_id: nil)
+               .includes(:vendor)
         elsif params[:tab] == 'tenants'
           scope.joins(:vendor)
                .where.not(vendor_id: nil)
                .where.not(spree_vendors: { tenant_id: nil })
+               .includes(vendor: :tenant)
         else
           scope.where(vendor_id: nil)
         end
