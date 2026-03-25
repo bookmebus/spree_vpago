@@ -17,7 +17,12 @@
 
   const abapayKhqrDeeplink = <%= @payment.payment_method.abapay_khqr_deeplink? %>;
   const shouldOpenAbaPayDeeplink = isMobile && <%= @payment.payment_method.open_abapay_deeplink? %>;
-  const shouldOpenCheckoutUrl = <%= @payment.payment_method.open_checkout_url? %>;
+
+  // If the device is not mobile, deeplinks won't work anyway,
+  // so we always open the checkout URL (KHQR page) for desktop users.
+  // 
+  // On mobile, only open the checkout URL if explicitly enabled.
+  const shouldOpenCheckoutUrl = !isMobile || <%= @payment.payment_method.open_checkout_url? %>;
 
   function showRedirectContainer(buttonLabel = null, onClick = null) {
     const loadingContainer = document.getElementById('vpago_loading_container');
@@ -62,12 +67,24 @@
         return;
       }
 
+      let deeplinkTriggered = false;
+
       if (data.abapay_deeplink && shouldOpenAbaPayDeeplink) {
         window.location.href = data.abapay_deeplink;
+        deeplinkTriggered = true;
       }
 
       if (data.checkout_qr_url && shouldOpenCheckoutUrl) {
-        window.location.href = data.checkout_qr_url;
+        // If a deeplink is triggered, add a short delay before navigating to the checkout URL.
+        // Without this delay, some platforms (especially Android) may ignore or cancel the deeplink
+        // because a second navigation happens too quickly.
+        if (deeplinkTriggered){
+          setTimeout(() => {
+            window.location.href = data.checkout_qr_url;
+          }, 300);
+        } else {
+          window.location.href = data.checkout_qr_url;
+        }
       }
 
       var shouldShowRedirectContainer = !shouldOpenCheckoutUrl && shouldOpenAbaPayDeeplink;

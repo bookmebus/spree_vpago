@@ -6,7 +6,7 @@ module Spree
     preference :host, :string
     preference :api_key, :string
     preference :merchant_id, :string
-    preference :payment_option, :string
+    preference :payment_option, :string, default: 'abapay_khqr_deeplink'
     preference :transaction_fee_fix, :string
     preference :transaction_fee_percentage, :string
     preference :public_key, :text
