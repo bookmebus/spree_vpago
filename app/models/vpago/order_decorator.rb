@@ -1,11 +1,12 @@
 module Vpago
   module OrderDecorator
     extend Spree::DisplayMoney
+
     money_methods :order_adjustment_total, :shipping_discount
 
     def self.prepended(base)
       base.has_many :payouts, class_name: 'Spree::Payout', through: :payments
-      base.has_many :vendor_payment_methods, -> { unscope(:order).distinct },
+      base.has_many :vendor_payment_methods, -> { where(spree_payment_methods: { deleted_at: nil }).reorder(nil).distinct },
                     class_name: 'Spree::PaymentMethod',
                     through: :line_items
 
@@ -51,19 +52,29 @@ module Vpago
 
     # override
     def available_payment_methods(store = nil)
-      payment_methods = if respond_to?(:tenant) && tenant.present?
-                          tenant_payment_methods
-                        elsif vendor_payment_methods.any?
-                          vendor_payment_methods
-                        else
-                          collect_payment_methods(store)
-                        end
+      @available_payment_methods ||= begin
+        payment_methods = if respond_to?(:tenant) && tenant.present?
+                            tenant_payment_methods
+                          elsif vendor_payment_methods.any?
+                            vendor_payment_methods
+                          else
+                            store ||= self.store
+                            store.payment_methods
+                          end
 
-      @available_payment_methods ||= if required_payway_payout?
-                                       payment_methods.select(&:support_payout?)
-                                     else
-                                       payment_methods
-                                     end
+        payment_methods = if early_adopter?
+                            payment_methods.available_on_frontend_for_early_adopter.select { |pm| pm.available_for_order?(self) }
+                          else
+                            payment_methods.available_on_front_end.select { |pm| pm.available_for_order?(self) }
+                          end
+
+        payment_methods = payment_methods.select(&:support_payout?) if required_payway_payout?
+        payment_methods
+      end
+    end
+
+    def early_adopter?
+      user.present? && user.respond_to?(:early_adopter?) && user.early_adopter?
     end
 
     def tenant_payment_methods

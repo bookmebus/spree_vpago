@@ -1,7 +1,6 @@
 # Configure Rails Environment
 ENV['RAILS_ENV'] = 'test'
 ENV['DEFAULT_URL_HOST'] = 'http://localhost:4000'
-ENV['PAYWAY_CHECK_TRANSACTION_PATH'] = '/api/payment-gateway/v1/payments/check-transaction'
 
 require File.expand_path('../dummy/config/environment.rb', __FILE__)
 

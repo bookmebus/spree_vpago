@@ -118,6 +118,100 @@ RSpec.describe Spree::Order, type: :model do
       it 'return does not return any store payment methods (has no associated vendor)' do
         expect(order.available_payment_methods.pluck(:id)).not_to include(payment_method0.id)
       end
+
+      it 'removes inherited line_item ordering while keeping soft-delete filtering' do
+        deleted_vendor_payment_method = create(:payment_method, vendor: vendor1)
+        deleted_vendor_payment_method.destroy
+
+        sql = order.vendor_payment_methods.to_sql
+
+        expect(sql).not_to include('"spree_line_items"."created_at"')
+        expect(order.vendor_payment_methods).to include(payment_method1)
+        expect(order.vendor_payment_methods).not_to include(deleted_vendor_payment_method)
+      end
+
+      it 'does not raise DISTINCT + ORDER BY postgres error when loading available payment methods' do
+        expect { order.available_payment_methods.to_a }.not_to raise_error
+      end
+    end
+
+    context 'when user is early adopter' do
+      let(:store) { instance_double(Spree::Store) }
+      let(:payment_methods_scope) { double('payment_methods_scope') }
+      let(:allowed_method) { instance_double(Spree::PaymentMethod) }
+      let(:blocked_method) { instance_double(Spree::PaymentMethod) }
+
+      before do
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(false)
+        allow(order).to receive(:vendor_payment_methods).and_return([])
+        allow(order).to receive(:store).and_return(store)
+        allow(store).to receive(:payment_methods).and_return(payment_methods_scope)
+        allow(order).to receive(:early_adopter?).and_return(true)
+        allow(order).to receive(:required_payway_payout?).and_return(false)
+        allow(allowed_method).to receive(:available_for_order?).with(order).and_return(true)
+        allow(blocked_method).to receive(:available_for_order?).with(order).and_return(false)
+      end
+
+      it 'uses early adopter payment method scope' do
+        expect(payment_methods_scope).to receive(:available_on_frontend_for_early_adopter).and_return([allowed_method, blocked_method])
+        expect(payment_methods_scope).not_to receive(:available_on_front_end)
+
+        expect(order.available_payment_methods).to eq([allowed_method])
+      end
+    end
+
+    context 'when user is not early adopter' do
+      let(:store) { instance_double(Spree::Store) }
+      let(:payment_methods_scope) { double('payment_methods_scope') }
+      let(:allowed_method) { instance_double(Spree::PaymentMethod) }
+      let(:blocked_method) { instance_double(Spree::PaymentMethod) }
+
+      before do
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(false)
+        allow(order).to receive(:vendor_payment_methods).and_return([])
+        allow(order).to receive(:store).and_return(store)
+        allow(store).to receive(:payment_methods).and_return(payment_methods_scope)
+        allow(order).to receive(:early_adopter?).and_return(false)
+        allow(order).to receive(:required_payway_payout?).and_return(false)
+        allow(allowed_method).to receive(:available_for_order?).with(order).and_return(true)
+        allow(blocked_method).to receive(:available_for_order?).with(order).and_return(false)
+      end
+
+      it 'uses regular frontend payment method scope' do
+        expect(payment_methods_scope).to receive(:available_on_front_end).and_return([allowed_method, blocked_method])
+        expect(payment_methods_scope).not_to receive(:available_on_frontend_for_early_adopter)
+
+        expect(order.available_payment_methods).to eq([allowed_method])
+      end
+    end
+  end
+
+  describe '#early_adopter?' do
+    let(:order) { create(:order) }
+
+    it 'returns false when user is nil' do
+      allow(order).to receive(:user).and_return(nil)
+
+      expect(order.early_adopter?).to be false
+    end
+
+    it 'returns false when user does not respond to early_adopter?' do
+      user = instance_double('User', present?: true)
+      allow(user).to receive(:respond_to?).with(:early_adopter?).and_return(false)
+      allow(order).to receive(:user).and_return(user)
+
+      expect(order.early_adopter?).to be false
+    end
+
+    it 'returns true when user responds true for early_adopter?' do
+      user = instance_double('User', present?: true)
+      allow(user).to receive(:respond_to?).with(:early_adopter?).and_return(true)
+      allow(user).to receive(:early_adopter?).and_return(true)
+      allow(order).to receive(:user).and_return(user)
+
+      expect(order.early_adopter?).to be true
     end
   end
 
@@ -195,13 +289,21 @@ RSpec.describe Spree::Order, type: :model do
     let(:payment_method2) { create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr') }
     let(:payment_method3) { create(:payway_v2_gateway, preferred_payment_option: 'abapay_khqr_deeplink') }
     let(:payment_method4) { create(:acleda_payment_method) }
+    let(:store) { instance_double(Spree::Store) }
+    let(:payment_methods_scope) { double('payment_methods_scope') }
 
     let(:order) { create(:order) }
 
     context "when required_payway_payout is true" do
       before do
         allow(order).to receive(:required_payway_payout?).and_return(true)
-        allow(order).to receive(:collect_payment_methods).with(nil).and_return([payment_method1, payment_method2, payment_method3, payment_method4])
+        allow(order).to receive(:early_adopter?).and_return(false)
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(false)
+        allow(order).to receive(:vendor_payment_methods).and_return([])
+        allow(order).to receive(:store).and_return(store)
+        allow(store).to receive(:payment_methods).and_return(payment_methods_scope)
+        allow(payment_methods_scope).to receive(:available_on_front_end).and_return([payment_method1, payment_method2, payment_method3, payment_method4])
       end
 
       it "returns only return payway v2 payment methods that support payout" do
@@ -216,7 +318,13 @@ RSpec.describe Spree::Order, type: :model do
     context "when required_payway_payout is false" do
       before do
         allow(order).to receive(:required_payway_payout?).and_return(false)
-        allow(order).to receive(:collect_payment_methods).with(nil).and_return([payment_method1, payment_method2, payment_method3, payment_method4])
+        allow(order).to receive(:early_adopter?).and_return(false)
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(false)
+        allow(order).to receive(:vendor_payment_methods).and_return([])
+        allow(order).to receive(:store).and_return(store)
+        allow(store).to receive(:payment_methods).and_return(payment_methods_scope)
+        allow(payment_methods_scope).to receive(:available_on_front_end).and_return([payment_method1, payment_method2, payment_method3, payment_method4])
       end
       
       it "returns all payment methods" do
