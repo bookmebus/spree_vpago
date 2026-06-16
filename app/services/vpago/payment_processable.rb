@@ -24,17 +24,18 @@ module Vpago
       :unable_to_complete_order
     end
 
-    # example.
-    # Started Vpago::PaymentProcessor#process_payment! for payment_number: PX81YZX with args: {}
-    # Completed Vpago::PaymentProcessor#process_payment! for payment_number: PX81YZX in 2000ms
-    def log_process(method, *args)
-      start_time = Time.now
-      Rails.logger.error("Started #{self.class}##{method} for payment_number: #{@payment.number} with args: #{args}")
-
-      yield
-
-      duration_ms = (Time.now - start_time) * 1000
-      Rails.logger.error("Completed #{self.class}##{method} for payment_number: #{@payment.number} in #{duration_ms}ms")
+    def log_process(method, *args, &)
+      VpagoLogger.log(
+        label: "#{self.class.name}##{method}",
+        data: {
+          payment_number: @payment.number,
+          order_number: @payment.order.number,
+          payment_method_type: @payment.payment_method.type,
+          payment_method_name: @payment.payment_method.name,
+          args: args
+        },
+        &
+      )
     end
 
     def user_informer
