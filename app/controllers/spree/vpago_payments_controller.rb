@@ -17,7 +17,7 @@ module Spree
 
       @order = @payment.order
 
-      Rails.logger.info("[Vpago][#{@payment.number}] Showing checkout page for order #{@order.number}")
+      VpagoLogger.log(label: 'Spree::VpagoPaymentsController#checkout', data: vpago_log_context)
     end
 
     # GET
@@ -27,7 +27,7 @@ module Spree
 
       @order = @payment.order
 
-      Rails.logger.info("[Vpago][#{@payment.number}] Showing processing page for order #{@order.number}")
+      VpagoLogger.log(label: 'Spree::VpagoPaymentsController#processing', data: vpago_log_context)
     end
 
     # GET
@@ -38,7 +38,7 @@ module Spree
       @order = @payment.order
       raise CanCan::AccessDenied unless @order.completed?
 
-      Rails.logger.info("[Vpago][#{@payment.number}] Showing success page for order #{@order.number}")
+      VpagoLogger.log(label: 'Spree::VpagoPaymentsController#success', data: vpago_log_context)
     end
 
     # GET
@@ -49,20 +49,21 @@ module Spree
       return render json: { status: :success }, status: :ok if @payment.completed?
       return render json: { status: :failed }, status: :ok if @payment.failed?
 
-      if @payment.payment_method.support_check_transaction_api?
-        Rails.logger.info("[Vpago][#{@payment.number}] Checking transaction for payment #{@payment.number}")
-        checker = @payment.payment_method.check_transaction(@payment)
-        Rails.logger.info("[Vpago][#{@payment.number}] Check transaction result for payment #{@payment.number} with success: #{checker.success?}, failed: #{checker.try(:failed?)}")
+      unless @payment.payment_method.support_check_transaction_api?
+        VpagoLogger.log(label: 'Spree::VpagoPaymentsController#check_transaction unsupported', data: vpago_log_context)
+        return render json: { status: :pending }, status: :ok
+      end
 
-        if checker.success?
-          render json: { status: :success }, status: :ok
-        elsif checker.try(:failed?) == true
-          render json: { status: :failed }, status: :ok
-        else
-          render json: { status: :pending }, status: :ok
-        end
+      checker = VpagoLogger.log(
+        label: 'Spree::VpagoPaymentsController#check_transaction',
+        data: vpago_log_context
+      ) { @payment.payment_method.check_transaction(@payment) }
+
+      if checker.success?
+        render json: { status: :success }, status: :ok
+      elsif checker.try(:failed?) == true
+        render json: { status: :failed }, status: :ok
       else
-        Rails.logger.info("[Vpago][#{@payment.number}] Payment method does not support check transaction API")
         render json: { status: :pending }, status: :ok
       end
     end
@@ -75,30 +76,35 @@ module Spree
       @payment = Vpago::PaymentFinder.new(return_params).find_and_verify
 
       if @payment.nil?
-        Rails.logger.error("[Vpago] Payment not found for params: #{return_params}")
+        VpagoLogger.error(
+          label: 'Spree::VpagoPaymentsController#process_payment payment_not_found',
+          data: vpago_log_context(params: return_params)
+        )
         return render_not_found
       end
 
-      Rails.logger.info("[Vpago][#{@payment.number}] Payment found: #{@payment&.number}, order: #{@payment&.order&.number}")
+      VpagoLogger.log(label: 'Spree::VpagoPaymentsController#process_payment payment_found', data: vpago_log_context)
 
       # for ABA reviewing mode, we can disable pushback from bank, and only process it from our app UI instead.
       # This will give ABA team to know that we don't rely on just pushback and have fallback to process payment.
       if @payment.payment_method.type_payway_v2? && @payment.payment_method.reviewing_mode? && request_from_external_server?
-        Rails.logger.info("[Vpago][#{@payment.number}] Received payment notification from bank in reviewing mode, skipping processing")
+        VpagoLogger.log(label: 'Spree::VpagoPaymentsController#process_payment skipped_reviewing_mode', data: vpago_log_context)
         return render json: { status: :ok }, status: :ok
       end
 
       unless @payment.order.paid?
-        Rails.logger.info("[Vpago][#{@payment.number}] Enqueuing payment processor job for payment #{@payment.number}")
-        Vpago::PaymentProcessorJob.perform_later(
-          payment_number: @payment.number
-        )
+        VpagoLogger.log(
+          label: 'Spree::VpagoPaymentsController#process_payment enqueue_payment_processor_job',
+          data: vpago_log_context
+        ) { Vpago::PaymentProcessorJob.perform_later(payment_number: @payment.number) }
       end
 
-      Rails.logger.info("[Vpago][#{@payment.number}] Successfully enqueued payment processor job for payment #{@payment.number}")
       render json: { status: :ok }, status: :ok
     rescue StandardError => e
-      Rails.logger.error("[Vpago][#{@payment&.number}] Failed to enqueue payment processor job: #{e.message}")
+      VpagoLogger.error(
+        label: 'Spree::VpagoPaymentsController#process_payment failed',
+        data: vpago_log_context(error_class: e.class.name, error_message: e.message, backtrace: e.backtrace&.first(5))
+      )
       render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
 
@@ -107,14 +113,28 @@ module Spree
       return render json: { status: { code: '000001', message: 'success' }, data: nil }, status: :ok if request.method != 'POST'
 
       @payment = Spree::Payment.find_by(number: params.dig(:data, :external_ref_id))
-      return render_not_found unless @payment
 
-      Vpago::PaymentProcessorJob.perform_later(payment_number: @payment.number) unless @payment.order.paid?
-      Rails.logger.info("[Vpago][#{@payment.number}] Successfully enqueued payment processor job for payment #{@payment.number}")
+      if @payment.nil?
+        VpagoLogger.error(
+          label: 'Spree::VpagoPaymentsController#true_money_process_payment payment_not_found',
+          data: vpago_log_context(external_ref_id: params.dig(:data, :external_ref_id))
+        )
+        return render_not_found
+      end
+
+      unless @payment.order.paid?
+        VpagoLogger.log(
+          label: 'Spree::VpagoPaymentsController#true_money_process_payment enqueue_payment_processor_job',
+          data: vpago_log_context
+        ) { Vpago::PaymentProcessorJob.perform_later(payment_number: @payment.number) }
+      end
 
       render json: { status: { code: '000001', message: 'success' }, data: nil }, status: :ok
     rescue StandardError => e
-      Rails.logger.error("[Vpago][#{@payment&.number}] Failed to enqueue payment processor job: #{e.message}")
+      VpagoLogger.error(
+        label: 'Spree::VpagoPaymentsController#true_money_process_payment failed',
+        data: vpago_log_context(error_class: e.class.name, error_message: e.message, backtrace: e.backtrace&.first(5))
+      )
       render json: { status: :internal_server_error, message: 'Failed to enqueue payment processor job' }, status: :internal_server_error
     end
 
@@ -143,6 +163,16 @@ module Spree
 
     def request_from_external_server?
       params[:internal_client].blank? || params[:internal_client] == 'false'
+    end
+
+    def vpago_log_context(extra = {})
+      {
+        payment_number: @payment&.number,
+        order_number: @payment&.order&.number,
+        payment_method_type: @payment&.payment_method&.type,
+        payment_method_name: @payment&.payment_method&.name,
+        request_id: request.request_id
+      }.merge(extra)
     end
   end
 end
