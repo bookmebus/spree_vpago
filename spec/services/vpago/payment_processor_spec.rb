@@ -111,8 +111,16 @@ RSpec.describe Vpago::PaymentProcessor do
 
   describe '#process_payment!' do
     it 'informs user that payment is processing & triggers payment.process!' do
-      expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#process_payment! for payment_number: #{payment.number} with args: \[]")).once
-      expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#process_payment! for payment_number: #{payment.number} in")).once
+      expect(VpagoLogger).to receive(:log).with(
+        label: 'Vpago::PaymentProcessor#process_payment!',
+        data: {
+          payment_number: payment.number,
+          order_number: payment.order.number,
+          payment_method_type: payment.payment_method.type,
+          payment_method_name: payment.payment_method.name,
+          args: []
+        }
+      ).and_call_original
 
       expect(user_informer).to receive(:payment_is_processing).with(processing: true)
       expect(payment).to receive(:process!)
@@ -134,8 +142,16 @@ RSpec.describe Vpago::PaymentProcessor do
     
     context 'when completer success' do
       it 'inform user that order is processing, trigger completer & handle_order_process_completed' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#process_order! for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#process_order! for payment_number: #{payment.number} in")).once
+        expect(VpagoLogger).to receive(:log).with(
+          label: 'Vpago::PaymentProcessor#process_order!',
+          data: {
+            payment_number: payment.number,
+            order_number: payment.order.number,
+            payment_method_type: payment.payment_method.type,
+            payment_method_name: payment.payment_method.name,
+            args: []
+          }
+        ).and_call_original
 
         expect(user_informer).to receive(:order_is_processing).with(processing: true)
         expect(completer).to receive(:call).with(order: payment.order).and_call_original
@@ -151,8 +167,16 @@ RSpec.describe Vpago::PaymentProcessor do
       end
 
       it 'inform user that order is processing, trigger completer & handle_order_process_failure with out of stock message' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#process_order! for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#process_order! for payment_number: #{payment.number} in")).once
+        expect(VpagoLogger).to receive(:log).with(
+          label: 'Vpago::PaymentProcessor#process_order!',
+          data: {
+            payment_number: payment.number,
+            order_number: payment.order.number,
+            payment_method_type: payment.payment_method.type,
+            payment_method_name: payment.payment_method.name,
+            args: []
+          }
+        ).and_call_original
 
         expect(user_informer).to receive(:order_is_processing).with(processing: true)
         expect(completer).to receive(:call).with(order: payment.order).and_call_original
@@ -168,8 +192,16 @@ RSpec.describe Vpago::PaymentProcessor do
       end
 
       it 'inform user that order is processing, trigger completer & handle_order_process_failure with discountinued message' do
-        expect(Rails.logger).to receive(:error).with(start_with("Started Vpago::PaymentProcessor#process_order! for payment_number: #{payment.number} with args: \[]")).once
-        expect(Rails.logger).to receive(:error).with(start_with("Completed Vpago::PaymentProcessor#process_order! for payment_number: #{payment.number} in")).once
+        expect(VpagoLogger).to receive(:log).with(
+          label: 'Vpago::PaymentProcessor#process_order!',
+          data: {
+            payment_number: payment.number,
+            order_number: payment.order.number,
+            payment_method_type: payment.payment_method.type,
+            payment_method_name: payment.payment_method.name,
+            args: []
+          }
+        ).and_call_original
 
         expect(user_informer).to receive(:order_is_processing).with(processing: true)
         expect(completer).to receive(:call).with(order: payment.order).and_call_original
