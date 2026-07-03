@@ -1,0 +1,53 @@
+<%
+  opr_device = request.user_agent.to_s.downcase.match?(/iphone|ipad|ipod/) ? 'ios' : 'android'
+  checkout = ::Vpago::AcledaV2::Checkout.new(@payment, { platform: params[:platform], opr_device: opr_device })
+
+  begin
+    checkout.call
+  rescue => e
+    Rails.logger.error("Acleda V2 checkout.call failed: #{e.message}")
+  end
+%>
+
+<% if checkout.failed? %>
+  <script>
+    console.error("[Vpago] Acleda V2 checkout error: <%= j checkout.error_message.to_s %>");
+    document.addEventListener("DOMContentLoaded", () => {
+      const loadingContainer = document.getElementById('vpago_loading_container');
+      if (loadingContainer) {
+        loadingContainer.textContent = "We couldn't start your payment. Please go back and try again.";
+      }
+    });
+  </script>
+<% elsif checkout.deeplink? %>
+  <script>
+    function showRedirectContainer(buttonLabel, onClick) {
+      const loadingContainer = document.getElementById('vpago_loading_container');
+      const redirectContainer = document.getElementById('vpago_redirect_container');
+      const redirectButton = document.getElementById('vpago_redirect_button');
+
+      redirectButton.textContent = buttonLabel;
+      redirectButton.addEventListener('click', onClick);
+
+      loadingContainer.style.display = 'none';
+      redirectContainer.style.removeProperty('display');
+    }
+
+    const deeplinkUrl = "<%= raw checkout.deeplink_url %>";
+    const redirectTo = (url) => { if (url) window.location.href = url; };
+
+
+<<<<<<< Updated upstream
+    redirectTo(deeplinkUrl);
+    showRedirectContainer("Open ACLEDA", () => redirectTo(deeplinkUrl));
+=======
+    redirectTo(deeplinkUrl);   
+    showRedirectContainer("Open ACLEDA", () => redirectTo(deeplinkUrl));
+
+>>>>>>> Stashed changes
+  </script>
+<% else %>
+  <%= render 'spree/checkout/payment/acleda_v2_checkout_form',
+             gateway_params: checkout.gateway_params,
+             action_url: checkout.action_url %>
+<% end %>
