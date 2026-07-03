@@ -12,6 +12,9 @@ module Vpago
           payway_abapay
           payway_alipay
           payway_wechat
+          acleda_v2
+          acleda_v2_khqr
+          acleda_v2_cards
           acleda
           acleda_khqr
           acleda_cards
@@ -26,6 +29,10 @@ module Vpago
 
       def available_vattanac_payment_options
         %w[khqr deeplink all]
+      end
+
+      def available_acleda_v2_modes
+        Spree::Gateway::AcledaV2::MODES
       end
 
       def preference_field_for(form, field, options)
@@ -45,6 +52,8 @@ module Vpago
           return form.select(:preferred_abapay_khqr_deeplink_option, Spree::Gateway::PaywayV2::ABAPAY_KHQR_DEEPLINK_OPTIONS, {}, class: 'fullwidth select2')
         when 'preferred_vattanac_payment_option'
           return form.select(:preferred_vattanac_payment_option, available_vattanac_payment_options, {}, class: 'fullwidth select2')
+        when 'preferred_acleda_v2_mode'
+          return form.select(:preferred_acleda_v2_mode, available_acleda_v2_modes, {}, class: 'fullwidth select2')
         end
         super
       end

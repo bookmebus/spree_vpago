@@ -60,7 +60,7 @@ module Vpago
             purchaseDate: purchase_date,
             purchaseDesc: 'items',
             item: '1',
-            quantity: '1',
+            quantity: '1', # always 1: one payment = one transaction
             expiryTime: expiry_time,
             otherUrl: other_url
           }
