@@ -7,7 +7,9 @@
         <% elsif action == 'open_checkout' %>
             <%= link_to_with_icon('qr-code.svg', Spree.t(action), payment.checkout_url, target: '_blank', no_text: true, class: "btn btn-light btn-sm") %>
         <% else %>
-            <%= link_to_with_icon(action + '.svg', Spree.t(action), fire_admin_order_payment_path(@order, payment, e: action), method: :put, no_text: true, data: { action: action }, class: "btn btn-light btn-sm") if can?(action.to_sym, payment) %>
+            <% action_data = { action: action } %>
+            <% action_data[:confirm] = Spree.t(:reprocess_payment_confirmation, default: 'Reprocess this payment? This will re-run the gateway transaction.') if action == 'process' %>
+            <%= link_to_with_icon(action + '.svg', Spree.t(action), fire_admin_order_payment_path(@order, payment, e: action), method: :put, no_text: true, data: action_data, class: "btn btn-light btn-sm") if can?(action.to_sym, payment) %>
         <% end %>
     <% end %>
 </span>

@@ -39,6 +39,25 @@ module Spree
         flash[:error] = e.message.to_s
         redirect_to spree.new_admin_order_payment_path(@order)
       end
+
+      # override
+      # Before the normal `process!` re-runs the gateway, reset a stuck vpago
+      # payment back to `checkout`. Admin reprocess only — the automatic webhook
+      # path is untouched (it auto-resets `failed` alone).
+      def fire
+        reset_stuck_payment_for_reprocess!
+        super
+      end
+
+      private
+
+      def reset_stuck_payment_for_reprocess!
+        return unless params[:e] == 'process'
+        return unless @payment&.payment_method&.vpago_payment?
+        return unless @payment.can_reset_for_retry?
+
+        @payment.reset_for_retry!
+      end
     end
   end
 end

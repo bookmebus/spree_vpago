@@ -27,9 +27,11 @@ module Vpago
                     :process_payment_url,
                     to: :url_constructor
 
-      # Add state machine event for payment retry
+      # State machine event for payment retry / admin reprocess.
+      # `failed` is auto-reset by process!/capture! below (Sidekiq retry);
+      # void/invalid/processing are reset only by the admin reprocess action.
       base.state_machine.event :reset_for_retry do
-        transition from: %i[failed], to: :checkout
+        transition from: %i[failed void invalid processing], to: :checkout
       end
     end
 

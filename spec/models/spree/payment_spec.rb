@@ -191,25 +191,41 @@ RSpec.describe Spree::Payment, type: :model do
     let(:payment_method) { create(:payway_v2_gateway) }
     let(:payment) { create(:payway_v2_payment, order: order, payment_method: payment_method) }
 
-    context 'when payment is in failed state' do
+    context 'when payment is in a stuck/failed state' do
       it 'transitions payment from failed to checkout' do
         payment.update!(state: 'failed')
-        
+
         expect {
           payment.reset_for_retry!
         }.to change { payment.state }.from('failed').to('checkout')
       end
-    end
 
-    context 'when payment is not in failed state' do
-      it 'does not transition from processing state' do
+      it 'transitions payment from processing to checkout' do
         payment.update!(state: 'processing')
-        
+
         expect {
           payment.reset_for_retry!
-        }.to raise_error(StateMachines::InvalidTransition)
+        }.to change { payment.state }.from('processing').to('checkout')
       end
 
+      it 'transitions payment from void to checkout' do
+        payment.update!(state: 'void')
+
+        expect {
+          payment.reset_for_retry!
+        }.to change { payment.state }.from('void').to('checkout')
+      end
+
+      it 'transitions payment from invalid to checkout' do
+        payment.update!(state: 'invalid')
+
+        expect {
+          payment.reset_for_retry!
+        }.to change { payment.state }.from('invalid').to('checkout')
+      end
+    end
+
+    context 'when payment is in a non-resettable state' do
       it 'does not transition from completed state' do
         payment.update!(state: 'completed')
         
