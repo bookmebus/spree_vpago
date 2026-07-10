@@ -6,6 +6,17 @@ spree:
   insufficient_payment_amount_to_cover_the_total: "ចំនួនទឹកប្រាក់នៃការទូទាត់គឺមិនគ្រប់គ្រាន់"
   qr_code: "QR code"
   open_checkout: "Open Checkout"
+  admin:
+    orders:
+      suspicious_orders: "ការបង់ប្រាក់គួរឱ្យសង្ស័យ"
+      outstanding_balance: "សមតុល្យនៅសល់"
+      payments: "ការបង់ប្រាក់"
+      payment_number: "លេខការបង់ប្រាក់"
+      email_or_phone: "អ៊ីមែល / លេខទូរស័ព្ទ"
+      payments_count:
+        one: "ការបង់ប្រាក់ %{count}"
+        other: "ការបង់ប្រាក់ %{count}"
+      payments_for_order: "ការបង់ប្រាក់សម្រាប់ %{number}"
   vpago:
     payments:
       check_and_heal: "កែស្វ័យប្រវត្តិ"

@@ -90,5 +90,12 @@ Spree::Core::Engine.add_routes do
         post :verify_with_bank
       end
     end
+
+    resources :suspicious_orders, only: [:index] do
+      member do
+        get :payments
+        post 'payments/:payment_number/check_transaction', action: :check_transaction, as: :check_transaction
+      end
+    end
   end
 end
