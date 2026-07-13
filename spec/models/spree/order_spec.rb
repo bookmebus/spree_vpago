@@ -244,6 +244,91 @@ RSpec.describe Spree::Order, type: :model do
     end
   end
 
+  describe '#collect_backend_payment_methods' do
+    context 'when order has a tenant' do
+      let(:order) { create(:order) }
+      let(:tenant) { double('tenant') }
+      let(:tenant_payment_methods_scope) { double('tenant_payment_methods_scope') }
+      let(:allowed_method) { instance_double(Spree::PaymentMethod) }
+      let(:blocked_method) { instance_double(Spree::PaymentMethod) }
+
+      before do
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(true)
+        allow(order).to receive(:tenant).and_return(tenant)
+        allow(tenant).to receive(:tenant_payment_methods).and_return(tenant_payment_methods_scope)
+        allow(tenant_payment_methods_scope).to receive(:available_on_back_end).and_return([allowed_method, blocked_method])
+        allow(allowed_method).to receive(:available_for_order?).with(order).and_return(true)
+        allow(blocked_method).to receive(:available_for_order?).with(order).and_return(false)
+      end
+
+      it 'uses tenant payment methods filtered to those available for the order' do
+        expect(order.collect_backend_payment_methods).to eq([allowed_method])
+      end
+
+      it 'does not fall back to vendor or store payment methods' do
+        expect(order).not_to receive(:vendor_payment_methods)
+        expect(order).not_to receive(:store)
+
+        order.collect_backend_payment_methods
+      end
+    end
+
+    context 'when order has no tenant but has vendor payment methods' do
+      let(:vendor1) { create(:vendor) }
+      let(:vendor2) { create(:vendor) }
+
+      let(:order) { create(:order) }
+
+      let!(:line_item1) { create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor1)) }
+      let!(:line_item2) { create(:line_item, order: order, product: create(:product_in_stock, vendor: vendor2)) }
+
+      let!(:store_payment_method) { create(:payment_method) }
+      let!(:backend_vendor_payment_method) { create(:payment_method, vendor: vendor1, display_on: 'back_end') }
+      let!(:frontend_vendor_payment_method) { create(:payment_method, vendor: vendor2, display_on: 'front_end') }
+
+      before do
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(false)
+      end
+
+      it 'returns vendor payment methods available on the backend' do
+        expect(order.collect_backend_payment_methods).to eq([backend_vendor_payment_method])
+      end
+
+      it 'excludes vendor payment methods restricted to the frontend' do
+        expect(order.collect_backend_payment_methods).not_to include(frontend_vendor_payment_method)
+      end
+
+      it 'excludes store payment methods without an associated vendor' do
+        expect(order.collect_backend_payment_methods).not_to include(store_payment_method)
+      end
+    end
+
+    context 'when order has no tenant and no vendor payment methods' do
+      let(:order) { create(:order) }
+      let(:store) { instance_double(Spree::Store) }
+      let(:payment_methods_scope) { double('payment_methods_scope') }
+      let(:allowed_method) { instance_double(Spree::PaymentMethod) }
+      let(:blocked_method) { instance_double(Spree::PaymentMethod) }
+
+      before do
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(false)
+        allow(order).to receive(:vendor_payment_methods).and_return([])
+        allow(order).to receive(:store).and_return(store)
+        allow(store).to receive(:payment_methods).and_return(payment_methods_scope)
+        allow(payment_methods_scope).to receive(:available_on_back_end).and_return([allowed_method, blocked_method])
+        allow(allowed_method).to receive(:available_for_order?).with(order).and_return(true)
+        allow(blocked_method).to receive(:available_for_order?).with(order).and_return(false)
+      end
+
+      it 'falls back to the store payment methods scoped to the backend' do
+        expect(order.collect_backend_payment_methods).to eq([allowed_method])
+      end
+    end
+  end
+
   describe '#early_adopter?' do
     let(:order) { create(:order) }
 
