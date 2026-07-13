@@ -186,6 +186,62 @@ RSpec.describe Spree::Order, type: :model do
         expect(order.available_payment_methods).to eq([allowed_method])
       end
     end
+
+    context 'when user is ticket_seller' do
+      let(:store) { instance_double(Spree::Store) }
+      let(:payment_methods_scope) { double('payment_methods_scope') }
+      let(:allowed_method) { instance_double(Spree::PaymentMethod) }
+      let(:blocked_method) { instance_double(Spree::PaymentMethod) }
+
+      before do
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(false)
+        allow(order).to receive(:vendor_payment_methods).and_return([])
+        allow(order).to receive(:store).and_return(store)
+        allow(store).to receive(:payment_methods).and_return(payment_methods_scope)
+        allow(order).to receive(:early_adopter?).and_return(false)
+        allow(order).to receive(:ticket_seller?).and_return(true)
+        allow(order).to receive(:required_payway_payout?).and_return(false)
+        allow(allowed_method).to receive(:available_for_order?).with(order).and_return(true)
+        allow(blocked_method).to receive(:available_for_order?).with(order).and_return(false)
+      end
+
+      it 'uses back end payment method scope' do
+        expect(payment_methods_scope).to receive(:available_on_back_end).and_return([allowed_method, blocked_method])
+        expect(payment_methods_scope).not_to receive(:available_on_front_end)
+        expect(payment_methods_scope).not_to receive(:available_on_frontend_for_early_adopter)
+
+        expect(order.available_payment_methods).to eq([allowed_method])
+      end
+    end
+
+    context 'when user is both early adopter and ticket_seller' do
+      let(:store) { instance_double(Spree::Store) }
+      let(:payment_methods_scope) { double('payment_methods_scope') }
+      let(:allowed_method) { instance_double(Spree::PaymentMethod) }
+      let(:blocked_method) { instance_double(Spree::PaymentMethod) }
+
+      before do
+        allow(order).to receive(:respond_to?).and_call_original
+        allow(order).to receive(:respond_to?).with(:tenant).and_return(false)
+        allow(order).to receive(:vendor_payment_methods).and_return([])
+        allow(order).to receive(:store).and_return(store)
+        allow(store).to receive(:payment_methods).and_return(payment_methods_scope)
+        allow(order).to receive(:early_adopter?).and_return(true)
+        allow(order).to receive(:ticket_seller?).and_return(true)
+        allow(order).to receive(:required_payway_payout?).and_return(false)
+        allow(allowed_method).to receive(:available_for_order?).with(order).and_return(true)
+        allow(blocked_method).to receive(:available_for_order?).with(order).and_return(false)
+      end
+
+      it 'prioritizes early adopter payment method scope over ticket_seller' do
+        expect(payment_methods_scope).to receive(:available_on_frontend_for_early_adopter).and_return([allowed_method, blocked_method])
+        expect(payment_methods_scope).not_to receive(:available_on_back_end)
+        expect(payment_methods_scope).not_to receive(:available_on_front_end)
+
+        expect(order.available_payment_methods).to eq([allowed_method])
+      end
+    end
   end
 
   describe '#early_adopter?' do
