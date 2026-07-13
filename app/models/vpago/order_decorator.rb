@@ -64,6 +64,8 @@ module Vpago
 
         payment_methods = if early_adopter?
                             payment_methods.available_on_frontend_for_early_adopter.select { |pm| pm.available_for_order?(self) }
+                          elsif ticket_seller?
+                            payment_methods.available_on_back_end.select { |pm| pm.available_for_order?(self) }
                           else
                             payment_methods.available_on_front_end.select { |pm| pm.available_for_order?(self) }
                           end
@@ -75,6 +77,10 @@ module Vpago
 
     def early_adopter?
       user.present? && user.respond_to?(:early_adopter?) && user.early_adopter?
+    end
+
+    def ticket_seller?
+      user.present? && user.respond_to?(:has_spree_role?) && user.has_spree_role?('ticket_seller')
     end
 
     def tenant_payment_methods
