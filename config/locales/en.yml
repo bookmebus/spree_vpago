@@ -10,6 +10,17 @@ en:
     insufficient_payment_amount_to_cover_the_total: "Payment amount is insufficient to cover the total"
     qr_code: "QR code"
     open_checkout: "Open Checkout"
+    admin:
+      orders:
+        suspicious_orders: "Suspicious Orders"
+        outstanding_balance: "Outstanding Balance"
+        payments: "Payments"
+        payment_number: "Payment Number"
+        email_or_phone: "Email / Phone Number"
+        payments_count:
+          one: "1 Payment"
+          other: "%{count} Payments"
+        payments_for_order: "Payments for %{number}"
     vpago:
       payments:
         check_and_heal: "Auto correct"
