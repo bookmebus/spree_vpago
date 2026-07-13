@@ -50,19 +50,19 @@ RSpec.describe Vpago::AcledaV2::Base do
       end
     end
 
-    context 'when a deeplink checkout opened from the app with an app_scheme configured' do
-      let(:payment_method) do
-        create(:acleda_v2_gateway, preferred_acleda_v2_mode: 'deeplink', preferred_app_scheme: 'bookmeplusdev')
-      end
-      let(:payment) { create(:acleda_v2_payment, order: order, payment_method: payment_method) }
-      let(:options) { { platform: 'app' } }
+    # context 'when a deeplink checkout opened from the app with an app_scheme configured' do
+    #   let(:payment_method) do
+    #     create(:acleda_v2_gateway, preferred_acleda_v2_mode: 'deeplink', preferred_app_scheme: 'bookmeplusdev')
+    #   end
+    #   let(:payment) { create(:acleda_v2_payment, order: order, payment_method: payment_method) }
+    #   let(:options) { { platform: 'app' } }
 
-      it 'swaps the processing url scheme to the app scheme, so the bank app can hand control back natively' do
-        uri = URI.parse(payment.processing_url)
-        uri.scheme = 'bookmeplusdev'
+    #   it 'swaps the processing url scheme to the app scheme, so the bank app can hand control back natively' do
+    #     uri = URI.parse(payment.processing_url)
+    #     uri.scheme = 'bookmeplusdev'
 
-        expect(base.callback_url).to eq(uri.to_s)
-      end
-    end
+    #     expect(base.callback_url).to eq(uri.to_s)
+    #   end
+    # end
   end
 end

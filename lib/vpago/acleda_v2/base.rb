@@ -88,11 +88,13 @@ module Vpago
       end
 
       def callback_url
-        return continue_success_url unless deeplink? && app_scheme.present?
+        # return continue_success_url unless deeplink? && app_scheme.present?
 
-        uri = URI.parse(continue_success_url)
-        uri.scheme = app_scheme
-        uri.to_s
+        # uri = URI.parse(continue_success_url)
+        # uri.scheme = app_scheme
+        # uri.to_s
+
+        continue_success_url
       end
 
       def app_scheme
