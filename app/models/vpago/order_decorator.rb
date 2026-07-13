@@ -75,6 +75,19 @@ module Vpago
       end
     end
 
+    # override
+    def collect_backend_payment_methods
+      payment_methods = if respond_to?(:tenant) && tenant.present?
+                          tenant_payment_methods
+                        elsif vendor_payment_methods.any?
+                          vendor_payment_methods
+                        else
+                          store.payment_methods
+                        end
+
+      payment_methods.available_on_back_end.select { |pm| pm.available_for_order?(self) }
+    end
+
     def early_adopter?
       user.present? && user.respond_to?(:early_adopter?) && user.early_adopter?
     end
