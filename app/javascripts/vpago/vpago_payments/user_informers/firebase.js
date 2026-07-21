@@ -31,6 +31,10 @@ async function listenToProcessingState({
     let reasonCode = documentData["reason_code"];
     let reasonMessage = documentData["reason_message"];
 
+    if (window.parent !== window) {
+      window.parent.postMessage(messageCode, "*");
+    }
+
     let orderCompleted = orderState === "complete";
     if (orderCompleted) {
       queueProcessor.queueStateChange({
@@ -40,7 +44,7 @@ async function listenToProcessingState({
             orderState,
             paymentState,
             reasonCode,
-            reasonMessage
+            reasonMessage,
           );
         },
       });
@@ -57,7 +61,7 @@ async function listenToProcessingState({
               paymentState,
               processing,
               reasonCode,
-              reasonMessage
+              reasonMessage,
             );
           },
         });
@@ -71,7 +75,7 @@ async function listenToProcessingState({
               paymentState,
               processing,
               reasonCode,
-              reasonMessage
+              reasonMessage,
             );
           },
         });
@@ -85,7 +89,7 @@ async function listenToProcessingState({
               paymentState,
               processing,
               reasonCode,
-              reasonMessage
+              reasonMessage,
             );
           },
         });
@@ -99,7 +103,7 @@ async function listenToProcessingState({
               paymentState,
               processing,
               reasonCode,
-              reasonMessage
+              reasonMessage,
             );
           },
         });
@@ -113,7 +117,7 @@ async function listenToProcessingState({
               paymentState,
               processing,
               reasonCode,
-              reasonMessage
+              reasonMessage,
             );
           },
         });
@@ -127,7 +131,7 @@ async function listenToProcessingState({
               paymentState,
               processing,
               reasonCode,
-              reasonMessage
+              reasonMessage,
             );
           },
         });
