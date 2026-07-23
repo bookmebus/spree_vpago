@@ -8,11 +8,11 @@ module Spree
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
     rescue_from CanCan::AccessDenied, with: :access_denied
 
+    before_action :find_payment, only: %i[checkout processing success]
+    after_action :allow_iframe_embedding, only: %i[checkout processing success]
+
     # GET
     def checkout
-      @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
-      raise ActiveRecord::RecordNotFound unless @payment.present?
-
       return redirect_to @payment.processing_url, allow_other_host: true unless @payment.checkout?
 
       @order = @payment.order
@@ -22,9 +22,6 @@ module Spree
 
     # GET
     def processing
-      @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
-      raise ActiveRecord::RecordNotFound unless @payment.present?
-
       @order = @payment.order
 
       VpagoLogger.log(label: 'Spree::VpagoPaymentsController#processing', data: vpago_log_context)
@@ -32,9 +29,6 @@ module Spree
 
     # GET
     def success
-      @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
-      raise ActiveRecord::RecordNotFound unless @payment.present?
-
       @order = @payment.order
       raise CanCan::AccessDenied unless @order.completed?
 
@@ -145,6 +139,18 @@ module Spree
       sanitized_params.merge!(JSON.parse(sanitized_params.delete(:return_params))) if sanitized_params[:return_params].present?
 
       sanitized_params
+    end
+
+    def find_payment
+      @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
+      raise ActiveRecord::RecordNotFound unless @payment.present?
+    end
+
+    # frame-ancestors (set above) supersedes X-Frame-Options in modern
+    # browsers, but the default SAMEORIGIN header would still block legacy
+    # browsers from embedding these pages, so drop it for the iframe actions.
+    def allow_iframe_embedding
+      response.headers.delete('X-Frame-Options')
     end
 
     def render_not_found

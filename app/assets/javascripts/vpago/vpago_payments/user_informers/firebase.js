@@ -13693,10 +13693,10 @@ This typically indicates that your device does not have a healthy Internet conne
     firebaseConfigs,
     documentReferencePath,
     onPaymentIsProcessing,
+    onPaymentIsRetrying,
     onOrderIsProcessing,
     onOrderIsCompleted,
     onOrderProcessFailed,
-    onPaymentIsRefunded,
     onPaymentProcessFailed,
     onCompleted
   }) {
@@ -13713,6 +13713,9 @@ This typically indicates that your device does not have a healthy Internet conne
       let processing = documentData["processing"] === true;
       let reasonCode = documentData["reason_code"];
       let reasonMessage = documentData["reason_message"];
+      if (window.parent !== window) {
+        window.parent.postMessage(messageCode, "*");
+      }
       let orderCompleted = orderState === "complete";
       if (orderCompleted) {
         queueProcessor.queueStateChange({
@@ -13734,6 +13737,20 @@ This typically indicates that your device does not have a healthy Internet conne
             minDelayInMs: 1500,
             callback: async () => {
               await onPaymentIsProcessing(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
+          break;
+        case "payment_is_retrying":
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onPaymentIsRetrying(
                 orderState,
                 paymentState,
                 processing,
@@ -13776,20 +13793,6 @@ This typically indicates that your device does not have a healthy Internet conne
             minDelayInMs: 1500,
             callback: async () => {
               await onOrderProcessFailed(
-                orderState,
-                paymentState,
-                processing,
-                reasonCode,
-                reasonMessage
-              );
-            }
-          });
-          break;
-        case "payment_is_refunded":
-          queueProcessor.queueStateChange({
-            minDelayInMs: 1500,
-            callback: async () => {
-              await onPaymentIsRefunded(
                 orderState,
                 paymentState,
                 processing,
