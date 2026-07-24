@@ -40,6 +40,10 @@ jobs:
       #   with:
       #     cmd: install
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.9.0"
+
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2.0"
@@ -52,6 +56,14 @@ jobs:
           sudo apt-get -yqq install libpq-dev
           gem install bundler
           bundle install --jobs 4 --retry 3
+          npm install
+
+      - name: Check JS assets are up-to-date
+        run: |
+          npm run build
+          git diff --exit-code app/assets/javascripts/ || \
+            (echo "ERROR: app/assets/javascripts/ is out of sync with app/javascripts/ sources. Run 'npm run build' and commit the result." && exit 1)
+
 
       - name: Quality
         env:
