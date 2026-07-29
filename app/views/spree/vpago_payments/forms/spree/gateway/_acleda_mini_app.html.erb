@@ -1,0 +1,93 @@
+<%
+  opr_device = request.user_agent.to_s.downcase.match?(/iphone|ipad|ipod/) ? 'ios' : 'android'
+  checkout = ::Vpago::AcledaMiniApp::Checkout.new(@payment, { platform: 'app', opr_device: opr_device })
+
+  begin
+    checkout.call
+  rescue => e
+    Rails.logger.error("Acleda Mini App checkout.call failed: #{e.message}")
+  end
+%>
+
+<p id="unsupported-message"
+   style="margin-top: 10px; font-weight: bold; color: red; display: none;">
+</p>
+
+<% if checkout.failed? %>
+  <script>
+    console.error("[Vpago] Acleda Mini App checkout error: <%= j checkout.error_message.to_s %>");
+    document.addEventListener("DOMContentLoaded", () => {
+      const loadingContainer = document.getElementById('vpago_loading_container');
+      if (loadingContainer) {
+        loadingContainer.textContent = "We couldn't start your payment. Please go back and try again.";
+      }
+    });
+  </script>
+<% else %>
+  <script>
+    // ACLEDA JS bridge (unified iOS + Android). Defined before use so it is
+    // available when the native layer injects its handlers.
+    window.acledaJSBridge = window.acledaJSBridge || {
+      call: function (action, data = {}) {
+        const payload = { action, data };
+
+        // iOS WKWebView
+        if (
+          window.webkit &&
+          window.webkit.messageHandlers &&
+          window.webkit.messageHandlers.acledaIOSJSBridge
+        ) {
+          window.webkit.messageHandlers.acledaIOSJSBridge.postMessage(payload);
+          return true;
+        }
+
+        // Android WebView
+        if (
+          window.acledaAndroidJSBridge &&
+          typeof window.acledaAndroidJSBridge.postMessage === "function"
+        ) {
+          window.acledaAndroidJSBridge.postMessage(JSON.stringify(payload));
+          return true;
+        }
+
+        console.warn("[acledaJSBridge] Native bridge not found");
+        return false;
+      }
+    };
+
+    function showRedirectContainer(buttonLabel, onClick) {
+      const loadingContainer = document.getElementById('vpago_loading_container');
+      const redirectContainer = document.getElementById('vpago_redirect_container');
+      const redirectButton = document.getElementById('vpago_redirect_button');
+
+      redirectButton.textContent = buttonLabel;
+      redirectButton.addEventListener('click', onClick);
+
+      loadingContainer.style.display = 'none';
+      redirectContainer.style.removeProperty('display');
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const acledaDeeplink = "<%= raw checkout.acleda_deeplink %>";
+      const processingUrl = "<%= raw @payment.processing_url %>";
+
+      // Native -> JS after payment completes. Primary completion signal; the
+      // transaction checker polling is the fallback.
+      window.onPaymentResult = function (result) {
+        console.log("[acledaJSBridge] Payment result:", result);
+        // result.batchId, result.status = "success" | "failed" | "cancelled"
+        window.location.href = processingUrl;
+      };
+
+      const startPayment = () => window.acledaJSBridge.call("startPayment", { acleda_deeplink: acledaDeeplink });
+
+      if (startPayment()) {
+        showRedirectContainer("Continue", startPayment);
+      } else {
+        const unsupported = document.getElementById('unsupported-message');
+        unsupported.style.display = 'block';
+        unsupported.innerText = 'Unsupported environment';
+      }
+    });
+  </script>
+<% end %>
