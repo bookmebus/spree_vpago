@@ -17,6 +17,13 @@ Spree::Core::Engine.add_routes do
     resources :transactions, only: [:show]
   end
 
+  # ACLEDA Mini App session init (ACLEDA Mini App Integration Spec, Step 01).
+  # ACLEDA calls POST /miniapp/acleda with { phone, first_name, last_name }
+  # and receives a session-based miniAppUrl.
+  namespace :miniapp do
+    resources :acleda, only: [:create], controller: 'acledas'
+  end
+
   resource :vpago_payments do
     collection do
       get :checkout
