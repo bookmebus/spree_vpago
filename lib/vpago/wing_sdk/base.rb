@@ -33,7 +33,7 @@ module Vpago
       end
 
       def return_url
-        "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/webhook/wings/#{payment_number}/return?app_checkout=#{app_checkout}"
+        "#{ENV.fetch('PAYMENT_BASE_URL', nil)}/webhook/wings/#{payment_number}/return?app_checkout=#{app_checkout}"
       end
 
       def app_checkout

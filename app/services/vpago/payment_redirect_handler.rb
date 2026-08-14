@@ -50,7 +50,7 @@ module Vpago
 
     def process_acleda_gateway
       data = {
-        href: "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/acleda_redirects?payment_number=#{@payment.number}"
+        href: "#{ENV.fetch('PAYMENT_BASE_URL', nil)}/acleda_redirects?payment_number=#{@payment.number}"
       }
 
       @redirect_options = data
@@ -81,7 +81,7 @@ module Vpago
     def process_payway_v2_card
       ## TO DO: generate redirect url
       data = {
-        href: "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/payway_v2_card_popups?payment_number=#{@payment.number}"
+        href: "#{ENV.fetch('PAYMENT_BASE_URL', nil)}/payway_v2_card_popups?payment_number=#{@payment.number}"
       }
 
       @redirect_options = data
@@ -115,7 +115,7 @@ module Vpago
       end
 
       conn.post(abapay_payment.checkout_url, gateway_params) do |request|
-        request.headers['Referer'] = ENV.fetch('DEFAULT_URL_HOST', nil)
+        request.headers['Referer'] = ENV.fetch('PAYMENT_BASE_URL', nil)
       end
     end
 
@@ -127,7 +127,7 @@ module Vpago
     def process_payway_card
       ## TO DO: generate redirect url
       data = {
-        href: "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/payway_card_popups?payment_number=#{@payment.number}"
+        href: "#{ENV.fetch('PAYMENT_BASE_URL', nil)}/payway_card_popups?payment_number=#{@payment.number}"
       }
 
       @redirect_options = data
@@ -135,7 +135,7 @@ module Vpago
 
     def process_wing_gateway
       data = {
-        href: "#{ENV.fetch('DEFAULT_URL_HOST', nil)}/wing_redirects?payment_number=#{@payment.number}"
+        href: "#{ENV.fetch('PAYMENT_BASE_URL', nil)}/wing_redirects?payment_number=#{@payment.number}"
       }
 
       @redirect_options = data
@@ -169,7 +169,7 @@ module Vpago
       end
 
       @response = conn.post(abapay_payment.action_url, gateway_params) do |request|
-        request.headers['Referer'] = ENV.fetch('DEFAULT_URL_HOST', nil)
+        request.headers['Referer'] = ENV.fetch('PAYMENT_BASE_URL', nil)
       end
     end
 
