@@ -102,7 +102,7 @@ module Vpago
     # override this method if you want flexibility
     # for example, host per payment method or tenant
     def payment_host
-      ENV.fetch('DEFAULT_URL_HOST')
+      ENV.fetch('PAYMENT_BASE_URL')
     end
   end
 end
