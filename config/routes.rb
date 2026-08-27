@@ -60,6 +60,7 @@ Spree::Core::Engine.add_routes do
           get :payment_redirect
           patch :request_update_payment
         end
+        resources :account_on_files, only: [:create]
       end
     end
   end
