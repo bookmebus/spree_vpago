@@ -100,7 +100,7 @@ module Vpago
       end
 
       def fetch_access_token
-        response = Faraday.post(
+        response = Faraday.new(request: { open_timeout: Vpago::HttpTimeouts::OPEN_TIMEOUT, timeout: Vpago::HttpTimeouts::TIMEOUT }).post(
           access_token_url,
           URI.encode_www_form(
             grant_type: 'client_credentials',

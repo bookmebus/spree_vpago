@@ -37,6 +37,8 @@ module Vpago
       def check_remote_status
         conn = Faraday::Connection.new do |faraday|
           faraday.request :url_encoded
+          faraday.options.open_timeout = Vpago::HttpTimeouts::OPEN_TIMEOUT
+          faraday.options.timeout = Vpago::HttpTimeouts::TIMEOUT
         end
 
         data = {

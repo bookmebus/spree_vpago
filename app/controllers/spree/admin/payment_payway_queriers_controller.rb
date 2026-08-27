@@ -17,6 +17,13 @@ module Spree
         end
 
         redirect_to admin_order_payment_path(order_id: @payment.order.number, id: @payment.number)
+      rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+        VpagoLogger.error(
+          label: 'Spree::Admin::PaymentPaywayQueriersController#show gateway_timeout',
+          data: { payment_number: @payment.number, error_class: e.class.name, error_message: e.message }
+        )
+        flash[:error] = Spree.t('vpago.payments.gateway_timeout')
+        redirect_to admin_order_payment_path(order_id: @payment.order.number, id: @payment.number)
       end
 
       private

@@ -60,6 +60,12 @@ module Spree
       else
         render json: { status: :pending }, status: :ok
       end
+    rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+      VpagoLogger.error(
+        label: 'Spree::VpagoPaymentsController#check_transaction gateway_timeout',
+        data: vpago_log_context(error_class: e.class.name, error_message: e.message)
+      )
+      render json: { status: :pending }, status: :ok
     end
 
     # POST

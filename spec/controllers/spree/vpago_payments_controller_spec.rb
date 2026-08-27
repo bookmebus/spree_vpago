@@ -53,4 +53,40 @@ RSpec.describe Spree::VpagoPaymentsController, type: :request do
       end
     end
   end
+
+  describe 'GET #check_transaction' do
+    let(:params) do
+      {
+        order_number: order.number,
+        payment_number: payment.number,
+        order_jwt_token: checkout.order_jwt_token
+      }
+    end
+
+    context 'when the gateway times out' do
+      before do
+        allow_any_instance_of(Spree::Gateway::PaywayV2).to receive(:check_transaction).and_raise(Faraday::TimeoutError)
+      end
+
+      it 'returns a pending status instead of an error' do
+        get '/vpago_payments/check_transaction', params: params
+
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)).to eq({ 'status' => 'pending' })
+      end
+    end
+
+    context 'when the gateway connection fails' do
+      before do
+        allow_any_instance_of(Spree::Gateway::PaywayV2).to receive(:check_transaction).and_raise(Faraday::ConnectionFailed, 'connection reset')
+      end
+
+      it 'returns a pending status instead of an error' do
+        get '/vpago_payments/check_transaction', params: params
+
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)).to eq({ 'status' => 'pending' })
+      end
+    end
+  end
 end
