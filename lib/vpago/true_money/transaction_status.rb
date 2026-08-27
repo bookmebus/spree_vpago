@@ -2,7 +2,7 @@ module Vpago
   module TrueMoney
     class TransactionStatus < Base
       def call
-        @response = Faraday.get(check_transaction_url, nil, default_headers)
+        @response = Faraday.new(request: { open_timeout: Vpago::HttpTimeouts::OPEN_TIMEOUT, timeout: Vpago::HttpTimeouts::TIMEOUT }).get(check_transaction_url, nil, default_headers)
       end
 
       def success?

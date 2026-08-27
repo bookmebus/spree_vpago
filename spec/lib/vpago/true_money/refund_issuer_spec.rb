@@ -48,8 +48,11 @@ RSpec.describe Vpago::TrueMoney::RefundIssuer do
     instance_double(Faraday::Response, success?: true, status: 200, body: mock_refund_response_body)
   end
 
+  let(:token_connection) { instance_double(Faraday::Connection, post: mock_access_token_response) }
+
   before do
-    allow(Faraday).to receive(:post).and_return(mock_access_token_response, mock_refund_response)
+    allow(Faraday).to receive(:new).and_return(token_connection)
+    allow(Faraday).to receive(:post).and_return(mock_refund_response)
     allow(Time).to receive(:now).and_return(Time.at(1_700_000_000))
     allow_any_instance_of(Vpago::RsaHandler).to receive(:generate_signature).and_return('dummy-signature')
   end

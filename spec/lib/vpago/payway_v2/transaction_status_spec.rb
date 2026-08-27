@@ -81,4 +81,26 @@ RSpec.describe Vpago::PaywayV2::TransactionStatus do
       expect(subject.failed?).to be true
     end
   end
+
+  describe '#check_remote_status' do
+    it 'configures the connection with the shared open/read timeouts' do
+      allow(Faraday::Connection).to receive(:new).and_wrap_original do |original, *args, &block|
+        conn = original.call(*args, &block)
+
+        expect(conn.options.open_timeout).to eq Vpago::HttpTimeouts::OPEN_TIMEOUT
+        expect(conn.options.timeout).to eq Vpago::HttpTimeouts::TIMEOUT
+
+        allow(conn).to receive(:post).and_return(double(status: 200, body: '{}'))
+        conn
+      end
+
+      subject.send(:check_remote_status)
+    end
+
+    it 'propagates a Faraday timeout raised by the underlying connection' do
+      allow_any_instance_of(Faraday::Connection).to receive(:post).and_raise(Faraday::TimeoutError)
+
+      expect { subject.send(:check_remote_status) }.to raise_error(Faraday::TimeoutError)
+    end
+  end
 end

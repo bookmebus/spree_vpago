@@ -28,6 +28,11 @@ module Vpago
         elsif checker.failed?
           mark_payment_as_failed(checker.error_message)
         end
+      rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+        VpagoLogger.error(
+          label: 'Vpago::PaywayV2::PaymentRequestUpdater#process_payment_status gateway_timeout',
+          data: { payment_number: @payment.number, error_class: e.class.name, error_message: e.message }
+        )
       end
 
       def mark_payment_as_success(checker)

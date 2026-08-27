@@ -70,9 +70,10 @@ RSpec.describe Vpago::TrueMoney::Base do
 
   describe '#fetch_access_token' do
     let(:token_response) { double('Response', success?: true, body: { access_token: 'access_token_123' }.to_json) }
+    let(:connection) { instance_double(Faraday::Connection, post: token_response) }
 
     before do
-      allow(Faraday).to receive(:post).and_return(token_response)
+      allow(Faraday).to receive(:new).and_return(connection)
     end
 
     it 'returns the fetched access token' do

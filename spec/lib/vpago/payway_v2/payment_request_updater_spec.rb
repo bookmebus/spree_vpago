@@ -14,8 +14,19 @@ RSpec.describe Vpago::PaywayV2::PaymentRequestUpdater, type: :model do
       updater = Vpago::PaywayV2::PaymentRequestUpdater.new(payment, options)
       updater.call
       
-      expect(payment.state).to eq('failed') 
-      expect(payment.source.payment_description).to eq('Items are not eligible due to insufficient stock') 
+      expect(payment.state).to eq('failed')
+      expect(payment.source.payment_description).to eq('Items are not eligible due to insufficient stock')
+    end
+  end
+
+  describe 'gateway timeout' do
+    it 'leaves the payment untouched instead of marking it failed' do
+      allow_any_instance_of(gateway.class).to receive(:check_transaction).and_raise(Faraday::TimeoutError)
+      options = { updated_by_user_id: user.id }
+      updater = Vpago::PaywayV2::PaymentRequestUpdater.new(payment, options)
+
+      expect { updater.call }.not_to raise_error
+      expect(payment.reload.state).to eq('processing')
     end
   end
 end

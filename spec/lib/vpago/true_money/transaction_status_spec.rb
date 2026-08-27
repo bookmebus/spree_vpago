@@ -20,9 +20,12 @@ RSpec.describe Vpago::TrueMoney::TransactionStatus do
 
   let(:mock_transaction_response) { instance_double(Faraday::Response, body: mock_transaction_response_body) }
 
+  let(:connection) do
+    instance_double(Faraday::Connection, post: mock_access_token_response, get: mock_transaction_response)
+  end
+
   before do
-    allow(Faraday).to receive(:post).and_return(mock_access_token_response)
-    allow(Faraday).to receive(:get).and_return(mock_transaction_response)
+    allow(Faraday).to receive(:new).and_return(connection)
     allow(Time).to receive(:now).and_return(Time.at(1_700_000_000))
     allow_any_instance_of(Vpago::RsaHandler).to receive(:generate_signature).and_return('dummy-signature')
   end

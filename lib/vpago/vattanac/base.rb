@@ -70,7 +70,8 @@ module Vpago
       private
 
       def fetch_access_token
-        response = Faraday.post(access_token_url, { username: username, password: password }.to_json, { 'Content-Type' => CONTENT_TYPE_JSON })
+        response = Faraday.new(request: { open_timeout: Vpago::HttpTimeouts::OPEN_TIMEOUT, timeout: Vpago::HttpTimeouts::TIMEOUT })
+                          .post(access_token_url, { username: username, password: password }.to_json, { 'Content-Type' => CONTENT_TYPE_JSON })
 
         raise "Access Token Error: #{response.status} - #{response.body}" unless response.success?
 
@@ -78,7 +79,7 @@ module Vpago
       end
 
       def post(url, body)
-        response = Faraday.post(url, body.to_json, default_headers)
+        response = Faraday.new(request: { open_timeout: Vpago::HttpTimeouts::OPEN_TIMEOUT, timeout: Vpago::HttpTimeouts::TIMEOUT }).post(url, body.to_json, default_headers)
         parse_json(response.body)
       end
     end

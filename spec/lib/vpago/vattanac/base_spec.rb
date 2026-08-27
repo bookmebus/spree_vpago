@@ -40,7 +40,9 @@ RSpec.describe Vpago::Vattanac::Base do
 
     it 'fetches token from API and memoizes it on success' do
       success_response = double('Response', success?: true, status: 200, body: { data: { accessToken: 'tok-xyz' } }.to_json)
-      expect(Faraday).to receive(:post).with(
+      connection = instance_double(Faraday::Connection)
+      allow(Faraday).to receive(:new).and_return(connection)
+      expect(connection).to receive(:post).with(
         token_url,
         { username: instance.username, password: instance.password }.to_json,
         { 'Content-Type' => 'application/json' }
@@ -54,16 +56,39 @@ RSpec.describe Vpago::Vattanac::Base do
 
     it 'raises error when HTTP is not successful' do
       error_response = double('Response', success?: false, status: 401, body: 'unauthorized')
-      allow(Faraday).to receive(:post).and_return(error_response)
+      connection = instance_double(Faraday::Connection, post: error_response)
+      allow(Faraday).to receive(:new).and_return(connection)
 
       expect { instance.send(:fetch_access_token) }.to raise_error(RuntimeError, /Access Token Error: 401 - unauthorized/)
     end
 
     it 'raises error when accessToken is missing' do
       success_response = double('Response', success?: true, status: 200, body: { data: { } }.to_json)
-      allow(Faraday).to receive(:post).and_return(success_response)
+      connection = instance_double(Faraday::Connection, post: success_response)
+      allow(Faraday).to receive(:new).and_return(connection)
 
       expect { instance.send(:fetch_access_token) }.to raise_error(RuntimeError, /Missing accessToken/)
+    end
+  end
+
+  describe '#post' do
+    before { allow(instance).to receive(:access_token).and_return('abc123') }
+
+    it 'posts through a connection configured with the open/read timeouts' do
+      response = double('Response', body: { data: { status: 'SUCCESS' } }.to_json)
+      connection = instance_double(Faraday::Connection, post: response)
+
+      expect(Faraday).to receive(:new).with(
+        request: { open_timeout: Vpago::HttpTimeouts::OPEN_TIMEOUT, timeout: Vpago::HttpTimeouts::TIMEOUT }
+      ).and_return(connection)
+
+      expect(instance.send(:post, 'https://example.com/check', { transactionId: 'X' })).to eq({ 'data' => { 'status' => 'SUCCESS' } })
+    end
+
+    it 'propagates a Faraday timeout raised by the underlying connection' do
+      allow(Faraday).to receive(:new).and_raise(Faraday::TimeoutError)
+
+      expect { instance.send(:post, 'https://example.com/check', { transactionId: 'X' }) }.to raise_error(Faraday::TimeoutError)
     end
   end
 end
