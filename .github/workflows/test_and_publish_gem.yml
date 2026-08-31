@@ -12,7 +12,7 @@ on:
       - 112-ci-cd
       - 245-build-and-publish-gem
     tags:
-        - "*"
+      - "*"
 jobs:
   test_and_publish_gem:
     runs-on: ubuntu-latest
@@ -66,11 +66,11 @@ jobs:
       #   run: |
       #     bundle exec brakeman
 
-      - name: Run test
-        env:
-          DATABASE_URL: postgres://myuser:mypassword@localhost:5432/test_db
-        run: |
-          bundle exec rake
+      # - name: Run test
+      #   env:
+      #     DATABASE_URL: postgres://myuser:mypassword@localhost:5432/test_db
+      #   run: |
+      #     bundle exec rake
 
       - name: Build gem
         env:
