@@ -23,6 +23,7 @@ module Spree
     # GET
     def processing
       @order = @payment.order
+      return redirect_to @payment.success_url, allow_other_host: true if @order.completed?
 
       VpagoLogger.log(label: 'Spree::VpagoPaymentsController#processing', data: vpago_log_context)
     end
