@@ -6,6 +6,7 @@ module Vpago
     TYPE_ACLEDA = 'Spree::Gateway::Acleda'.freeze
     TYPE_ACLEDA_V2 = 'Spree::Gateway::AcledaV2'.freeze
     TYPE_ACLEDA_MOBILE = 'Spree::Gateway::AcledaMobile'.freeze
+    TYPE_ACLEDA_MINI_APP = 'Spree::Gateway::AcledaMiniApp'.freeze
     TYPE_TRUE_MONEY = 'Spree::Gateway::TrueMoney'.freeze
     TYPE_VATTANAC = 'Spree::Gateway::Vattanac'.freeze
     TYPE_VATTANAC_MINI_APP = 'Spree::Gateway::VattanacMiniApp'.freeze
@@ -24,6 +25,7 @@ module Vpago
           Spree::PaymentMethod::TYPE_ACLEDA,
           Spree::PaymentMethod::TYPE_ACLEDA_V2,
           Spree::PaymentMethod::TYPE_ACLEDA_MOBILE,
+          Spree::PaymentMethod::TYPE_ACLEDA_MINI_APP,
           Spree::PaymentMethod::TYPE_VATTANAC,
           Spree::PaymentMethod::TYPE_VATTANAC_MINI_APP,
           Spree::PaymentMethod::TYPE_TRUE_MONEY,
@@ -93,6 +95,10 @@ module Vpago
 
     def type_acleda_v2?
       type == Spree::PaymentMethod::TYPE_ACLEDA_V2
+    end
+
+    def type_acleda_mini_app?
+      type == Spree::PaymentMethod::TYPE_ACLEDA_MINI_APP
     end
 
     def type_payway?
