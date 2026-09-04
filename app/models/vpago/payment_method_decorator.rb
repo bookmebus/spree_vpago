@@ -80,6 +80,10 @@ module Vpago
         ::Vpago::Acleda::PaymentRequestUpdater
       elsif type_acleda_mobile?
         ::Vpago::AcledaMobile::PaymentRequestUpdater
+      elsif type_acleda_v2?
+        ::Vpago::AcledaV2::PaymentRequestUpdater
+      elsif type_vattanac?
+        ::Vpago::Vattanac::PaymentRequestUpdater
       end
     end
 
@@ -105,6 +109,10 @@ module Vpago
 
     def type_wingsdk?
       type == Spree::PaymentMethod::TYPE_WINGSDK
+    end
+
+    def type_vattanac?
+      type == Spree::PaymentMethod::TYPE_VATTANAC
     end
 
     def type_vattanac_mini_app?
