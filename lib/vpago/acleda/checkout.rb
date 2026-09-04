@@ -3,7 +3,7 @@ module Vpago
     class Checkout < Base
       attr_accessor :error_message
 
-      def initialize(payment, options={})
+      def initialize(payment, options = {})
         super
 
         @error_message = nil
@@ -30,15 +30,15 @@ module Vpago
       end
 
       def json_response
-        @json ||= JSON.parse(@response.body)
+        @json_response ||= JSON.parse(@response.body)
       end
 
       def create_session
         con = Faraday::Connection.new(url: host)
 
         con.post(create_session_path) do |request|
-          request.headers["Content-Type"] = "application/json"
-          request.body = create_session_requst_body.to_json
+          request.headers['Content-Type'] = 'application/json'
+          request.body = create_session_request_body.to_json
         end
       end
 
@@ -46,12 +46,12 @@ module Vpago
         @error_message.present?
       end
 
-      def create_session_requst_body
-        {
+      def create_session_request_body
+        request_body = {
           loginId: login_id,
-          password: password,
+          password:,
           merchantID: merchant_id,
-          signature: signature,
+          signature:,
           xpayTransaction: {
             txid: payment_number,
             invoiceid: order_number,
@@ -60,14 +60,23 @@ module Vpago
             purchaseDate: purchase_date,
             purchaseDesc: 'items',
             item: '1',
-            quantity: '1',
-            expiryTime: expiry_time
+            quantity: '1', # always 1: one payment = one transaction
+            expiryTime: expiry_time,
+            otherUrl: other_url
           }
         }
+
+        if @payment.payment_method.xpay_mpgs?
+          request_body[:xpayTransaction][:paymentCard] = acleda_payment_card if acleda_payment_card.present?
+        elsif @payment.payment_method.khqr?
+          request_body[:xpayTransaction][:operationType] = '3'
+        end
+
+        request_body
       end
 
       def create_session_path
-        ENV['ACLEDA_CREATE_SESSION_PATH']
+        ENV.fetch('ACLEDA_CREATE_SESSION_PATH', nil)
       end
 
       def gateway_params
@@ -86,7 +95,9 @@ module Vpago
           currencytype: 'USD',
           transactionID: payment_number,
           successUrlToReturn: success_url,
-          errorUrl: error_url
+          errorUrl: error_url,
+          companyName: acleda_company_name,
+          companyLogo: ActionController::Base.helpers.image_url('vpago/payway/acleda_merchant_logo_300x300.png')
         }
       end
     end

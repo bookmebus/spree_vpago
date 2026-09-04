@@ -1,0 +1,34 @@
+<% @checkout = ::Vpago::TrueMoney::Checkout.new(@payment) %>
+<% redirect_urls = @checkout.generate_payment_urls(params[:platform]) %>
+
+<script>
+  function showRedirectContainer(buttonLabel, onClick) {
+    const loadingContainer = document.getElementById('vpago_loading_container');
+    const redirectContainer = document.getElementById('vpago_redirect_container');
+    const redirectButton = document.getElementById('vpago_redirect_button');
+
+    redirectButton.textContent = buttonLabel;
+    redirectButton.addEventListener('click', onClick);
+
+    loadingContainer.style.display = 'none';
+    redirectContainer.style.removeProperty('display');
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const platform = "<%= params[:platform] %>";
+    const redirectUrls = <%= redirect_urls.to_json.html_safe %>;
+
+    function setupConfirmPaymentButton() {
+      if (platform === "app") {
+        window.location.href = redirectUrls.deeplink;
+        setTimeout(() => {
+          window.location.href = redirectUrls.webview;
+        }, 1500);
+      } else {
+        window.open(redirectUrls.webview, '_blank');
+      }
+    }
+
+    setupConfirmPaymentButton();
+  });
+</script>

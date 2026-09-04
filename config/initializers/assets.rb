@@ -1,0 +1,1 @@
+Rails.application.config.assets.precompile << 'spree_vpago_manifest.js'

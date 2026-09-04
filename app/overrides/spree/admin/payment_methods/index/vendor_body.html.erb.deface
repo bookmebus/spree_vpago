@@ -1,0 +1,11 @@
+<!-- insert_before "[data-hook='admin_payment_methods_index_row_actions']" -->
+
+<% if params[:tab] == 'vendors' %>
+  <td class="text-center">
+    <% if method.vendor&.present? %>
+      <%= link_to method.vendor.name, edit_admin_vendor_path(method.vendor), target: "_blank" %>
+    <% else %>
+      N/A
+    <% end %>
+  </td>
+<% end %>

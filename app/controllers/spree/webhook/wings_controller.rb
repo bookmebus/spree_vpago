@@ -1,15 +1,16 @@
 module Spree
   module Webhook
     class WingsController < BaseController
-      skip_before_action :verify_authenticity_token, only: [:return, :continue, :create]
+      skip_before_action :verify_authenticity_token, only: %i[return continue create]
+
       before_action :retrive_payment, only: [:create]
-      before_action :find_payment, only: [:return, :continue]
+      before_action :find_payment, only: %i[return continue]
 
       def create
         render_plain = true
         check_and_redirect(render_plain)
       end
-      
+
       ## click on button Done: POST { wing_id: payment_number, response: {"remark"=>"PNRE5V5E", "amount"=>" USD 30.00", "total"=>" USD 30.00", "transaction_id"=>"ONL031157", "customer_name"=>"Wing Testing WCX-USD", "biller_name"=>"VTENH"}}
       ## click on button Back: GET  { wing_id: payment_number }
       def return
@@ -17,6 +18,7 @@ module Spree
       end
 
       private
+
       def find_payment
         @payment = ::Spree::Payment.find_by(number: params[:wing_id])
       end
@@ -32,26 +34,28 @@ module Spree
         @payment = payment_retriever.payment
       end
 
-      def check_and_redirect(render_plain=false)
+      def check_and_redirect(render_plain: false)
         request_updater = ::Vpago::WingSdk::PaymentRequestUpdater.new(@payment)
         request_updater.call
 
         order = @payment.order
         order = order.reload
 
+        pending_or_paid = order.paid? || @payment.pending?
         if render_plain
-          order.paid? || @payment.pending? ? render(plain: :success) : render(plain: :failed, status: 400)
+          pending_or_paid ? render(plain: :success) : render(plain: :failed, status: 400)
         else
           redirect_order(order)
         end
       end
 
       def redirect_order(order)
+        pending_or_paid = order.paid? || @payment.pending?
         if params[:app_checkout] == 'yes'
-          redirect_to order.paid? || @payment.pending? ? success_payway_results_path : failed_payway_results_path
+          redirect_to pending_or_paid ? success_payway_results_path : failed_payway_results_path
         else
-          flash[:order_completed] = "1" if order.paid? # required by order_just_completed for purchase tracking
-          redirect_to order.paid? || @payment.pending? ? order_path(order) : checkout_state_path(:payment)
+          flash[:order_completed] = '1' if order.paid? # required by order_just_completed for purchase tracking
+          redirect_to pending_or_paid ? order_path(order) : checkout_state_path(:payment)
         end
       end
     end

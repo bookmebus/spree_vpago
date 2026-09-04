@@ -3,6 +3,24 @@
 
 en:
   spree:
+    acleda_type: "Payment Type"
+    acleda_company_name: "Product Name in ACLEDA view"
+    acleda_payment_card: "Payment Card (only required for XPAY-MPGS)"
+    payment_process_failed: "Payment process failed"
+    insufficient_payment_amount_to_cover_the_total: "Payment amount is insufficient to cover the total"
+    qr_code: "QR code"
+    open_checkout: "Open Checkout"
+    admin:
+      orders:
+        suspicious_orders: "Suspicious Orders"
+        outstanding_balance: "Outstanding Balance"
+        payments: "Payments"
+        payment_number: "Payment Number"
+        email_or_phone: "Email / Phone Number"
+        payments_count:
+          one: "1 Payment"
+          other: "%{count} Payments"
+        payments_for_order: "Payments for %{number}"
     vpago:
       payments:
         check_and_heal: "Auto correct"
@@ -17,5 +35,6 @@ en:
         failed_require_updated_reason: "You must provide update reason"
         payment_found_with_result: "Found payment with result: %{result}"
         payment_not_found_with_error: "Payment not found with error: %{error}"
+        gateway_timeout: "The payment gateway did not respond in time. Please try again shortly."
         query_status: "Query payment status"
         confirm_manual_update: "Are you sure to update this order to complete"

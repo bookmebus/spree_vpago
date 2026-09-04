@@ -1,0 +1,15 @@
+<!-- insert_before "erb[silent]:contains('content_for :page_actions')" -->
+
+<%= render partial: 'spree/admin/shared/payment_methods_tabs' %>
+
+<% if params[:tab] == 'vendors' %>
+  <div class="alert alert-info mb-3">
+    <%= svg_icon name: "info-circle.svg", classes: 'mr-2', width: '16', height: '16' %> 
+    Payment methods for each vendor. Once set, only those payment methods will be displayed to users.
+  </div>
+<% elsif params[:tab] == 'tenants' %>
+  <div class="alert alert-info mb-3">
+    <%= svg_icon name: "info-circle.svg", classes: 'mr-2', width: '16', height: '16' %> 
+    Payment methods for each tenant. Once set, only those payment methods will be displayed to users.
+  </div>
+<% end %>

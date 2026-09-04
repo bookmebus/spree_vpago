@@ -3,7 +3,7 @@ module Spree
     class PaymentWingSdkBaseController < Spree::Admin::BaseController
       include Spree::Backend::Callbacks
 
-      before_action :load_payment, only: [:show, :update]
+      before_action :load_payment, only: %i[show update]
       before_action :validate_order, only: [:update]
 
       def validate_order

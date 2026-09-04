@@ -1,7 +1,7 @@
 module Spree
   module Webhook
     class PaywaysController < BaseController
-      skip_before_action :verify_authenticity_token, only: [:return, :v2_return, :continue, :v2_continue]
+      skip_before_action :verify_authenticity_token, only: %i[return v2_return continue v2_continue]
 
       # match via: [:get, :post]
       # {"response"=>"{\"tran_id\":\"PE13LXT1\",\"status\":0"}"}
@@ -27,6 +27,7 @@ module Spree
       end
 
       private
+
       def v2_request_updater_service
         ::Vpago::PaywayV2::PaymentRequestUpdater
       end
@@ -35,15 +36,13 @@ module Spree
         ::Vpago::Payway::PaymentRequestUpdater
       end
 
+      # the callback invoke by PAYWAY in case of success
       def return_callback_handler(handler_service)
         # pawway send get request with nothing
-        if(request.method == "GET")
-          return render plain: :ok
-        end
+        return render plain: :ok if request.method == 'GET'
 
-        # the callback invoke by PAYWAY in case of success
-        payload = JSON.parse(params[:response])
-        payment = Spree::Payment.find_by(number: payload["tran_id"])
+        builder = Vpago::PaywayReturnOptionsBuilder.new(params: params)
+        payment = builder.payment
 
         request_updater = handler_service.new(payment)
         request_updater.call
@@ -63,13 +62,14 @@ module Spree
         order = payment.order
 
         if order.paid?
-          flash[:order_completed] = "1" # required by order_just_completed for purchase tracking
+          flash[:order_completed] = '1' # required by order_just_completed for purchase tracking
         end
 
+        pending_or_paid = order.paid? || payment.pending?
         if params[:app_checkout] == 'yes'
-          redirect_to order.paid? || payment.pending? ? success_payway_results_path : failed_payway_results_path
+          redirect_to pending_or_paid ? success_payway_results_path : failed_payway_results_path
         else
-          redirect_to order.paid? || payment.pending? ? order_path(order) : checkout_state_path(:payment)
+          redirect_to pending_or_paid ? order_path(order) : checkout_state_path(:payment)
         end
       end
     end

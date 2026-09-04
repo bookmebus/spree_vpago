@@ -9,7 +9,9 @@ module Spree
           app_checkout: true
         }
 
-        @client_redirect = ::Vpago::Acleda::Checkout.new(@payment, options)
+        @client_redirect = ActiveRecord::Base.connected_to(role: :writing) do
+          ::Vpago::Acleda::Checkout.new(@payment, options)
+        end
       end
     end
 

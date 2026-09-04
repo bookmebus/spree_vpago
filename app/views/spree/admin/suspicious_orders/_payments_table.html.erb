@@ -1,0 +1,71 @@
+<% if check_result.present? %>
+  <script>
+    show_flash('<%= check_result[:success] ? "success" : "error" %>', '<%= j check_result[:message] %>')
+  </script>
+<% end %>
+
+<table class="table mb-0">
+  <thead class="text-muted">
+    <tr>
+      <th><%= Spree::Payment.human_attribute_name(:id) %></th>
+      <th><%= Spree::Payment.human_attribute_name(:number) %></th>
+      <th><%= "#{Spree.t('date')}/#{Spree.t('time')}" %></th>
+      <th class="text-center"><%= Spree.t(:amount) %></th>
+      <th class="text-center"><%= Spree.t(:payment_method) %></th>
+      <th class="text-center"><%= Spree.t(:payment_state) %></th>
+      <th class="actions text-center"></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% payments.each do |payment| %>
+      <tr>
+        <td><%= payment.id %></td>
+        <td><%= link_to payment.number, spree.admin_order_payment_path(order, payment), data: { turbo_frame: '_top' } %></td>
+        <td><%= pretty_time(payment.created_at) %></td>
+        <td class="text-center"><%= payment.display_amount %></td>
+        <td class="text-center">
+          <% payment_method = payment.payment_method %>
+          <% if can?(:update, payment_method) %>
+            <%= link_to payment_method.name, spree.edit_admin_payment_method_path(payment_method),
+                  target: '_blank', rel: 'noopener noreferrer' %>
+          <% else %>
+            <%= payment_method.name %>
+          <% end %>
+        </td>
+        <td class="text-center">
+          <span class="badge badge-pill badge-<%= payment.state %>">
+            <%= Spree.t(payment.state, scope: :payment_states, default: payment.state.capitalize) %>
+          </span>
+        </td>
+        <td class="actions">
+          <span class="d-flex justify-content-center payment-action-buttons">
+            <% if payment.payment_method.support_check_transaction_api? %>
+
+              <%= button_to spree.check_transaction_admin_suspicious_order_path(order, payment_number: payment.number),
+                    form: { data: { turbo_frame: "suspicious_order_#{order.id}_payments" }, class: 'd-inline' },
+                    class: 'btn btn-light btn-sm icon-link with-tip', title: Spree.t('vpago.payments.query_status') do %>
+                <%= svg_icon(name: 'search.svg', classes: 'icon icon-search', width: 14, height: 14) %>
+              <% end %>
+            <% end %>
+
+            <% payment.actions.each do |action| %>
+              <% if action == 'credit' %>
+                <%= link_to_with_icon('exit.svg', Spree.t(:refund), spree.new_admin_order_payment_refund_path(order, payment),
+                      no_text: true, data: { turbo_frame: '_top' }, class: 'btn btn-light btn-sm') if can?(:create, Spree::Refund) %>
+              <% elsif action == 'open_checkout' %>
+                <%= link_to_with_icon('qr-code.svg', Spree.t(action), payment.checkout_url,
+                      target: '_blank', rel: 'noopener noreferrer', no_text: true, class: 'btn btn-light btn-sm') %>
+              <% else %>
+                <% action_data = { action: action, turbo_frame: '_top' } %>
+                <% action_data[:confirm] = Spree.t(:reprocess_payment_confirmation, default: 'Reprocess this payment? This will re-run the gateway transaction.') if action == 'process' %>
+                <%= link_to_with_icon(action + '.svg', Spree.t(action), spree.fire_admin_order_payment_path(order, payment, e: action),
+                      method: :put, no_text: true, data: action_data,
+                      class: 'btn btn-light btn-sm') if can?(action.to_sym, payment) %>
+              <% end %>
+            <% end %>
+          </span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

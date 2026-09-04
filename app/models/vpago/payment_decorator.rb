@@ -1,35 +1,122 @@
+# Note for process! & capture! method:
+#
+# Original process! & capture! calls started_processing! to move state
+# [:checkout, :pending, :completed, :processing] → :processing.
+#
+# When gateway call fails, handle_response calls send(:failure) which transitions
+# the payment to :failed state. This happens BEFORE the GatewayError is raised,
+# so when Sidekiq retries the job, the payment is already in :failed state.
+#
+# The :started_processing event doesn't allow transition from :failed → :processing,
+# so we need to reset the state back to :checkout first via reset_for_retry!
+#
+# This allows process! or capture! to be retried by Sidekiq or by admin via /fire after connection errors
+# or other transient gateway failures.
 module Vpago
   module PaymentDecorator
+    def self.prepended(base)
+      base.has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payment
+      base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :should_generate_payouts?
 
-    # On the first call, everything works. The order is transitioned to complete and one Spree::Payment, 
-    # which redirect the payment. But, after making the same call again,
-    # for instance because the payment wasn't completed or failed,
-    # another Spree::Payment is created but without a payment_url. So, if a consumer,
-    # for whatever reason, failed to complete the first payment, it would not be possible try again. 
-    # This also meant that any consecutive Spree::Payment would not have a payment_url. The consumer is stuck
+      base.delegate :checkout_url,
+                    :web_checkout_url,
+                    :processing_url,
+                    :success_url,
+                    :success_deeplink_url,
+                    :check_transaction_url,
+                    :process_payment_url,
+                    to: :url_constructor
 
-    def build_source
-      return unless new_record?
-
-      if source_attributes.present? && source.blank? && payment_method.try(:payment_source_class)
-        self.source = payment_method.payment_source_class.new(source_attributes)
-        source.payment_method_id = payment_method.id
-        source.user_id = order.user_id if order
-
-        # Spree will not process payments if order is completed.
-        # We should call process! for completed orders to create a the gateway payment.
-        process! if order.completed?
+      # State machine event for payment retry / admin reprocess.
+      # `failed` is auto-reset by process!/capture! below (Sidekiq retry);
+      # void/invalid/processing are reset only by the admin reprocess action.
+      base.state_machine.event :reset_for_retry do
+        transition from: %i[failed void invalid processing], to: :checkout
       end
     end
 
-    def authorized?
-      if source.is_a? Spree::VpagoPaymentSource
-        pending?
-      else
-        false
-      end
+    # Stores preloaded payout IDs in private_metadata to avoid N+1 queries
+    # when checking whether payouts exist for this payment.
+    def preload_payout_ids=(ids)
+      self.private_metadata ||= {}
+      self.private_metadata['preload_payout_ids'] = ids
+    end
+
+    def preload_payout_ids
+      self.private_metadata&.fetch('preload_payout_ids', []) || []
+    end
+
+    # override
+    def process!
+      reset_for_retry! if failed?
+
+      super
+    end
+
+    # override
+    def capture!(amount = nil)
+      reset_for_retry! if failed?
+
+      super
+    end
+
+    # override:
+    # to allow capture faraday connection error. gateway_error method already write rails log for this.
+    def protect_from_connection_error
+      yield
+    rescue ActiveMerchant::ConnectionError => e
+      failure!
+      gateway_error(e)
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+      failure!
+      gateway_error(ActiveMerchant::ConnectionError.new(e.message, e))
+    end
+
+    def user_informer
+      @user_informer ||= ::Vpago::UserInformers::Firebase.new(order)
+    end
+
+    def url_constructor
+      @url_constructor ||= Vpago::PaymentUrlConstructor.new(self)
+    end
+
+    def should_generate_payouts?
+      payment_method.enable_payout? && payouts.empty?
+    end
+
+    # COMPLETED, CANCELLED
+    def pre_auth_status
+      pre_auth_response['transaction_status']
+    end
+
+    def pre_auth_completed?
+      pre_auth_status == 'COMPLETED'
+    end
+
+    def pre_auth_cancelled?
+      pre_auth_status == 'CANCELLED'
+    end
+
+    def true_money_payment?
+      payment_method.type_true_money?
+    end
+
+    def vattanac_payment?
+      payment_method.type_vattanac?
+    end
+
+    def vattanac_mini_app_payment?
+      payment_method.type_vattanac_mini_app?
+    end
+
+    def check_payment?
+      payment_method.type_check?
+    end
+
+    def can_redirect_to_app?
+      payment_method.can_redirect_to_app?
     end
   end
 end
 
-Spree::Payment.prepend(Vpago::PaymentDecorator)
+Spree::Payment.prepend(Vpago::PaymentDecorator) unless Spree::Payment.include?(Vpago::PaymentDecorator)

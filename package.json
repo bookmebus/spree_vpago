@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "@spree/dashboard": "^0.2.1",
+    "esbuild": "^0.24.2",
+    "firebase": "^11.2.0"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "test": "mocha **/*.test.js --timeout 5000"
+  },
+  "devDependencies": {
+    "chai": "^5.2.0",
+    "mocha": "^11.1.0"
+  }
+}
