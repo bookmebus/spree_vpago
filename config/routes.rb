@@ -73,6 +73,12 @@ Spree::Core::Engine.add_routes do
     resources :payment_payway_checkers
     resources :payment_payway_markers
 
+    resources :payment_acleda_v2_queriers, only: [:show]
+    resources :payment_acleda_v2_checkers, only: [:update]
+
+    resources :payment_vattanac_queriers, only: [:show]
+    resources :payment_vattanac_checkers, only: [:update]
+
     resources :products do
       resources :payout_profile_products
     end
