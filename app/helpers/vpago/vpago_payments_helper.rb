@@ -6,7 +6,21 @@ module Vpago
 
     # eg. forms/spree/gateway/payway_v2
     def render_checkout_form
-      render partial: "spree/vpago_payments/forms/#{@payment.payment_method.class.to_s.underscore}"
+      render partial: checkout_form_partial_path
+    end
+
+    # Not every payment method has (or needs) a checkout-form partial -- store credit, cash-on,
+    # and similar methods are processed instantly/manually with no external redirect/QR/webview
+    # step. Mirrors the existence-check pattern already used by render_additional_processing_script
+    # below, rather than guessing from the payment method's class/namespace (the "Gateway::" in
+    # e.g. Spree::Gateway::PaywayV2 is a naming convention only -- none of these classes actually
+    # inherit from Spree::Gateway).
+    def checkout_form_exists?(payment)
+      lookup_context.exists?(checkout_form_partial_path(payment), [], true)
+    end
+
+    def checkout_form_partial_path(payment = @payment)
+      "spree/vpago_payments/forms/#{payment.payment_method.class.to_s.underscore}"
     end
 
     def render_transaction_checker

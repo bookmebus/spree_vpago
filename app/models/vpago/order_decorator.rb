@@ -12,6 +12,32 @@ module Vpago
 
       base.state_machine.before_transition from: :cart, do: :ensure_valid_vendor_payment_methods
       base.state_machine.after_transition to: :complete, do: :generate_line_items_total_metadata
+
+      base.delegate :processing_url, :success_url, :process_order_url, to: :order_url_constructor
+    end
+
+    # For orders where order_total_after_store_credit is zero (see Vpago::OrderProcessor) --
+    # no Spree::Payment is involved, so this mirrors Vpago::PaymentDecorator#user_informer /
+    # #url_constructor but keyed on the order directly instead of a payment.
+    def user_informer
+      @user_informer ||= ::Vpago::UserInformers::Firebase.new(self)
+    end
+
+    def order_url_constructor
+      @order_url_constructor ||= Vpago::OrderUrlConstructor.new(self)
+    end
+
+    # Present whenever there's nothing left to pay after store credit -- store credit covering the
+    # order in full, cash-on with nothing remaining, or a free event. Deliberately client-agnostic
+    # to how that zero got reached: applying store credit always creates a checkout-state
+    # Spree::Payment (see SpreeCmCommissioner::Checkout::AddStoreCreditPayments), but the client
+    # shouldn't have to know that to decide which URL to open -- it still gets processed correctly
+    # here, since Spree::Checkout::Complete (used by both PaymentProcessor and OrderProcessor)
+    # calls order.process_payments! on any checkout-state payment as part of completing the order.
+    def vpago_order_processing_url
+      return if completed? || !order_total_after_store_credit.zero?
+
+      processing_url
     end
 
     # override

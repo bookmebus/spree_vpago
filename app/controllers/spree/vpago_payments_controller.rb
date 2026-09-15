@@ -1,4 +1,8 @@
 module Spree
+  # processing/success render spree/vpago_shared/{processing,success} -- shared with
+  # Spree::VpagoOrdersController, since the two flows share the same card layout, Stimulus
+  # controller, and booking-details partial (see spree/vpago_shared/processing.html.erb for how
+  # @payment-vs-@order is resolved there).
   class VpagoPaymentsController < ApplicationController
     layout 'vpago_payments'
     helper 'vpago/vpago_payments'
@@ -13,7 +17,14 @@ module Spree
 
     # GET
     def checkout
-      return redirect_to @payment.processing_url, allow_other_host: true unless @payment.checkout?
+      # Not every payment method has a checkout-form partial -- store credit, cash-on, and
+      # similar methods are processed instantly/manually with no external redirect/QR/webview
+      # step (the "Gateway::" in e.g. Spree::Gateway::PaywayV2 is a naming convention only, not
+      # real inheritance from Spree::Gateway, so a class-based check can't tell them apart --
+      # check the partial's actual existence instead, same as render_additional_processing_script
+      # already does). Skip straight to the processing page, same as an already-processed payment.
+      awaiting_checkout_form = @payment.checkout? && helpers.checkout_form_exists?(@payment)
+      return redirect_to @payment.processing_url, allow_other_host: true unless awaiting_checkout_form
 
       @order = @payment.order
 
@@ -26,6 +37,7 @@ module Spree
       return redirect_to @payment.success_url, allow_other_host: true if @order.completed?
 
       VpagoLogger.log(label: 'Spree::VpagoPaymentsController#processing', data: vpago_log_context)
+      render 'spree/vpago_shared/processing'
     end
 
     # GET
@@ -34,6 +46,7 @@ module Spree
       raise CanCan::AccessDenied unless @order.completed?
 
       VpagoLogger.log(label: 'Spree::VpagoPaymentsController#success', data: vpago_log_context)
+      render 'spree/vpago_shared/success'
     end
 
     # GET
