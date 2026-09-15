@@ -1,0 +1,89 @@
+<%
+  opr_device = request.user_agent.to_s.downcase.match?(/iphone|ipad|ipod/) ? 'ios' : 'android'
+  checkout = ::Vpago::AcledaMiniApp::Checkout.new(@payment, { platform: 'app', opr_device: opr_device })
+
+  # openSessionV2 runs here and persists paymentTokenid for the later getTxnStatus check.
+  # A rejected session and a transport error both leave the page with no deeplink, which is
+  # the single failure it has to render.
+  acleda_deeplink =
+    begin
+      checkout.acleda_deeplink
+    rescue StandardError => e
+      Rails.logger.error("[Acleda] openSessionV2 raised: #{e.message}")
+      nil
+    end
+
+  Rails.logger.error("[Acleda] openSessionV2 failed: #{checkout.error_message}") if checkout.failed?
+%>
+
+<p id="acleda-message"
+   style="margin-top: 10px; font-weight: bold; color: red; display: none;">
+</p>
+
+<script>
+  function showRedirectContainer(buttonLabel, onClick) {
+    const loadingContainer = document.getElementById('vpago_loading_container');
+    const redirectContainer = document.getElementById('vpago_redirect_container');
+    const redirectButton = document.getElementById('vpago_redirect_button');
+
+    redirectButton.textContent = buttonLabel;
+    redirectButton.addEventListener('click', onClick);
+
+    loadingContainer.style.display = 'none';
+    redirectContainer.style.removeProperty('display');
+  }
+
+  function showError(detail) {
+    console.error('[Acleda] ' + detail);
+
+    const message = document.getElementById('acleda-message');
+    message.innerText = "We couldn't start your ACLEDA payment.";
+    message.style.display = 'block';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const acledaDeeplink = "<%= raw acleda_deeplink %>";
+
+    if (!acledaDeeplink) {
+      showError('openSessionV2 returned no deeplinkUrl');
+      return;
+    }
+
+    // Payment is handed to ACLEDA by navigating to the deeplink openSessionV2 returned, which
+    // their WebView intercepts and runs natively. The spec's `acledaJSBridge` (steps 03-05) is
+    // deliberately not used: `window.webkit` is undefined on the Mini App document in every
+    // build we can test against, so `startPayment` had nowhere to go and ACLEDA proposed
+    // intercepting the deeplink instead. If they ship the bridge, it belongs in front of this
+    // with `window.onPaymentResult` for the result; today the customer returns through the
+    // `callBackUrl` sent to openSessionV2 and check_transaction_periodically.js (already
+    // running on this page) confirms with getTxnStatus either way.
+    //
+    // The navigation must target the *top-level* document: hosts intercept main-frame
+    // navigation only, and this page is framed by the storefront, so navigating our own frame
+    // is what made ACLEDA answer "invalid transaction".
+    const startPayment = () => {
+      try {
+        window.top.location.href = acledaDeeplink;
+      } catch (error) {
+        // Navigating an ancestor we cannot read is only permitted while a tap's transient
+        // activation lasts, so the automatic attempt can be refused. Falling back to our own
+        // frame is not a fix — ACLEDA answers a framed request with "invalid transaction" and
+        // the page is then gone. Leave it alive so the button below can retry from a real tap,
+        // which is the only thing that grants that activation.
+        showError('Could not navigate the top document: ' + error.message);
+      }
+    };
+
+    startPayment();
+
+    // A blocked navigation and a successful one look identical from here, so wait before
+    // offering the button: showing it immediately makes it flash up and vanish on the runs
+    // that worked. Opening the bank app usually backgrounds this document rather than
+    // unloading it, which is what `hidden` catches.
+    setTimeout(() => {
+      if (document.visibilityState === 'hidden') return;
+
+      showRedirectContainer('Pay with ACLEDA', startPayment);
+    }, 1000);
+  });
+</script>
