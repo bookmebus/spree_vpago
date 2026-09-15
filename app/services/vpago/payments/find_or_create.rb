@@ -19,6 +19,13 @@ module Vpago
       end
 
       def find_or_create_payment(order:, params:, payment_method:)
+        # Store credit is applied via the storefront's own POST .../checkout/add_store_credit,
+        # never through create_payment. Its source_class (Spree::StoreCredit) has neither a
+        # payment_method_id column nor the other fields a blank .new(...) below would need to
+        # save, so falling through would raise ActiveModel::UnknownAttributeError instead of
+        # producing a broken payment -- fail clearly instead.
+        return failure(nil, :store_credit_must_be_applied_via_add_store_credit) if payment_method.is_a?(Spree::PaymentMethod::StoreCredit)
+
         payment = order.payments.find_or_initialize_by(
           state: :checkout,
           amount: order.order_total_after_store_credit,

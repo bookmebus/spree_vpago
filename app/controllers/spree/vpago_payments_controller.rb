@@ -1,4 +1,8 @@
 module Spree
+  # processing/success render spree/vpago_shared/{processing,success} -- shared with
+  # Spree::VpagoOrdersController, since the two flows share the same card layout, Stimulus
+  # controller, and booking-details partial (see spree/vpago_shared/processing.html.erb for how
+  # @payment-vs-@order is resolved there).
   class VpagoPaymentsController < ApplicationController
     layout 'vpago_payments'
     helper 'vpago/vpago_payments'
@@ -31,6 +35,7 @@ module Spree
       return redirect_to @payment.success_url, allow_other_host: true if @order.completed?
 
       VpagoLogger.log(label: 'Spree::VpagoPaymentsController#processing', data: vpago_log_context)
+      render 'spree/vpago_shared/processing'
     end
 
     # GET
@@ -39,6 +44,7 @@ module Spree
       raise CanCan::AccessDenied unless @order.completed?
 
       VpagoLogger.log(label: 'Spree::VpagoPaymentsController#success', data: vpago_log_context)
+      render 'spree/vpago_shared/success'
     end
 
     # GET
