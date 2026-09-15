@@ -13,7 +13,14 @@ module Spree
 
     # GET
     def checkout
-      return redirect_to @payment.processing_url, allow_other_host: true unless @payment.checkout?
+      # Not every payment method has a checkout-form partial -- store credit, cash-on, and
+      # similar methods are processed instantly/manually with no external redirect/QR/webview
+      # step (the "Gateway::" in e.g. Spree::Gateway::PaywayV2 is a naming convention only, not
+      # real inheritance from Spree::Gateway, so a class-based check can't tell them apart --
+      # check the partial's actual existence instead, same as render_additional_processing_script
+      # already does). Skip straight to the processing page, same as an already-processed payment.
+      awaiting_checkout_form = @payment.checkout? && helpers.checkout_form_exists?(@payment)
+      return redirect_to @payment.processing_url, allow_other_host: true unless awaiting_checkout_form
 
       @order = @payment.order
 
