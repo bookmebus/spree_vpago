@@ -70,6 +70,27 @@ module Spree
     end
 
     # POST
+    def create_transaction
+      @payment = Vpago::PaymentFinder.new(params.permit!.to_h).find_and_verify
+      raise ActiveRecord::RecordNotFound unless @payment.present?
+
+      return render json: { error: true, message: 'unsupported' }, status: :not_implemented unless @payment.payment_method.support_create_transaction_api?
+
+      result = VpagoLogger.log(
+        label: 'Spree::VpagoPaymentsController#create_transaction',
+        data: vpago_log_context
+      ) { @payment.payment_method.create_transaction(@payment, platform: params[:platform]) }
+
+      render json: result, status: :ok
+    rescue Faraday::Error, JSON::ParserError, NoMethodError => e
+      VpagoLogger.error(
+        label: 'Spree::VpagoPaymentsController#create_transaction failed',
+        data: vpago_log_context(error_class: e.class.name, error_message: e.message)
+      )
+      render json: { error: true, message: 'Failed to create transaction' }, status: :bad_gateway
+    end
+
+    # POST
     def process_payment
       return render json: { status: :ok }, status: :ok if request.method != 'POST'
 

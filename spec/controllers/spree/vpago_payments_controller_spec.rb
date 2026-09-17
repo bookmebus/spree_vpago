@@ -89,4 +89,51 @@ RSpec.describe Spree::VpagoPaymentsController, type: :request do
       end
     end
   end
+
+  describe 'POST #create_transaction' do
+    let(:params) do
+      {
+        order_number: order.number,
+        payment_number: payment.number,
+        order_jwt_token: checkout.order_jwt_token,
+        platform: 'app'
+      }
+    end
+
+    context 'when the gateway supports create_transaction' do
+      it 'renders the raw gateway response as JSON' do
+        allow_any_instance_of(Spree::Gateway::PaywayV2)
+          .to receive(:create_transaction)
+          .with(payment, platform: 'app')
+          .and_return({ 'status' => { 'code' => 0 }, 'abapay_deeplink' => 'aba://pay' })
+
+        post '/vpago_payments/create_transaction', params: params
+
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)).to eq({ 'status' => { 'code' => 0 }, 'abapay_deeplink' => 'aba://pay' })
+      end
+    end
+
+    context 'when the gateway does not support create_transaction' do
+      it 'returns a not_implemented status' do
+        allow_any_instance_of(Spree::Gateway::PaywayV2).to receive(:support_create_transaction_api?).and_return(false)
+
+        post '/vpago_payments/create_transaction', params: params
+
+        expect(response).to have_http_status(:not_implemented)
+        expect(JSON.parse(response.body)).to eq({ 'error' => true, 'message' => 'unsupported' })
+      end
+    end
+
+    context 'when the gateway call fails' do
+      it 'returns a bad_gateway status instead of raising' do
+        allow_any_instance_of(Spree::Gateway::PaywayV2).to receive(:create_transaction).and_raise(Faraday::TimeoutError)
+
+        post '/vpago_payments/create_transaction', params: params
+
+        expect(response).to have_http_status(:bad_gateway)
+        expect(JSON.parse(response.body)).to eq({ 'error' => true, 'message' => 'Failed to create transaction' })
+      end
+    end
+  end
 end

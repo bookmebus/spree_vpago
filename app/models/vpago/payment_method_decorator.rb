@@ -43,6 +43,12 @@ module Vpago
       respond_to?(:check_transaction)
     end
 
+    # The payment method must implement `create_transaction(payment, options = {})`,
+    # returning a Hash suitable for `render json:` directly.
+    def support_create_transaction_api?
+      respond_to?(:create_transaction)
+    end
+
     # TODO: we have already implement purchase for payway_v2.
     # make sure to implement this on other payment method as well.
     def purchase(_amount, _source, _gateway_options = {})

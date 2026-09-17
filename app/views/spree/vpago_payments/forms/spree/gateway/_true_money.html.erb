@@ -1,6 +1,3 @@
-<% @checkout = ::Vpago::TrueMoney::Checkout.new(@payment) %>
-<% redirect_urls = @checkout.generate_payment_urls(params[:platform]) %>
-
 <script>
   function showRedirectContainer(buttonLabel, onClick) {
     const loadingContainer = document.getElementById('vpago_loading_container');
@@ -16,19 +13,22 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     const platform = "<%= params[:platform] %>";
-    const redirectUrls = <%= redirect_urls.to_json.html_safe %>;
 
-    function setupConfirmPaymentButton() {
-      if (platform === "app") {
-        window.location.href = redirectUrls.deeplink;
-        setTimeout(() => {
-          window.location.href = redirectUrls.webview;
-        }, 1500);
-      } else {
-        window.open(redirectUrls.webview, '_blank');
+    window.createTransaction({
+      url: "<%= raw @payment.create_transaction_url %>&platform=<%= params[:platform] %>",
+      onSuccess: function(redirectUrls) {
+        if (platform === "app") {
+          window.location.href = redirectUrls.deeplink;
+          setTimeout(() => {
+            window.location.href = redirectUrls.webview;
+          }, 1500);
+        } else {
+          window.open(redirectUrls.webview, '_blank');
+        }
+      },
+      onError: function() {
+        document.getElementById('vpago_loading_container').textContent = "We couldn't start your payment. Please go back and try again.";
       }
-    }
-
-    setupConfirmPaymentButton();
+    });
   });
 </script>
