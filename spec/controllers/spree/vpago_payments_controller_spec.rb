@@ -5,6 +5,54 @@ RSpec.describe Spree::VpagoPaymentsController, type: :request do
   let(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order) }
   let(:checkout) { Vpago::PaywayV2::Checkout.new(payment) }
 
+  describe 'GET #checkout' do
+    context 'when the payment method is store credit' do
+      let(:wallet_user) { create(:user) }
+      let(:wallet_order) { create(:order, user: wallet_user, number: 'R131576462', total: 25.00, currency: 'USD') }
+      let(:store_credit_method) { create(:store_credit_payment_method, stores: [wallet_order.store]) }
+      let(:credit) { create(:store_credit, user: wallet_user, amount: 30.00, store: wallet_order.store) }
+      let(:store_credit_payment) do
+        create(:store_credit_payment, order: wallet_order, source: credit, payment_method: store_credit_method,
+                                       amount: 25.00, number: 'PSTORECREDIT1')
+      end
+      let(:jwt_token) { JWT.encode({ order_number: wallet_order.number, order_id: wallet_order.id }, wallet_order.token, 'HS256') }
+
+      it 'redirects to the processing page instead of raising a missing-partial error' do
+        get '/vpago_payments/checkout', params: {
+          payment_number: store_credit_payment.number,
+          order_number: wallet_order.number,
+          order_jwt_token: jwt_token
+        }
+
+        expect(response).to redirect_to(store_credit_payment.processing_url)
+      end
+    end
+
+    context 'when the payment method is CashOn (non-gateway, no form partial either)' do
+      let(:cash_user) { create(:user) }
+      let(:cash_order) { create(:order, user: cash_user, number: 'R131576463', total: 15.00, currency: 'USD') }
+      let(:cash_on_method) { Spree::PaymentMethod::CashOn.create!(name: 'Cash on Delivery', stores: [cash_order.store]) }
+      let(:cash_on_payment) do
+        # CashOn#source_required? is true, so Payment validates source presence -- the source's
+        # actual type is irrelevant to what's under test here (payment_method-based partial
+        # lookup), so a plain credit card record just satisfies that validation.
+        create(:payment, order: cash_order, source: create(:credit_card), payment_method: cash_on_method,
+                          amount: 15.00, number: 'PCASHON1')
+      end
+      let(:jwt_token) { JWT.encode({ order_number: cash_order.number, order_id: cash_order.id }, cash_order.token, 'HS256') }
+
+      it 'redirects to the processing page instead of raising a missing-partial error' do
+        get '/vpago_payments/checkout', params: {
+          payment_number: cash_on_payment.number,
+          order_number: cash_order.number,
+          order_jwt_token: jwt_token
+        }
+
+        expect(response).to redirect_to(cash_on_payment.processing_url)
+      end
+    end
+  end
+
   describe 'POST #process_payment' do
     context 'when request from ABA (return)' do
       let(:params) { { tran_id: payment.number, return_params: checkout.return_params } }

@@ -592,4 +592,48 @@ RSpec.describe Spree::Order, type: :model do
       expect(payment_order.processed_payment_total).to eq(10.00)
     end
   end
+
+  describe '#vpago_order_processing_url' do
+    let(:incomplete_order) { create(:order_with_line_items, state: :payment) }
+
+    context 'when order_total_after_store_credit is zero and the order is not completed' do
+      before { allow(incomplete_order).to receive(:order_total_after_store_credit).and_return(0) }
+
+      it 'returns the order processing url' do
+        expect(incomplete_order.vpago_order_processing_url).to eq incomplete_order.processing_url
+      end
+    end
+
+    context 'when order_total_after_store_credit is not zero' do
+      before { allow(incomplete_order).to receive(:order_total_after_store_credit).and_return(10) }
+
+      it 'returns nil' do
+        expect(incomplete_order.vpago_order_processing_url).to be_nil
+      end
+    end
+
+    context 'when the order is already completed' do
+      before { allow(order).to receive(:order_total_after_store_credit).and_return(0) }
+
+      it 'returns nil' do
+        expect(order.vpago_order_processing_url).to be_nil
+      end
+    end
+
+    context 'when the order already has a valid payment (e.g. store credit covering it in full)' do
+      # AddStoreCreditPayments always creates a checkout-state Spree::Payment, even when it covers
+      # the order in full -- deliberately still returns the order processing url here: the client
+      # shouldn't have to know a payment exists to decide which URL to open, and
+      # Spree::Checkout::Complete (used by Vpago::OrderProcessor) still processes that payment as
+      # part of completing the order.
+      before do
+        allow(incomplete_order).to receive(:order_total_after_store_credit).and_return(0)
+        create(:store_credit_payment, order: incomplete_order, state: 'checkout')
+      end
+
+      it 'returns the order processing url' do
+        expect(incomplete_order.vpago_order_processing_url).to eq incomplete_order.processing_url
+      end
+    end
+  end
 end

@@ -1,16 +1,33 @@
+<%
+  # Shared by both Spree::VpagoPaymentsController and Spree::VpagoOrdersController. Which flow
+  # actually runs is decided by the same condition that decided which URL the client got in the
+  # first place (Vpago::OrderDecorator#vpago_order_processing_url) -- not by whether @payment
+  # happens to be set (store credit's checkout-state payment is very much real even when the total
+  # is fully covered by it; @payment being nil here only means this happens to be rendering under
+  # VpagoOrdersController, not that there's no payment on the order). Keeping both on the same
+  # condition means a store-credit/cash-on/free-event order always runs through Vpago::OrderProcessor
+  # regardless of which controller happens to render this page -- Spree::Checkout::Complete still
+  # processes that checkout-state payment as part of completing the order either way.
+  vpago_use_order_flow = @order.vpago_order_processing_url.present?
+  # Falls back to the order-level URL if @payment is nil either way -- e.g. this renders under
+  # VpagoOrdersController, which never sets @payment at all.
+  vpago_process_url = vpago_use_order_flow ? @order.process_order_url : (@payment&.process_payment_url || @order.process_order_url)
+  vpago_user_informer = vpago_use_order_flow ? @order.user_informer : (@payment&.user_informer || @order.user_informer)
+  vpago_success_url = vpago_use_order_flow ? @order.success_url : (@payment&.success_url || @order.success_url)
+%>
 <h1 id="status">THIS IS CURRENT STATE</h1>
 <p id="reason_code"></p>
 <p id="processing"></p>
 <p id="reason_message"></p>
 
-<%= render_additional_processing_script(@payment) %>
+<%= render_additional_processing_script(@payment) if @payment && !vpago_use_order_flow %>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     let firebaseConfigs = <%= Rails.application.credentials.firebase_web_config.to_json.html_safe %>;
 
     window.requestProcessPayment({
-      url: "<%= @payment.process_payment_url %>",
+      url: "<%= vpago_process_url %>",
       params: <%= params.except(:action, :controller, :amp).to_json.html_safe %>,
       maxRetries: 5,
       retryDelayMs: 1000,
@@ -18,7 +35,7 @@
 
     window.listenToProcessingState({
       firebaseConfigs: firebaseConfigs,
-      documentReferencePath: "<%= @payment.user_informer.document_reference_path %>",
+      documentReferencePath: "<%= vpago_user_informer.document_reference_path %>",
       onPaymentIsProcessing: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Payment is processing";
         document.getElementById("reason_code").innerText = reasonCode;
@@ -56,7 +73,7 @@
         document.getElementById("reason_message").innerText = reasonMessage;
       },
       onCompleted: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
-        let successPath = "<%= @payment.success_url %>";
+        let successPath = "<%= vpago_success_url %>";
         window.location.href = successPath;
       },
     });
