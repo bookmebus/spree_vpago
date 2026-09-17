@@ -168,6 +168,12 @@ module Spree
       checker
     end
 
+    def create_transaction(payment, options = {})
+      creator = Vpago::PaywayV2::TransactionCreator.new(payment, disable_return_deeplink: options[:platform] == 'web')
+      creator.call
+      creator.json_response
+    end
+
     private
 
     def cancel_pre_auth(payment)

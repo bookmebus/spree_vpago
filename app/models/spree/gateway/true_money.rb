@@ -78,5 +78,9 @@ module Spree
       checker.call
       checker
     end
+
+    def create_transaction(payment, options = {})
+      Vpago::TrueMoney::Checkout.new(payment).generate_payment_urls(options[:platform])
+    end
   end
 end

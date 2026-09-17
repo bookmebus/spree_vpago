@@ -24,6 +24,7 @@ module Vpago
                     :success_url,
                     :success_deeplink_url,
                     :check_transaction_url,
+                    :create_transaction_url,
                     :process_payment_url,
                     to: :url_constructor
 
