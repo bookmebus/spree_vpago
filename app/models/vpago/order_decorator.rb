@@ -12,6 +12,19 @@ module Vpago
 
       base.state_machine.before_transition from: :cart, do: :ensure_valid_vendor_payment_methods
       base.state_machine.after_transition to: :complete, do: :generate_line_items_total_metadata
+
+      base.delegate :processing_url, :success_url, :process_order_url, to: :order_url_constructor
+    end
+
+    # For orders where order_total_after_store_credit is zero (see Vpago::OrderProcessor) --
+    # no Spree::Payment is involved, so this mirrors Vpago::PaymentDecorator#user_informer /
+    # #url_constructor but keyed on the order directly instead of a payment.
+    def user_informer
+      @user_informer ||= ::Vpago::UserInformers::Firebase.new(self)
+    end
+
+    def order_url_constructor
+      @order_url_constructor ||= Vpago::OrderUrlConstructor.new(self)
     end
 
     # override

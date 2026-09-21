@@ -29,6 +29,15 @@ Spree::Core::Engine.add_routes do
     end
   end
 
+  resource :vpago_orders do
+    collection do
+      get :processing
+      get :success
+
+      match :process_order, via: %i[get post]
+    end
+  end
+
   namespace :webhook do
     resource :payways, only: [] do
       match 'return', to: 'payways#return', via: %i[get post]
