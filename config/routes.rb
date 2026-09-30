@@ -17,12 +17,24 @@ Spree::Core::Engine.add_routes do
     resources :transactions, only: [:show]
   end
 
+  resource :vpago_payments do
+    collection do
+      get :checkout
+      get :processing
+      get :success
+
+      match :check_transaction, via: %i[get]
+      match :process_payment, via: %i[get post]
+      match :true_money_process_payment, via: %i[get post]
+    end
+  end
+
   namespace :webhook do
     resource :payways, only: [] do
-      match 'return', to: 'payways#return', via: [:get, :post]
+      match 'return', to: 'payways#return', via: %i[get post]
       get 'continue', to: 'payways#continue'
 
-      match 'v2_return', to: 'payways#v2_return', via: [:get, :post]
+      match 'v2_return', to: 'payways#v2_return', via: %i[get post]
       get 'v2_continue', to: 'payways#v2_continue'
     end
 
@@ -37,7 +49,18 @@ Spree::Core::Engine.add_routes do
     end
 
     resources :wings, only: [:create] do
-      match 'return', to: 'wings#return', via: [:get, :post]
+      match 'return', to: 'wings#return', via: %i[get post]
+    end
+  end
+
+  namespace :api, defaults: { format: 'json' } do
+    namespace :v2 do
+      namespace :storefront do
+        resource :checkout, controller: :checkout do
+          get :payment_redirect
+          patch :request_update_payment
+        end
+      end
     end
   end
 
@@ -49,5 +72,36 @@ Spree::Core::Engine.add_routes do
     resources :payment_payway_queriers, only: [:show]
     resources :payment_payway_checkers
     resources :payment_payway_markers
+
+    resources :payment_acleda_v2_queriers, only: [:show]
+    resources :payment_acleda_v2_checkers, only: [:update]
+
+    resources :payment_vattanac_queriers, only: [:show]
+    resources :payment_vattanac_checkers, only: [:update]
+
+    resources :products do
+      resources :payout_profile_products
+    end
+
+    resources :orders do
+      resources :payouts
+    end
+
+    resources :shipping_methods do
+      resources :payout_profile_shipping_methods
+    end
+
+    resources :payout_profiles do
+      member do
+        post :verify_with_bank
+      end
+    end
+
+    resources :suspicious_orders, only: [:index] do
+      member do
+        get :payments
+        post 'payments/:payment_number/check_transaction', action: :check_transaction, as: :check_transaction
+      end
+    end
   end
 end

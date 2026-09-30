@@ -1,0 +1,4 @@
+<!-- insert_top "[data-hook='tax_header']" -->
+
+<th><%= Spree.t(:id) %></th>
+<th class="text-center"><%= Spree.t(:collect_by) %></th>

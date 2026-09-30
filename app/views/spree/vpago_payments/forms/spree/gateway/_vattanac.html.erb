@@ -1,0 +1,53 @@
+<%
+checkout = Vpago::Vattanac::Checkout.new(@payment)
+payment_option = @payment.payment_method.preferred_vattanac_payment_option
+
+result = begin
+  checkout.create
+rescue => e
+  Rails.logger.error("Vattanac checkout.create failed: #{e.message}")
+  { deeplink_url: nil, web_url: nil }
+end
+%>
+
+<script>
+  function showRedirectContainer(buttonLabel, onClick) {
+    const loadingContainer = document.getElementById('vpago_loading_container');
+    const redirectContainer = document.getElementById('vpago_redirect_container');
+    const redirectButton = document.getElementById('vpago_redirect_button');
+
+    redirectButton.textContent = buttonLabel;
+    redirectButton.addEventListener('click', onClick);
+
+    loadingContainer.style.display = 'none';
+    redirectContainer.style.removeProperty('display');
+  }
+
+  const platform = "<%= params[:platform] %>";
+  const deeplinkUrl = "<%= raw(result[:deeplink_url]) %>";
+  const webUrl = "<%= raw(result[:web_url]) %>";
+  const paymentOption = "<%= payment_option %>";
+
+  const redirectTo = (url) => { if (url) window.location.href = url; };
+
+  switch (paymentOption) {
+    case "khqr":
+      redirectTo(webUrl);
+      break;
+
+    case "deeplink":
+      redirectTo(deeplinkUrl);
+      showRedirectContainer("Continue", () => redirectTo(deeplinkUrl));
+      break;
+
+    case "all":
+      redirectTo(deeplinkUrl);
+      setTimeout(() => {
+        redirectTo(webUrl);
+      }, 1500);
+      break;
+
+    default:
+      console.error("Invalid payment option:", paymentOption);
+  }
+</script>

@@ -1,0 +1,8 @@
+<!-- insert_after "[data-hook='admin_order_tabs_payments']" -->
+
+<li class="nav-item" data-hook='admin_order_tabs_payouts'>
+  <%= link_to_with_icon 'wallet2.svg',
+    Spree.t(:payouts),
+    admin_order_payouts_url(@order),
+    class: "#{'active' if current == :payouts} nav-link" %>
+</li>

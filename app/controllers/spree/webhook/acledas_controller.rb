@@ -3,7 +3,7 @@ module Spree
     class AcledasController < BaseController
       skip_before_action :verify_authenticity_token, only: [:return]
 
-      before_action :find_payment, only: [:success, :error, :return]
+      before_action :find_payment, only: %i[success error return]
 
       rescue_from ::ActiveRecord::RecordNotFound, with: :record_not_found
 
@@ -24,18 +24,20 @@ module Spree
         order = @payment.order
 
         if order.paid?
-          flash[:order_completed] = "1" # required by order_just_completed for purchase tracking
+          flash[:order_completed] = '1' # required by order_just_completed for purchase tracking
         end
 
+        pending_or_paid = order.paid? || @payment.pending?
         if params[:app_checkout].to_s == '1'
-          redirect_to order.paid? || @payment.pending? ? success_payway_results_path : failed_payway_results_path
+          redirect_to pending_or_paid ? success_payway_results_path : failed_payway_results_path
         else
-          redirect_to order.paid? || @payment.pending? ? order_path(order) : checkout_state_path(:payment)
+          redirect_to pending_or_paid ? order_path(order) : checkout_state_path(:payment)
         end
       end
 
       private
-      def check_and_redirect(render_plain=false)
+
+      def check_and_redirect(render_plain: false)
         request_updater = ::Vpago::Acleda::PaymentRequestUpdater.new(@payment)
         request_updater.call
 
@@ -50,11 +52,13 @@ module Spree
       end
 
       def redirect_order(order)
+        pending_or_paid = order.paid? || @payment.pending?
+
         if params[:app_checkout].to_s == '1'
-          redirect_to order.paid? || @payment.pending? ? success_payway_results_path : failed_payway_results_path
+          redirect_to pending_or_paid ? success_payway_results_path : failed_payway_results_path
         else
-          flash[:order_completed] = "1" if order.paid? # required by order_just_completed for purchase tracking
-          redirect_to order.paid? || @payment.pending? ? order_path(order) : checkout_state_path(:payment)
+          flash[:order_completed] = '1' if order.paid? # required by order_just_completed for purchase tracking
+          redirect_to pending_or_paid ? order_path(order) : checkout_state_path(:payment)
         end
       end
 

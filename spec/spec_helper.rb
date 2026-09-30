@@ -1,11 +1,12 @@
 # Configure Rails Environment
 ENV['RAILS_ENV'] = 'test'
+ENV['PAYMENT_BASE_URL'] = 'http://localhost:4000'
 
 require File.expand_path('../dummy/config/environment.rb', __FILE__)
 
 require 'spree_dev_tools/rspec/spec_helper'
 require 'spree/testing_support/factories'
-
+require 'spree_multi_vendor/factories'
 
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.

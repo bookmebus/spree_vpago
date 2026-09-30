@@ -1,0 +1,67 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://checkout-sandbox.payway.com.kh/api/merchant-portal/merchant-access/online-transaction/pre-auth-completion
+    body:
+      encoding: UTF-8
+      string: hash=Sk4I%2FtfDXIkEQXT%2FXXJESYf8oCZCn9Iaq94g3kpKLiLUmegJPCuYavMOloXMRUZWgdrjkTXWQouRAe93No2pcA%3D%3D&merchant_auth=aeJtM4LQLhN%2Bri%2B5VcMbPwLI98RItpaXg5jhooEgXVS8RiB%2Bhq6TP4yPqNmVNZ8nb11Da02MLe5Jjirat6vPGVA7T4GySlhX1MFL%2BgbG5ng3qQQYGscZEzjwla6BqwaLe9ZT9bIuNW7AZa3%2B%2FPd3bFOGsBHRItFe7LJ2%2BGGxz2ESr%2BescB65%2BmZfYWs6tZmZhWZFSZsPY4odMZHtZ8Al0uuzeT9vCLb%2FXxVuTHspCrD5vHWsvqLonTwdWFqI4%2F2I%2BWztOevJsCP%2FomjuuTKqSavB4%2BPjs3q6JiqE9f5pqW2xT%2B7CjXKTn6YuiJUq0uk89z3YvF9AbGrDl%2FZjnsrozA%3D%3D&merchant_id=contigoasia&request_time=20250805041644
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Content-Type:
+      - application/x-www-form-urlencoded
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Tue, 05 Aug 2025 04:16:44 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      cache-control:
+      - private, must-revalidate
+      pragma:
+      - no-cache
+      expires:
+      - "-1"
+      x-ratelimit-limit:
+      - '100000'
+      x-ratelimit-remaining:
+      - '93480'
+      access-control-allow-origin:
+      - "*"
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-xss-protection:
+      - 1; mode=block
+      x-content-type-options:
+      - nosniff
+      content-security-policy:
+      - upgrade-insecure-requests
+      referrer-policy:
+      - same-origin
+      permissions-policy:
+      - geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()
+      cf-cache-status:
+      - DYNAMIC
+      set-cookie:
+      - __cf_bm=yC1JwkZiRL9Yo3orCMS4_e0nUSqyGLy8rxSckhl4z78-1754367404-1.0.1.1-q4Aj0b4Ovn_4INsGoMyneVrizwPBvWALpj76imtR8wF4WUnd9fgfOb8drI8sa62SSo5XAYUiiz_6HDpTZY.GvyxX5IoyuXtFPU5239v1mC0;
+        path=/; expires=Tue, 05-Aug-25 04:46:44 GMT; domain=.payway.com.kh; HttpOnly;
+        Secure; SameSite=None
+      server:
+      - cloudflare
+      cf-ray:
+      - 96a37b174e1c6e51-HKG
+      content-encoding:
+      - gzip
+    body:
+      encoding: ASCII-8BIT
+      string: '{"grand_total":"30.00","currency":"USD","transaction_status":"COMPLETED","status":{"code":"00","message":"Success!","tran_id":"PW7Q6M5U"}}'
+  recorded_at: Tue, 05 Aug 2025 04:16:44 GMT
+recorded_with: VCR 6.2.0

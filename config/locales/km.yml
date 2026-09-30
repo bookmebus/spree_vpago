@@ -1,4 +1,22 @@
 spree:
+  acleda_type: "Payment Type"
+  acleda_company_name: "Product Name in ACLEDA view"
+  acleda_payment_card: "Payment Card"
+  payment_process_failed: "Payment process failed"
+  insufficient_payment_amount_to_cover_the_total: "ចំនួនទឹកប្រាក់នៃការទូទាត់គឺមិនគ្រប់គ្រាន់"
+  qr_code: "QR code"
+  open_checkout: "Open Checkout"
+  admin:
+    orders:
+      suspicious_orders: "ការបង់ប្រាក់គួរឱ្យសង្ស័យ"
+      outstanding_balance: "សមតុល្យនៅសល់"
+      payments: "ការបង់ប្រាក់"
+      payment_number: "លេខការបង់ប្រាក់"
+      email_or_phone: "អ៊ីមែល / លេខទូរស័ព្ទ"
+      payments_count:
+        one: "ការបង់ប្រាក់ %{count}"
+        other: "ការបង់ប្រាក់ %{count}"
+      payments_for_order: "ការបង់ប្រាក់សម្រាប់ %{number}"
   vpago:
     payments:
       check_and_heal: "កែស្វ័យប្រវត្តិ"
@@ -13,5 +31,6 @@ spree:
       failed_require_updated_reason: "អ្នកត្រូវតែផ្តល់ហេតុផល"
       payment_found_with_result: "រកឃើញការទូទាត់ជាមួយលទ្ធផល %{result}"
       payment_not_found_with_error: "ការទូទាត់មិនត្រូវបានរកឃើញដោយកំហុស: %{error}"
+      gateway_timeout: "ផ្នែកទូទាត់មិនបានឆ្លើយតបទាន់ពេលទេ។ សូមព្យាយាមម្តងទៀតក្នុងពេលឆាប់ៗនេះ។"
       query_status: "សួរស្ថានភាពបង់ប្រាក់"
       confirm_manual_update: "តើអ្នកប្រាកដជាធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញនេះដើម្បីបញ្ចប់"

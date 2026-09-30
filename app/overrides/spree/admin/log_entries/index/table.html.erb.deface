@@ -1,0 +1,66 @@
+<!-- replace "#listing_log_entries" -->
+
+<div class="bg-white border rounded table-responsive">
+  <table class="table" id='listing_log_entries'>
+    <% @log_entries.each do |entry| %>
+      <thead class="text-muted">
+        <tr class="log_entry <%= entry.parsed_details.success? ? 'success' : 'fail' %>">
+          <td colspan="2">
+            <h4>
+              <i class="icon icon-<%= entry.parsed_details.success? ? 'save' : 'cancel' %>"></i>
+              <%= pretty_time(entry.created_at) %>
+            </h4>
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Message</td>
+          <td><%= entry.parsed_details.message %></td>
+        </tr>
+        
+        <% if entry.parsed_details.params.present? %>
+          <tr>
+            <td>Details</td>
+            <td>
+              <button type="button" 
+                      class="btn btn-sm btn-outline-secondary" 
+                      data-toggle="modal" 
+                      data-target="#detailsModal-<%= entry.id %>">
+                View Details
+              </button>
+
+              <!-- Modal -->
+              <div class="modal fade" id="detailsModal-<%= entry.id %>" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel-<%= entry.id %>" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="detailsModalLabel-<%= entry.id %>">
+                        Payment Details - <%= pretty_time(entry.created_at) %>
+                      </h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                      <% entry.parsed_details.params.each do |key, value| %>
+                        <div class="mb-4">
+                          <h6 class="text-muted"><%= key.to_s.titleize %></h6>
+                          <pre class="p-3 border rounded bg-light" style="max-height: 300px; overflow-y: auto;"><%= JSON.pretty_generate(value) rescue value.inspect %></pre>
+                        </div>
+                      <% end %>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    <% end %>
+  </table>
+</div>
+

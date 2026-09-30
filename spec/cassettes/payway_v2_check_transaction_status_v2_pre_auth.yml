@@ -1,0 +1,57 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction-2
+    body:
+      encoding: UTF-8
+      string: hash=zeIDpmvJUSdMQXFAKU5t2vihMqrtlPoEruGrEeD4cl06tvxJ1M6YdVNLYh8pbEEeHUpmXZQfE2OcWNrt3boAtA%3D%3D&merchant_id=contigoasia&req_time=20260320120242&tran_id=P2RIKFC2
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Content-Type:
+      - application/x-www-form-urlencoded
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Fri, 20 Mar 2026 05:07:38 GMT
+      content-type:
+      - application/json; charset=utf-8
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      content-encoding:
+      - gzip
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload, max-age=31536000; includeSubDomains;
+        preload
+      x-xss-protection:
+      - 1; mode=block
+      x-content-type-options:
+      - nosniff
+      content-security-policy:
+      - upgrade-insecure-requests
+      referrer-policy:
+      - same-origin
+      permissions-policy:
+      - geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()
+      cf-cache-status:
+      - DYNAMIC
+      set-cookie:
+      - __cf_bm=pA6fFQDq6zCzFFeEKIfXycUSOE8wZ1MDFgM9fcVmvJ0-1773983258-1.0.1.1-nGba7A6lbwQBdvT7xG3WpK.vEy9LfM5ZSZyl8k83QkTst30CCNVCIsHgOvJA1NlOOpG120gBgnJrQ1tbn1ih_WZ9PF4gzkM2Vbyl.UWEPeg;
+        path=/; expires=Fri, 20-Mar-26 05:37:38 GMT; domain=.payway.com.kh; HttpOnly;
+        Secure; SameSite=None
+      server:
+      - cloudflare
+      cf-ray:
+      - 9df231c409e59c6b-SIN
+    body:
+      encoding: UTF-8
+      string: '{"data":{"payment_status_code":0,"total_amount":2.00,"original_amount":2.00,"refund_amount":0.00,"discount_amount":0.00,"payment_amount":2.00,"payment_currency":"USD","apv":"519556","payment_status":"PRE-AUTH","transaction_date":"2026-03-20
+        12:02:43"},"status":{"code":"00","message":"Success!","tran_id":"P2RIKFC2"}}'
+  recorded_at: Fri, 20 Mar 2026 05:07:38 GMT
+recorded_with: VCR 6.2.0

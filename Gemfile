@@ -5,11 +5,23 @@ git_source(:github) do |repo_name|
   "https://github.com/#{repo_name}.git"
 end
 
-gem 'spree', github: 'spree/spree', branch: '4-2-stable'
-
 group :development, :test do
   gem 'brakeman'
+  gem 'byebug'
   gem 'rails-controller-testing'
+  gem 'vcr'
+  gem 'webmock'
 end
+
+group :development do
+  gem 'pg'
+  gem 'spree_dev_tools'
+end
+
+group :test do
+  gem 'shoulda-matchers'
+end
+
+gem 'jwt'
 
 gemspec

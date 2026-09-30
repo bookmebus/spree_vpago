@@ -1,0 +1,10 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var processingUrl = "<%= raw @payment.processing_url %>";
+    window.checkTransactionPeriodically({
+      checkTransactionUrl: "<%= raw @payment.check_transaction_url %>",
+      onFailure: () => window.location.replace(processingUrl),
+      onSuccess: () =>  window.location.replace(processingUrl),
+    });
+  });
+</script>
