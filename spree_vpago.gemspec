@@ -26,7 +26,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'spree_api', spree_version
   s.add_dependency 'spree_backend', spree_version
   s.add_dependency 'spree_core', spree_version
-  s.add_dependency 'spree_extension'
+  s.add_dependency 'spree_extension', '< 1.0'
   s.add_dependency 'spree_multi_vendor', '>= 2.4.1'
 
   s.metadata['rubygems_mfa_required'] = 'true'

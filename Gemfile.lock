@@ -7,7 +7,7 @@ PATH
       spree_api (>= 4.5)
       spree_backend (>= 4.5)
       spree_core (>= 4.5)
-      spree_extension
+      spree_extension (< 1.0)
       spree_multi_vendor (>= 2.4.1)
 
 GEM

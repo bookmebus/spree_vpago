@@ -13,6 +13,12 @@ module Vpago
       render partial: 'spree/vpago_payments/transaction_checker'
     end
 
+    # Host apps override success.html.erb; call this from every override so an
+    # embedding iframe modal still learns the order completed.
+    def render_success_script
+      render partial: 'spree/vpago_payments/success_script'
+    end
+
     # Each payment method may have their own additional processing script,
     # so we will look for the partial based on the payment method class name.
     #
