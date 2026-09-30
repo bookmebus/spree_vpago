@@ -23,6 +23,11 @@ module Spree
     # GET
     def processing
       @order = @payment.order
+
+      # Common, not an edge case: the gateway callback or the checkout page's transaction
+      # checker often completes the order before the browser lands here. Skipping this page
+      # also skips its Firebase listener, so success must post order_is_completed itself
+      # (render_success_script) or an embedding iframe modal never closes.
       return redirect_to @payment.success_url, allow_other_host: true if @order.completed?
 
       VpagoLogger.log(label: 'Spree::VpagoPaymentsController#processing', data: vpago_log_context)
@@ -153,9 +158,9 @@ module Spree
       raise ActiveRecord::RecordNotFound unless @payment.present?
     end
 
-    # frame-ancestors (set above) supersedes X-Frame-Options in modern
-    # browsers, but the default SAMEORIGIN header would still block legacy
-    # browsers from embedding these pages, so drop it for the iframe actions.
+    # These pages are embedded in iframes on many partner sites we don't
+    # enumerate, so framing is left unrestricted: no frame-ancestors policy, and
+    # Rails' default SAMEORIGIN header is dropped for the iframe actions.
     def allow_iframe_embedding
       response.headers.delete('X-Frame-Options')
     end

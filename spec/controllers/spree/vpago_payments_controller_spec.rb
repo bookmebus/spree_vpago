@@ -89,4 +89,46 @@ RSpec.describe Spree::VpagoPaymentsController, type: :request do
       end
     end
   end
+
+  describe 'GET #processing' do
+    let(:params) do
+      {
+        order_number: order.number,
+        payment_number: payment.number,
+        order_jwt_token: checkout.order_jwt_token
+      }
+    end
+
+    # A completed order redirects straight to success, which exercises the
+    # filters without rendering the Firebase-backed processing page.
+    before { order.update_columns(state: 'complete', completed_at: Time.current) }
+
+    it 'drops X-Frame-Options so other origins can embed the page' do
+      get '/vpago_payments/processing', params: params
+
+      expect(response).to have_http_status(:redirect)
+      expect(response.headers['X-Frame-Options']).to be_nil
+    end
+  end
+
+  describe 'GET #success' do
+    let(:params) do
+      {
+        order_number: order.number,
+        payment_number: payment.number,
+        order_jwt_token: checkout.order_jwt_token
+      }
+    end
+
+    before { order.update_columns(state: 'complete', completed_at: Time.current) }
+
+    # processing redirects here without rendering once the order is complete, so
+    # this is the only page that tells an embedding modal to close.
+    it 'posts order_is_completed to the embedding window' do
+      get '/vpago_payments/success', params: params
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('window.parent.postMessage("order_is_completed", "*")')
+    end
+  end
 end
