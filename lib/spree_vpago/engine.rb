@@ -23,6 +23,7 @@ module SpreeVpago
         Spree::Gateway::Acleda,
         Spree::Gateway::AcledaV2,
         Spree::Gateway::AcledaMobile,
+        Spree::Gateway::AcledaMiniApp,
         Spree::Gateway::Vattanac,
         Spree::Gateway::VattanacMiniApp,
         Spree::Gateway::TrueMoney,
