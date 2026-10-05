@@ -19,6 +19,13 @@ module Vpago
         payment = Spree::Payment.find_by!(number: payload['paymentId'])
         payment.update(transaction_response: payload)
         payment
+      elsif wing_mini_app_callback?
+        payment = Spree::Payment.find_by!(number: params_hash[:orderRef])
+        verifier = Vpago::WingMiniApp::WebhookVerifier.new(params_hash, payment)
+        raise "Wing Mini App webhook: verification failed for payment #{payment.number}" unless verifier.valid?
+
+        payment.update(transaction_response: params_hash)
+        payment
       elsif acleda_v2_callback?
         # ACLEDA V2's static portal callback echoes back _transactionid, which is
         # the payment number we sent as transactionID/txid at openSessionV2.
@@ -41,6 +48,10 @@ module Vpago
 
     def acleda_v2_callback?
       params_hash[:_paymenttokenid].present?
+    end
+
+    def wing_mini_app_callback?
+      params_hash[:orderRef].present? && params_hash[:secretKey].present?
     end
   end
 end
