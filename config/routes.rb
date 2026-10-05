@@ -17,11 +17,18 @@ Spree::Core::Engine.add_routes do
     resources :transactions, only: [:show]
   end
 
-  # ACLEDA Mini App session init (ACLEDA Mini App Integration Spec, Step 01).
-  # ACLEDA calls POST /mini_app/acleda with { phone, first_name, last_name }
-  # and receives a session-based miniAppUrl.
   namespace :mini_app do
+    # ACLEDA calls POST /mini_app/acleda with { phone, first_name, last_name }
+    # and receives a session-based miniAppUrl.
     resources :acleda, only: [:create], controller: 'acledas'
+
+    # Wing Mini App WebView entry. Wing opens GET /mini_app/wing cold and the page
+    # itself authenticates via getProfile.
+    resource :wing, only: %i[show create], controller: 'wings' do
+      # Wing's settlement webhook: #callback verifies the payment via PaymentFinder and
+      # queues PaymentProcessorJob to complete the order unless it is already paid.
+      post :callback, on: :collection
+    end
   end
 
   resource :vpago_payments do

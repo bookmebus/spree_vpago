@@ -10,6 +10,7 @@ module Vpago
     TYPE_TRUE_MONEY = 'Spree::Gateway::TrueMoney'.freeze
     TYPE_VATTANAC = 'Spree::Gateway::Vattanac'.freeze
     TYPE_VATTANAC_MINI_APP = 'Spree::Gateway::VattanacMiniApp'.freeze
+    TYPE_WING_MINI_APP = 'Spree::Gateway::WingMiniApp'.freeze
     TYPE_CASH_ON = 'Spree::PaymentMethod::CashOn'.freeze
 
     def self.prepended(base)
@@ -28,6 +29,7 @@ module Vpago
           Spree::PaymentMethod::TYPE_ACLEDA_MINI_APP,
           Spree::PaymentMethod::TYPE_VATTANAC,
           Spree::PaymentMethod::TYPE_VATTANAC_MINI_APP,
+          Spree::PaymentMethod::TYPE_WING_MINI_APP,
           Spree::PaymentMethod::TYPE_TRUE_MONEY,
           Spree::PaymentMethod::TYPE_CASH_ON
         ]
@@ -123,6 +125,10 @@ module Vpago
 
     def type_vattanac_mini_app?
       type == Spree::PaymentMethod::TYPE_VATTANAC_MINI_APP
+    end
+
+    def type_wing_mini_app?
+      type == Spree::PaymentMethod::TYPE_WING_MINI_APP
     end
 
     def type_true_money?

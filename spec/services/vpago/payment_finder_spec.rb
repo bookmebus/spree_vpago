@@ -37,6 +37,50 @@ RSpec.describe Vpago::PaymentFinder do
         expect { subject.find_and_verify! }.to raise_error(StandardError)
       end
     end
+
+    context 'with a Wing Mini App webhook' do
+      let(:wing_payment) do
+        create(:wing_mini_app_payment, number: 'PJ0MYD2Y', amount: 1.0,
+                                        order: create(:order, number: 'R131576461', currency: 'USD'))
+      end
+
+      let(:wing_app_id) { 'WG_APPID_0001' }
+      let(:wing_secret_api_key) { 'super-secret-key' }
+
+      def wing_params(debit_amount:)
+        fields = {
+          'orderRef' => wing_payment.number,
+          'debitAmount' => debit_amount,
+          'debitCcy' => 'USD',
+          'transactionId' => '0002367253451856',
+          'transactionDate' => '2026-09-09 11:47'
+        }
+        plaintext = "#{wing_app_id}#{Vpago::WingMiniApp::WebhookVerifier::FIELDS.map { |f| fields[f].to_s }.join}#{wing_secret_api_key}"
+        fields.merge('secretKey' => Digest::SHA256.hexdigest(plaintext.upcase).upcase).with_indifferent_access
+      end
+
+      before { stub_wing_mini_app_credentials(app_id: wing_app_id, secret_api_key: wing_secret_api_key) }
+
+      # Regression: Wing's own spec says debitAmount is always 2-decimal ("1.00"),
+      # but real payloads have sent "1" (no decimals) — this must still verify.
+      it 'accepts a settlement whose debitAmount lacks decimals' do
+        subject = described_class.new(wing_params(debit_amount: '1'))
+
+        expect(subject.find_and_verify!).to eq wing_payment
+      end
+
+      it 'accepts a settlement whose debitAmount has decimals' do
+        subject = described_class.new(wing_params(debit_amount: '1.00'))
+
+        expect(subject.find_and_verify!).to eq wing_payment
+      end
+
+      it 'rejects a settlement for the wrong amount' do
+        subject = described_class.new(wing_params(debit_amount: '999.00'))
+
+        expect { subject.find_and_verify! }.to raise_error(/verification failed/)
+      end
+    end
   end
 
   describe '#find_and_verify' do

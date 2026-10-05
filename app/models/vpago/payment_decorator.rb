@@ -113,6 +113,10 @@ module Vpago
       payment_method.type_acleda_mini_app?
     end
 
+    def wing_mini_app_payment?
+      payment_method.type_wing_mini_app?
+    end
+
     def check_payment?
       payment_method.type_check?
     end
