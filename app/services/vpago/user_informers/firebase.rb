@@ -2,6 +2,10 @@ require 'google/cloud/firestore'
 
 module Vpago
   module UserInformers
+    # order.tenant is available here but intentionally unused in #firebase_credentials —
+    # processing.html.erb reads this same document path via the still-global
+    # firebase_web_config Web SDK config, so this can't move to order.tenant's project
+    # until that view also goes per-tenant.
     class Firebase
       attr_accessor :order
 
@@ -46,11 +50,11 @@ module Vpago
       end
 
       def firestore
-        @firestore ||= Google::Cloud::Firestore.new(project_id: service_account[:project_id], credentials: service_account)
+        @firestore ||= firebase_credentials.firestore
       end
 
-      def service_account
-        @service_account ||= Rails.application.credentials.cloud_firestore_service_account
+      def firebase_credentials
+        @firebase_credentials ||= SpreeCmCommissioner::FirebaseCredentialsResolver.resolve(tenant: nil)
       end
     end
   end
