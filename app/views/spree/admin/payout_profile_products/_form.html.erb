@@ -1,0 +1,28 @@
+<%= f.field_container :payout_profile_id do %>
+  <%= f.label :payout_profile_id, Spree.t(:payout_profile) %>
+  <%= f.collection_select :payout_profile_id, @product.vendor.payout_profiles, :id, :display_name, { prompt: Spree.t('match_choices.none') }, class: 'form-control select2' %>
+  <%= f.error_message_on :payout_profile_id %>
+<% end %>
+
+<%= render partial: 'spree/admin/shared/payout_profile/info_card', locals: { payout_profile: f.object.payout_profile } if f.object.payout_profile.present? %>
+
+<%= f.field_container :optional, class: ["form-group card card-body"] do %>
+  <% default = object.class.columns_hash['optional'].default %>
+
+  <strong><%= Spree.t(:optional) %></strong>
+  <div class="radio my-2 form-check">
+    <%= f.radio_button :optional, true, class: 'form-check-input' %>
+    <%= f.label :optional_true, Spree.t(:say_yes) + (default == 'true' ? ' (default)' : ''), class: 'form-check-label' %>
+    <small class="form-text text-muted">
+      <%= "User can buy this product with other payment methods beside #{f.object.payout_profile.bank_name}, but amount will be sent to #{Spree::Store.default.name} account" %>
+    </small>
+  </div>
+
+  <div class="radio my-2 form-check">
+    <%= f.radio_button :optional, false, class: 'form-check-input' %>
+    <%= f.label :optional_false, Spree.t(:say_no) + (default == 'false' ? ' (default)' : ''), class: 'form-check-label' %>
+    <small class="form-text text-muted">
+      <%= "User can only buy this product with #{f.object.payout_profile.bank_name} payment methods" %>
+    </small>
+  </div>
+<% end if f.object.payout_profile.present? %>

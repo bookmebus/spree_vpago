@@ -1,0 +1,66 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://checkout-sandbox.payway.com.kh/api/merchant-portal/merchant-access/whitelist-account/update-whitelist-status
+    body:
+      encoding: UTF-8
+      string: '{"request_time":"20240510000000","merchant_id":"contigoasia","merchant_auth":"g1nS27/wcdO8gnHAYhQIUz5r93CVwMUBy+xYYbZmQLEEh0VVJXEujI3FF7JUj865+kMpViW+2NeUjoqo31XpM8g69pBCCoEqYxsTaLH7I5r5VdOt59BUIiAIMUSfqY2QC8EWmtE+weAs9Z3WeuMfPuJsFrcGwzNQXNCl5Czo3/8=","hash":"hwn4z8tk8Rbp17XstZSbEazJ6r8+4tXpmeyQg6HQqlKpCYnRqlDSm3zLrT9j1WBwTIAFEpVHraa1+/Z3b0Vjng=="}'
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      language:
+      - en
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Fri, 10 May 2024 07:11:40 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      cache-control:
+      - private, must-revalidate
+      pragma:
+      - no-cache
+      expires:
+      - "-1"
+      x-ratelimit-limit:
+      - '100000'
+      x-ratelimit-remaining:
+      - '99788'
+      access-control-allow-origin:
+      - "*"
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-xss-protection:
+      - 1; mode=block
+      x-content-type-options:
+      - nosniff
+      content-security-policy:
+      - upgrade-insecure-requests
+      referrer-policy:
+      - same-origin
+      permissions-policy:
+      - geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()
+      cf-cache-status:
+      - DYNAMIC
+      server:
+      - cloudflare
+      cf-ray:
+      - 88181dd1fd724c9b-SIN
+      content-encoding:
+      - gzip
+    body:
+      encoding: ASCII-8BIT
+      string: '{"data":{"name":"*********ount","payee":"070486124","currency":"USD","type":"ABA
+        Account","status":"0","created_at":"2024-05-10 11:20:03.000"},"status":{"code":"00","message":"Success!","tran_id":"1715325100222228"}}'
+  recorded_at: Fri, 10 May 2024 07:11:40 GMT
+recorded_with: VCR 6.2.0

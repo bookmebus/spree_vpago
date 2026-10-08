@@ -1,0 +1,3 @@
+<%= turbo_frame_tag "suspicious_order_#{@order.id}_payments" do %>
+  <%= render 'payments_table', order: @order, payments: @payments, check_result: @check_result %>
+<% end %>

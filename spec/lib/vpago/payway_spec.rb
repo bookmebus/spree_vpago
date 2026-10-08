@@ -10,7 +10,7 @@ RSpec.describe Vpago::Payway do
   end
 
   it "defines Vpago::Payway::TYPES" do
-    expect(Vpago::Payway::CARD_TYPES).to eq ['abapay', 'cards' ]
+    expect(Vpago::Payway::CARD_TYPES).to eq ['abapay', 'abapay_khqr', 'abapay_khqr_deeplink', 'cards', 'wechat', 'alipay']
   end
 
 end

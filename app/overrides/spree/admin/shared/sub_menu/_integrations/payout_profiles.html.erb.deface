@@ -1,0 +1,3 @@
+<!-- insert_bottom "[data-hook='admin_integrations']" -->
+
+<%= tab :payout_profiles, match_path: '/payout_profiles', label: 'Payout Profiles' if can? :manage, Spree::PayoutProfiles %>

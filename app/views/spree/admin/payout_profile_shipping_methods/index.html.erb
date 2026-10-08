@@ -1,0 +1,6 @@
+<%= render partial: 'spree/admin/shared/shipping_method_tabs', locals: { current: :payout_profile_shipping_methods } %>
+
+<% content_for :page_title do %>
+  <%= link_to Spree.t(:shipping_methods), spree.admin_shipping_methods_url %> /
+  <%= @shipping_method.name %>
+<% end %>

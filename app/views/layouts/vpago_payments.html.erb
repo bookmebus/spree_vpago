@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment</title>
+
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <%= yield :head %>
+
+  <%= javascript_include_tag "vpago/vpago_payments/check_transaction_periodically", 'data-turbo-track': 'reload' %>
+  <%= javascript_include_tag "vpago/vpago_payments/request_process_payment", 'data-turbo-track': 'reload' %>
+  <%= javascript_include_tag "vpago/vpago_payments/user_informers/#{user_informer}", 'data-turbo-track': 'reload' %>
+</head>
+
+<body>
+  <%= yield %>
+</body>
+</html>
