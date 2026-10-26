@@ -6,7 +6,7 @@ module Spree
       def index
         params[:q] = { completed_at_not_null: 1, payment_state_eq: 'balance_due', s: 'completed_at desc' }.dup if params[:q].blank?
 
-        @search = scope.ransack(params[:q])
+        @search = exclude_request_bookings(scope).ransack(params[:q])
         @orders = @search.result(distinct: true)
                          .preload(:payments, :reimbursements)
                          .page(params[:page])
@@ -58,6 +58,15 @@ module Spree
 
       def scope
         current_store.orders.accessible_by(current_ability, :index)
+      end
+
+      # Request bookings complete before the vendor confirms and the customer
+      # pays, so balance_due is expected there rather than a lost payment.
+      # `request_state` is added by spree_cm_commissioner, hence the column check.
+      def exclude_request_bookings(orders)
+        return orders unless Spree::Order.column_names.include?('request_state')
+
+        orders.where(request_state: nil)
       end
     end
   end
