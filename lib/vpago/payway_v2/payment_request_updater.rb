@@ -1,46 +1,67 @@
 module Vpago
   module PaywayV2
-    class PaymentRequestUpdater
-      attr_accessor :payment, :error_message
-
-      def initialize(payment, options={})
-        @options = options
-        @payment = payment
-      end
-
+    class PaymentRequestUpdater < ::Vpago::PaymentRequestUpdater
       def call
         return if @payment.order.paid?
 
-        checker = check_payway_status
-
-        if(checker.success?)
-          @error_message = nil
-          checker_result = {
-            status: true,
-            description: nil,
-            payway_v2_response: checker.result,
-          }
-          marker_options = @options.merge(checker_result)
-
-          marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
-          marker.call
+        if items_eligible?
+          process_payment_status
         else
-          @error_message = checker.error_message
-          marker_options = @options.merge(status: false, description: @error_message)
-
-          marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
-          marker.call
+          mark_items_as_ineligible
         end
       end
 
-      def success?
-        @error_message.nil?
+      private
+
+      def mark_items_as_ineligible
+        @error_message = 'Items are not eligible due to insufficient stock'
+        marker_options = @options.merge(status: false, description:  @error_message)
+        marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
+        marker.call
+      end
+
+      def process_payment_status
+        checker = check_payway_status
+
+        if checker.success?
+          mark_payment_as_success(checker)
+        elsif checker.failed?
+          mark_payment_as_failed(checker.error_message)
+        end
+      rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+        VpagoLogger.error(
+          label: 'Vpago::PaywayV2::PaymentRequestUpdater#process_payment_status gateway_timeout',
+          data: { payment_number: @payment.number, error_class: e.class.name, error_message: e.message }
+        )
+      end
+
+      def mark_payment_as_success(checker)
+        @error_message = nil
+        checker_result = {
+          status: true,
+          description: nil,
+          payway_v2_response: checker.json_response,
+          payout_total: checker.payout_total
+        }
+        marker_options = @options.merge(checker_result)
+        marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
+        marker.call
+      end
+
+      def mark_payment_as_failed(error_message)
+        @error_message = error_message
+        marker_options = @options.merge(status: false, description: @error_message)
+
+        marker = ::Vpago::PaymentStatusMarker.new(@payment, marker_options)
+        marker.call
       end
 
       def check_payway_status
-        trans_status = Vpago::PaywayV2::TransactionStatus.new(@payment)
-        trans_status.call
-        trans_status
+        @payment.payment_method.check_transaction(@payment)
+      end
+
+      def items_eligible?
+        @payment&.order&.line_items&.all?(&:sufficient_stock?) == true # rubocop:disable Style/SafeNavigationChainLength
       end
     end
   end

@@ -1,0 +1,50 @@
+<% @checkout = ::Vpago::VattanacMiniApp::Checkout.new(@payment) %>
+
+<p id="unsupported-message"
+   style="margin-top: 10px; font-weight: bold; color: red; display: none;">
+</p>
+
+<script>
+  function showRedirectContainer(buttonLabel, onClick) {
+    const loadingContainer = document.getElementById('vpago_loading_container');
+    const redirectContainer = document.getElementById('vpago_redirect_container');
+    const redirectButton = document.getElementById('vpago_redirect_button');
+
+    redirectButton.textContent = buttonLabel;
+    redirectButton.addEventListener('click', onClick);
+
+    loadingContainer.style.display = 'none';
+    redirectContainer.style.removeProperty('display');
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const setupMiniAppPayment = () => {
+      const detectMobileOS = () => {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'iOS';
+        if (/Android/i.test(ua)) return 'Android';
+        return 'unknown';
+      };
+
+      const os = detectMobileOS();
+      const payload = {
+        data: "<%= j @checkout.signed_payload %>",
+        paymentId: "<%= @checkout.payment_id %>"
+      };
+
+      if (os === 'iOS' && window.webkit?.messageHandlers?.startPayment) {
+        window.webkit.messageHandlers.startPayment.postMessage(JSON.stringify(payload));
+        showRedirectContainer("Continue", () => window.webkit.messageHandlers.startPayment.postMessage(JSON.stringify(payload)));
+      } else if (os === 'Android' && window.AndroidInterface?.startPayment) {
+        window.AndroidInterface.startPayment(JSON.stringify(payload));
+        showRedirectContainer("Continue", () => window.AndroidInterface.startPayment(JSON.stringify(payload)));
+      } else {
+        const unsupported = document.getElementById('unsupported-message');
+        unsupported.style.display = 'block';
+        unsupported.innerText = 'Unsupported OS';
+      }
+    };
+
+    setupMiniAppPayment();    
+  });
+</script>

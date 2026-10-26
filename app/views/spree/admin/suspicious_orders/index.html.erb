@@ -1,0 +1,112 @@
+<% content_for :page_title do %>
+  <%= Spree.t('admin.orders.suspicious_orders') %>
+<% end %>
+
+<%# Simple, always-visible filters kept intentionally small. %>
+<div class="card mb-3">
+  <div class="card-body">
+    <%= search_form_for [:admin, @search], url: spree.admin_suspicious_orders_path, html: { method: :get } do |f| %>
+      <div class="form-row align-items-end">
+        <div class="col-12 col-sm-6 col-lg mb-2 mb-lg-0">
+          <div class="form-group mb-0">
+            <%= f.label :number_cont, Spree.t(:search_order_number) %>
+            <%= f.search_field :number_cont, class: 'form-control' %>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg mb-2 mb-lg-0">
+          <div class="form-group mb-0">
+            <%= f.label :payments_number_cont, Spree.t('admin.orders.payment_number') %>
+            <%= f.search_field :payments_number_cont, class: 'form-control' %>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg mb-2 mb-lg-0">
+          <div class="form-group mb-0">
+            <%= f.label :email_or_phone_number_cont, Spree.t('admin.orders.email_or_phone') %>
+            <%= f.search_field :email_or_phone_number_cont, class: 'form-control' %>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg mb-2 mb-lg-0">
+          <div class="form-group mb-0">
+            <%= f.label :payment_state_eq, Spree.t(:payment_state) %>
+
+            <%= f.select :payment_state_eq,
+                  ::Spree::Order::PAYMENT_STATES.map { |s| [Spree.t("payment_states.#{s}"), s] },
+                  { include_blank: true }, class: 'select2-clear' %>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg mb-2 mb-lg-0">
+          <div class="form-group mb-0">
+            <%= f.label :payments_payment_method_id_eq, Spree.t(:payment_method) %>
+            <%= f.select :payments_payment_method_id_eq,
+                  ::Spree::PaymentMethod.pluck(:name, :id),
+                  { include_blank: true }, class: 'select2-clear' %>
+          </div>
+        </div>
+        <div class="col-12 col-lg-auto mb-2 mb-lg-0">
+          <%= button Spree.t(:search), 'search.svg', 'submit', class: 'btn-primary btn-block' %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<table class="table" id="listing_suspicious_orders">
+  <thead>
+    <tr>
+      <th><%= Spree.t(:order) %></th>
+      <th><%= Spree.t(:date) %></th>
+      <th><%= Spree.t(:status) %></th>
+      <th><%= Spree.t(:payment_state) %></th>
+      <th class="text-right"><%= Spree.t(:total) %></th>
+      <th class="text-right"><%= Spree.t('admin.orders.outstanding_balance') %></th>
+      <th class="text-right"><%= Spree.t('admin.orders.payments') %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @orders.each do |order| %>
+      <% payments_frame_id = "payments-collapse-#{order.id}" %>
+      <tr>
+        <td><%= link_to order.number, spree.edit_admin_order_path(order) %></td>
+        <td><%= pretty_time(order.completed_at) %></td>
+        <td>
+          <span class="badge badge-pill badge-<%= order.state %>">
+            <%= Spree.t("order_state.#{order.state}") %>
+          </span>
+        </td>
+        <td>
+          <span class="badge badge-pill badge-<%= order.payment_state %>">
+            <%= Spree.t("payment_states.#{order.payment_state}") %>
+          </span>
+        </td>
+        <td class="text-right"><%= order.display_total %></td>
+        <td class="text-right"><%= order.display_outstanding_balance %></td>
+        <td class="text-right">
+          <button type="button" data-toggle="collapse" data-target="#<%= payments_frame_id %>"
+                  aria-expanded="false" aria-controls="<%= payments_frame_id %>"
+                  class="btn btn-sm btn-light">
+            <%= Spree.t('admin.orders.payments_count', count: order.payments.size) %>
+            <%= svg_icon(name: 'chevron-down.svg', classes: 'icon ml-1', width: 12, height: 12) %>
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="7" class="p-0 border-top-0">
+          <div class="collapse" id="<%= payments_frame_id %>">
+            <div class="mb-3 border border-primary rounded-lg overflow-hidden bg-white">
+              <div class="bg-light px-3 py-2 small font-weight-bold text-uppercase text-muted">
+                <%= svg_icon(name: 'receipt.svg', classes: 'icon mr-2', width: 14, height: 14) %>
+                <%= Spree.t('admin.orders.payments_for_order', number: order.number) %>
+              </div>
+              <%= turbo_frame_tag "suspicious_order_#{order.id}_payments",
+                    src: spree.payments_admin_suspicious_order_path(order), loading: 'lazy' do %>
+                <div class="p-3 text-center text-muted"><%= Spree.t(:loading) %>…</div>
+              <% end %>
+            </div>
+          </div>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= render 'spree/admin/shared/index_table_options', collection: @orders %>

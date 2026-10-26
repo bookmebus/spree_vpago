@@ -33,7 +33,7 @@ module Spree
         service = Vpago::AcledaMobile::PaymentRetriever.new(options)
         service.call
 
-        return render_hashing_error if !service.data_valid?
+        return render_hashing_error unless service.data_valid?
 
         @payment = service.payment
         return render_payment_not_found if @payment.blank?
@@ -66,12 +66,11 @@ module Spree
 
         acleda_mobile_response(response_data, status_code)
       end
-      
 
       def acleda_mobile_response(response_data, status_code)
         render json: response_data, status: status_code
       end
-      
+
       def acleda_mobile_response_data(message, code)
         {
           status: {

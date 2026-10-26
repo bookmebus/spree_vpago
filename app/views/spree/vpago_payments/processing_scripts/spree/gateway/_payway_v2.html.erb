@@ -1,0 +1,27 @@
+<% if @payment.payment_method.reviewing_mode? %>
+  <script>
+    // This block in /processing is purely JUST for review/audit purposes (ABA requirement).
+    // It checks the bank transaction status periodically without actually
+    // triggering payment processing again. By the time the user lands
+    // on this page, the transaction is normally complete or failed.
+    //
+    // What it does:
+    // 1. Logs or updates the UI with transaction status for review.
+    // 2. Provides reassurance that the bank transaction was confirmed.
+    // 3. Optionally, could allow a manual retry button if needed.
+    //
+    // What it does NOT do:
+    // - It does NOT call requestProcessPayment again (payment job is
+    //   already unique and idempotent elsewhere).
+    // - It does NOT retry processing unnecessarily.
+    document.addEventListener("DOMContentLoaded", function() {
+      window.checkTransactionPeriodically({
+        checkTransactionUrl: "<%= raw @payment.check_transaction_url %>",
+        onFailure: () => console.log("[Vpago] ABA Review Mode: bank transaction failed ❌"),
+        onSuccess: () => console.log("[Vpago] ABA Review Mode: bank transaction confirmed ✅"),
+        maxDurationMs: 5 * 60 * 1000, // 5 minutes,
+        pollIntervalMs: 5000, // 5 seconds
+      })
+    });
+  </script>
+<% end %>

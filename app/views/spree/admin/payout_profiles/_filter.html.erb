@@ -1,0 +1,19 @@
+<%= search_form_for [:admin, @search] do |f| %>
+  <div data-hook="admin_payout_profile_search" class="row">
+    <div class="col-12 col-lg-6">
+      <div class="form-group">
+        <%= f.label :name_cont, Spree.t(:name) %>
+        <%= f.text_field :name_cont, size: 15, class: "form-control js-quick-search-target js-filterable" %>
+      </div>
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="form-group">
+        <%= f.label :vendor_id_eq, Spree.t(:vendor) %>
+        <%= f.select :vendor_id_eq, Spree::Vendor.all.map{|t| [t.name , t.id]}, { include_blank: true}, class: 'form-control js-filterable' %>
+      </div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <%= button Spree.t(:search), 'search.svg' %>
+  </div>
+<% end %>

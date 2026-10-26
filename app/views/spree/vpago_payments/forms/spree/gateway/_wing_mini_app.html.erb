@@ -1,0 +1,88 @@
+<% content_for :head do %>
+  <%= javascript_include_tag 'vpago/wing_mini_app/web_jsbridge.bundle', 'data-turbo-track': 'reload' %>
+<% end %>
+
+<% checkout = ::Vpago::WingMiniApp::Checkout.new(@payment) %>
+
+<p id="wing-message"
+   style="margin-top: 10px; font-weight: bold; color: red; display: none;">
+</p>
+
+<script>
+  function showRedirectContainer(buttonLabel, onClick) {
+    const loadingContainer = document.getElementById('vpago_loading_container');
+    const redirectContainer = document.getElementById('vpago_redirect_container');
+    const redirectButton = document.getElementById('vpago_redirect_button');
+
+    redirectButton.textContent = buttonLabel;
+    redirectButton.addEventListener('click', onClick);
+
+    loadingContainer.style.display = 'none';
+    redirectContainer.style.removeProperty('display');
+  }
+
+  function showError(detail) {
+    console.error('[Wing] ' + detail);
+
+    const message = document.getElementById('wing-message');
+    message.innerText = "We couldn't start your Wing payment.";
+    message.style.display = 'block';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const processingUrl = "<%= raw @payment.processing_url %>";
+    const bridge = window.WebJSBridge && window.WebJSBridge.$bridge;
+
+    if (!bridge || !bridge.isAvailable()) {
+      showError('This page only works inside the Wing app.');
+      return;
+    }
+
+    // Whichever signal lands first wins; the rest are then noise from the same
+    // payment. Also keeps the fallback button from replacing a page already leaving.
+    let handedOff = false;
+
+    const goToProcessing = () => {
+      if (handedOff) return;
+      handedOff = true;
+
+      window.location.replace(processingUrl);
+    };
+
+    const startPayment = () => {
+      // Screen only, both here and in the relay below. Settlement stays server to
+      // server, where WebhookVerifier checks Wing's webhook before anything is
+      // captured, and the processing page keeps polling until that lands — so it is
+      // the safe destination even for a payment that failed.
+      bridge
+        .callHandler('doPayment', <%= raw checkout.signed_payload.to_json %>)
+        .then(() => goToProcessing())
+        .catch((error) => showError('doPayment call failed: ' + error.message));
+    };
+
+    // Wing delivers native -> web calls by evaluating JS against the main frame,
+    // which is our web app embedding this page, not this document — so in a framed
+    // checkout it is mini_app/wing_bridge.js over there that hears getStatus and
+    // posts the bare code on. Sender identity, not origin: this page and the web app
+    // are deliberately on different hosts.
+    window.addEventListener('message', (event) => {
+      if (event.source !== window.parent) return;
+      if (!event.data || event.data.code !== 'wing_payment_status') return;
+
+      goToProcessing();
+    });
+
+    // The same signal for an unframed checkout, where this document *is* the main
+    // frame and Wing reaches it directly.
+    bridge.registerHandler('getStatus', () => goToProcessing());
+
+    startPayment();
+
+    setTimeout(() => {
+      if (document.visibilityState === 'hidden') return;
+      if (handedOff) return;
+
+      showRedirectContainer('Pay with Wing', startPayment);
+    }, 1000);
+  });
+</script>

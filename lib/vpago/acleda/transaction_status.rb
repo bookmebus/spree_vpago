@@ -3,8 +3,7 @@ require 'faraday'
 module Vpago
   module Acleda
     class TransactionStatus < Base
-      attr_accessor :error_message
-      attr_accessor :result
+      attr_accessor :error_message, :result
 
       def call
         prepare
@@ -20,10 +19,10 @@ module Vpago
         @response = check_acleda_payment_status
 
         if @response.status == 200
-          if json_response['result']['code'] != 0 
-            fail!(json_response['result']['errorDetails'])
-          else
+          if (json_response['result']['code']).zero?
             @result = json_response
+          else
+            fail!(json_response['result']['errorDetails'])
           end
         else
           fail!(@response.body)
@@ -47,17 +46,17 @@ module Vpago
         con = Faraday::Connection.new(url: host)
 
         con.post(check_status_path) do |request|
-          request.headers["Content-Type"] = "application/json"
+          request.headers['Content-Type'] = 'application/json'
           request.body = request_payload.to_json
         end
       end
 
       def check_status_path
-        ENV['ACLEDA_CHECK_STATUS_PATH']
+        ENV.fetch('ACLEDA_CHECK_STATUS_PATH', nil)
       end
 
       def json_response
-        @json ||= JSON.parse(@response.body)
+        @json_response ||= JSON.parse(@response.body)
       end
 
       def fail!(message)
@@ -65,7 +64,7 @@ module Vpago
       end
 
       def success?
-        @error_message == nil
+        @error_message.nil?
       end
     end
   end

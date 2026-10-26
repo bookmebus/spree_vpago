@@ -29,6 +29,26 @@ RSpec.describe Vpago::Payway::PaymentRequestUpdater, type: :model do
     end
   end
 
+  describe 'ignore_on_failed?' do
+    it 'return false by default' do
+      options = {}
+      status_updater = Vpago::Payway::PaymentRequestUpdater.new(payment, options)
+      expect(status_updater.ignore_on_failed?).to eq false
+    end
+
+    it 'return false when when set ignore_on_failed to options to false' do
+      options = { ignore_on_failed: false }
+      status_updater = Vpago::Payway::PaymentRequestUpdater.new(payment, options)
+      expect(status_updater.ignore_on_failed?).to eq false
+    end
+
+    it 'return true when when set ignore_on_failed in options to true' do
+      options = { ignore_on_failed: true }
+      status_updater = Vpago::Payway::PaymentRequestUpdater.new(payment, options)
+      expect(status_updater.ignore_on_failed?).to eq true
+    end
+  end
+
   describe '#call' do
     context 'if check payway status is success' do
       it 'set error_message to nil and invoke payment status marker' do

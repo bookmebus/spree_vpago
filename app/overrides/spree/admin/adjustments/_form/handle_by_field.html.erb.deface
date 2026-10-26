@@ -1,0 +1,10 @@
+<!-- insert_bottom "[data-hook='admin_adjustment_form_fields']" -->
+
+<%= f.field_container :handle_by, class: ['mb-4'] do %>
+  <%= f.label :handle_by, raw(Spree.t(:handle_by) + required_span_tag) %>
+  <%= f.select :handle_by, Spree::Adjustment.handle_bies.keys.map {|item| [item.capitalize, item]}, {}, :class => "fullwidth select2" %>
+  <%= f.error_message_on :handle_by %>
+  <small class="form-text text-muted">
+    This information is crucial for the financial report.
+  </small>
+<% end %>

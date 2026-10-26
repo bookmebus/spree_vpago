@@ -1,0 +1,11 @@
+<!-- insert_before ".actions" -->
+
+<td class="text-center">
+  <% if adjustment.source.is_a?(Spree::PromotionAction) %>
+    <%= link_to adjustment.handle_by.to_s.capitalize, edit_admin_promotion_path(adjustment.source.promotion) %>
+  <% elsif adjustment.source.is_a?(Spree::TaxRate) %>
+    <%= link_to adjustment.handle_by.to_s.capitalize, edit_admin_tax_rate_path(adjustment.source) %>
+  <% else %>
+    <%= adjustment.handle_by.to_s.capitalize %>
+  <% end %>
+</td>

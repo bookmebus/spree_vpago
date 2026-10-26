@@ -1,0 +1,7 @@
+<script>
+  // processing redirects here without rendering once the order is complete, so its
+  // Firebase listener never posts this. success only renders for completed orders.
+  if (window.parent !== window) {
+    window.parent.postMessage("order_is_completed", "*");
+  }
+</script>

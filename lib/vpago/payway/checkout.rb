@@ -1,7 +1,6 @@
 module Vpago
   module Payway
     class Checkout < Base
-
       def gateway_params
         result = {
           tran_id: transaction_id,
@@ -15,12 +14,11 @@ module Vpago
           continue_success_url: continue_success_url,
           return_params: return_params
         }
-    
+
         result[:phone_country_code] = phone_country_code
         result[:phone] = phone
         result
       end
-      
     end
   end
 end

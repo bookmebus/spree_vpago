@@ -3,11 +3,10 @@ module Vpago
     attr_accessor :payment, :error_message
 
     # :status, :description, :updated_by_user_id, updated_reason
-    def initialize(payment, options={})
+    def initialize(payment, options = {})
       @payment = payment
       @options = options
-
-      @options[:status] =  @options[:status] || false
+      @options[:status] = @options[:status] || false
     end
 
     def call
@@ -24,8 +23,9 @@ module Vpago
 
       payment_status = @options[:status] ? 'success' : 'failed'
       source.payment_status = payment_status
-      source.payment_description =  @options[:description]
-      source.transaction_id = @options[:transaction_id] if @options[:transaction_id].present? ## for acleda, we already update the transaction_id at when checkout
+      source.payment_description = @options[:description]
+      ## for acleda, we already update the transaction_id at when checkout
+      source.transaction_id = @options[:transaction_id] if @options[:transaction_id].present?
       source.preferred_wing_response = @options[:wing_response]
       source.preferred_acleda_response = @options[:acleda_response]
       source.preferred_payway_v2_response = @options[:payway_v2_response]
@@ -35,10 +35,10 @@ module Vpago
         source.updated_reason = @options[:updated_reason]
         source.updated_by_user_at = Time.zone.now
       end
-      
-      if(!source.save)
-        @error_message = source.errors.full_messages.join('\n')
-      end
+
+      return if source.save
+
+      @error_message = source.errors.full_messages.join('\n')
     end
 
     def update_payment_and_order
@@ -47,19 +47,20 @@ module Vpago
       else
         transition_to_failed!
       end
-      
+
       order_updater
     end
 
     def transition_to_paid!
       complete_payment!
       complete_order!
+      confirm_payouts!
     end
 
     def transition_to_failed!
-      @payment.failure! if !@payment.failed?
+      @payment.failure! unless @payment.failed?
       @payment.order.update(state: 'payment')
-      
+
       notify_failed_payment
     end
 
@@ -68,14 +69,37 @@ module Vpago
     end
 
     def complete_payment!
-      @payment.complete! if !@payment.completed?
+      return if @payment.completed?
+
+      # not follow state machine rule when it manual
+      if @options[:updated_by_user_id].present?
+        ApplicationRecord.transaction do
+          @payment.state_changes.create!(previous_state: @payment.state, next_state: 'completed', name: 'payment')
+          @payment.update(state: 'completed')
+        end
+      else
+        @payment.complete!
+      end
     end
 
     def complete_order!
       return if @payment.order.completed?
+
       order = @payment.order
       order.finalize!
       order.update(state: 'complete', completed_at: Time.zone.now)
+    end
+
+    def payout_confirmed?
+      @options[:payout_total] == @payment.payouts.sum(:amount)
+    end
+
+    def confirm_payouts!
+      return unless payout_confirmed?
+
+      @payment.payouts.find_each do |payout|
+        payout.update!(state: :confirmed)
+      end
     end
 
     def notify_failed_payment

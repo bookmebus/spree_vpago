@@ -1,0 +1,19 @@
+<% content_for :page_tabs do %>
+  <% if can? :update, @shipping_method %>
+    <li class="nav-item" data-hook='edit_shipment_method_tab'>
+      <%= link_to_with_icon 'edit.svg',
+        Spree.t(:edit),
+        edit_admin_shipping_method_url(@shipping_method),
+        class: "#{'active' if current == :edit} nav-link" %>
+    </li>
+  <% end %>
+
+  <% if can? :update, @shipping_method %>
+    <li class="nav-item" data-hook='edit_shipment_method_tab'>
+      <%= link_to_with_icon 'wallet2.svg',
+        Spree.t(:payout),
+        admin_shipping_method_payout_profile_shipping_methods_url(@shipping_method),
+        class: "#{'active' if current == :payout_profile_shipping_methods} nav-link" %>
+    </li>
+  <% end %>
+<% end %>

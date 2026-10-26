@@ -1,0 +1,43 @@
+<% subtotal = Spree::Money.new(payout.private_metadata.dig('payoutable', 'subtotal'), currency: payout.currency) %>
+<% vendor_adjustments_total_excluding_tax = Spree::Money.new(payout.private_metadata.dig('payoutable', 'vendor_adjustments_total_excluding_tax'), currency: payout.currency) %>
+<% vendor_tax_total = Spree::Money.new(payout.private_metadata.dig('payoutable', 'vendor_tax_total'), currency: payout.currency) %>
+<% vendor_pre_tax_amount = Spree::Money.new(payout.private_metadata.dig('payoutable', 'vendor_pre_tax_amount'), currency: payout.currency) %>
+
+<% commission_amount = Spree::Money.new(payout.private_metadata.dig('payoutable', 'commission_amount'), currency: payout.currency) %>
+<% pre_commission_amount = Spree::Money.new(payout.private_metadata.dig('payoutable', 'pre_commission_amount'), currency: payout.currency) %>
+<% commission_rate = payout.private_metadata.dig('payoutable', 'commission_rate') %>
+
+<% vendor_total = Spree::Money.new(payout.private_metadata.dig('payoutable', 'vendor_pre_tax_amount') + payout.private_metadata.dig('payoutable', 'vendor_tax_total'), currency: payout.currency) %>
+
+<span type="button"
+  data-toggle="popover"
+  data-trigger="hover"
+  data-html="true"
+  data-placement="right"
+  data-content="<%=
+  <<-HTML
+    <div class='m-0 px-3 py-2'>
+      <ul class='m-0 p-0'>
+        <li>
+          Price: #{line_item.single_money.to_html}
+          <div class="state badge badge-secondary badge-pill text-capitalize">x#{line_item.quantity}</div>
+        </li>
+        <li>Subtotal: #{subtotal}</li>
+        <li>Vendor adjustments: #{vendor_adjustments_total_excluding_tax}</li>
+        <li>Vendor collected tax: #{vendor_tax_total}</li>
+      </ul>
+      <hr>
+      <ul class='m-0 p-0'>
+        <li>Vendor total before tax: #{vendor_pre_tax_amount}</li>
+        <li>Vendor total: #{vendor_total}</li>
+      </ul>
+      <hr>
+      <ul class='m-0 p-0'>
+        <li>Commission:<br>#{vendor_pre_tax_amount} x #{commission_rate}% = #{commission_amount}</li>
+        <li class="mt-2">Pre commission:<br>#{vendor_total} - #{commission_amount} = #{pre_commission_amount}</li>
+      </ul>
+    </div>
+  HTML
+  %>">
+  <%= svg_icon name: "info-circle-fill.svg", width: '12', height: '12' %>
+</span>

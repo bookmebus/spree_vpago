@@ -1,0 +1,6 @@
+<!-- insert_before "[data-hook='display']" -->
+
+<div data-hook="vendor" class="form-group">
+  <%= label_tag :payment_method_vendor, Spree.t(:vendor) %>
+  <%= collection_select(:payment_method, :vendor_id, Spree::Vendor.all, :id, :name, { include_blank: Spree.t('match_choices.none') }, { class: 'select2' }) %>
+</div>
