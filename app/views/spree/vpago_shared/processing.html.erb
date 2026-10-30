@@ -21,7 +21,10 @@
 
     window.requestProcessPayment({
       url: "<%= vpago_process_url %>",
-      params: <%= params.except(:action, :controller, :amp).to_json.html_safe %>,
+      // The URL's query string already identifies the payment/order. Forwarding this page's own
+      // params would also send bank-appended callback params (ACLEDA _paymenttokenid, Vattanac
+      // data) and change which Vpago::PaymentFinder branch resolves the payment.
+      params: {},
       maxRetries: 5,
       retryDelayMs: 1000,
     })
