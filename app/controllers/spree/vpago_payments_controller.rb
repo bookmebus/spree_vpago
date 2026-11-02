@@ -32,7 +32,10 @@ module Spree
       # checker often completes the order before the browser lands here. Skipping this page
       # also skips its Firebase listener, so success must post order_is_completed itself
       # (render_success_script) or an embedding iframe modal never closes.
-      return redirect_to @payment.success_url, allow_other_host: true if @order.completed?
+      #
+      # A pre-auth payment is the exception: its order completes on the hold, so the user (often just back
+      # from the bank app) stays here on "verifying" until PaymentCapturerJob captures it.
+      return redirect_to @payment.success_url, allow_other_host: true if @order.completed? && !@payment.awaiting_pre_auth_capture?
 
       VpagoLogger.log(label: 'Spree::VpagoPaymentsController#processing', data: vpago_log_context)
       render 'spree/vpago_shared/processing'

@@ -49,7 +49,9 @@ module Vpago
     # which will enqueue a capture payment if available.
     def process_order!
       log_process('process_order!') do
-        user_informer.order_is_processing(processing: true)
+        # On a re-run for a completed pre-auth order (ABA pushback, page reload) this message would carry
+        # order_state=complete, which the processing page treats as success before the money is captured.
+        user_informer.order_is_processing(processing: true) unless awaiting_pre_auth_capture?
         completer = Spree::Checkout::Complete.new.call(order: @payment.order)
 
         if completer.success?
@@ -63,9 +65,25 @@ module Vpago
 
     def handle_order_process_completed
       log_process('handle_order_process_completed') do
+        # Notify before enqueueing: PaymentCapturerJob reports order_is_completed when the capture lands,
+        # and that message must not be overwritten by a later payment_is_capturing.
+        notify_order_completed
         enqueue_capture_payment_if_available!
+      end
+    end
+
+    # A pre-auth order completes on the hold, but the money only moves at capture, so the processing
+    # page keeps showing "verifying" until PaymentCapturerJob sends order_is_completed.
+    def notify_order_completed
+      if awaiting_pre_auth_capture?
+        user_informer.payment_is_capturing(processing: true)
+      else
         user_informer.order_is_completed(processing: false)
       end
+    end
+
+    def awaiting_pre_auth_capture?
+      @payment.reload.awaiting_pre_auth_capture? && @payment.order.complete?
     end
 
     def handle_order_process_failure(reason_code, reason_message = nil)

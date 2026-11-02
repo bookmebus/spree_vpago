@@ -7,6 +7,18 @@ RSpec.describe Spree::Admin::SuspiciousOrdersController do
   let!(:order) { create(:order) }
   let!(:request_booking) { create(:order) }
 
+  describe '#default_query' do
+    let!(:failed_order) { create(:order, state: 'complete', completed_at: Time.current, payment_state: 'failed') }
+    let!(:balance_due_order) { create(:order, state: 'complete', completed_at: Time.current, payment_state: 'balance_due') }
+    let!(:paid_order) { create(:order, state: 'complete', completed_at: Time.current, payment_state: 'paid') }
+
+    it 'lists completed balance_due and failed orders, not paid ones' do
+      result = Spree::Order.ransack(controller.send(:default_query)).result
+
+      expect(result).to contain_exactly(failed_order, balance_due_order)
+    end
+  end
+
   describe '#exclude_request_bookings' do
     context 'when spree_orders has no request_state column' do
       it 'returns every order' do

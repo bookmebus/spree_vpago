@@ -13,6 +13,9 @@ module Vpago
       def payment_is_retrying(processing:) = notify(:payment_is_retrying, processing)
       def order_is_processing(processing:) = notify(:order_is_processing, processing)
       def order_is_completed(processing:) = notify(:order_is_completed, processing)
+      def payment_is_capturing(processing:) = notify(:payment_is_capturing, processing)
+      def payment_capture_retrying(processing:) = notify(:payment_capture_retrying, processing)
+      def payment_capture_unconfirmed(processing:) = notify(:payment_capture_unconfirmed, processing)
       def order_process_failed(processing:, reason_code:, reason_message: nil) = notify(:order_process_failed, processing, reason_code, reason_message)
       def payment_process_failed(processing:, reason_code:, reason_message: nil) = notify(:payment_process_failed, processing, reason_code, reason_message)
 

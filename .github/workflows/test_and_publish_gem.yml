@@ -15,7 +15,9 @@ on:
         - "*"
 jobs:
   test_and_publish_gem:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, where setup-ruby only ships the latest patch of each series, so
+    # ruby 3.2.0 below 404s. Bump both together.
+    runs-on: ubuntu-24.04
 
     services:
       db:

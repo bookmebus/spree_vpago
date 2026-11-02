@@ -4,7 +4,7 @@ module Spree
       around_action :set_writing_role, only: %i[check_transaction]
 
       def index
-        params[:q] = { completed_at_not_null: 1, payment_state_eq: 'balance_due', s: 'completed_at desc' }.dup if params[:q].blank?
+        params[:q] = default_query if params[:q].blank?
 
         @search = exclude_request_bookings(scope).ransack(params[:q])
         @orders = @search.result(distinct: true)
@@ -58,6 +58,12 @@ module Spree
 
       def scope
         current_store.orders.accessible_by(current_ability, :index)
+      end
+
+      # `failed` too: a pre-auth capture that failed under the old flow left its order `failed`
+      # (its only payment is invalid), which `balance_due` alone never listed.
+      def default_query
+        { completed_at_not_null: 1, payment_state_in: %w[balance_due failed], s: 'completed_at desc' }
       end
 
       # Request bookings complete before the vendor confirms and the customer

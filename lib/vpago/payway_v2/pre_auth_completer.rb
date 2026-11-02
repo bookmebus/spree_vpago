@@ -18,11 +18,17 @@ module Vpago
       end
 
       def pre_auth_response
-        conn = Faraday::Connection.new do |faraday|
-          faraday.request :url_encoded
-        end
+        connection.post(complete_url, request_data)
+      end
 
-        conn.post(complete_url, request_data)
+      # Without timeouts Net::HTTP waits up to 60s to connect and 60s to read, holding the
+      # payment_processing worker thread that also completes every other customer's checkout.
+      def connection
+        Faraday::Connection.new do |faraday|
+          faraday.request :url_encoded
+          faraday.options.open_timeout = Vpago::HttpTimeouts::OPEN_TIMEOUT
+          faraday.options.timeout = Vpago::HttpTimeouts::TIMEOUT
+        end
       end
 
       def request_data
@@ -61,8 +67,11 @@ module Vpago
         "#{host}/api/merchant-portal/merchant-access/online-transaction/pre-auth-completion"
       end
 
+      # A non-JSON body (e.g. an HTML 502 page) must be a normal failure. Raising here would skip
+      # Spree's failure handling and leave the payment without any log entry.
       def success?
-        json_response['status']['code'] == '00'
+        status = json_response.is_a?(Hash) ? json_response['status'] : nil
+        status.is_a?(Hash) && status['code'].to_s == '00'
       end
 
       def json_response
@@ -71,7 +80,8 @@ module Vpago
         @json_response ||= begin
           JSON.parse(@response.body)
         rescue JSON::ParserError
-          {}
+          # Kept so the payment's log entry shows what the gateway actually returned.
+          { 'raw_body' => @response.body.to_s[0, 2000], 'http_status' => @response.status }
         end
       end
     end
