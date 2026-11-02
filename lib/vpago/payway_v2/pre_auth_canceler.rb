@@ -5,11 +5,7 @@ module Vpago
     class PreAuthCanceler < PreAuthCompleter
       # override
       def pre_auth_response
-        conn = Faraday::Connection.new do |faraday|
-          faraday.request :url_encoded
-        end
-
-        conn.post(cancel_url, request_data)
+        connection.post(cancel_url, request_data)
       end
 
       def request_data

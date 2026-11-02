@@ -13689,6 +13689,11 @@ This typically indicates that your device does not have a healthy Internet conne
   };
 
   // app/javascripts/vpago/vpago_payments/user_informers/firebase.js
+  var CAPTURE_PENDING_CODES = [
+    "payment_is_capturing",
+    "payment_capture_retrying",
+    "payment_capture_unconfirmed"
+  ];
   async function listenToProcessingState({
     firebaseConfigs,
     documentReferencePath,
@@ -13696,6 +13701,9 @@ This typically indicates that your device does not have a healthy Internet conne
     onPaymentIsRetrying,
     onOrderIsProcessing,
     onOrderIsCompleted,
+    onPaymentIsCapturing,
+    onPaymentCaptureRetrying,
+    onPaymentCaptureUnconfirmed,
     onOrderProcessFailed,
     onPaymentProcessFailed,
     onCompleted
@@ -13716,7 +13724,7 @@ This typically indicates that your device does not have a healthy Internet conne
       if (window.parent !== window) {
         window.parent.postMessage(messageCode, "*");
       }
-      let orderCompleted = orderState === "complete";
+      let orderCompleted = orderState === "complete" && !CAPTURE_PENDING_CODES.includes(messageCode);
       if (orderCompleted) {
         queueProcessor.queueStateChange({
           minDelayInMs: 1500,
@@ -13779,6 +13787,48 @@ This typically indicates that your device does not have a healthy Internet conne
             minDelayInMs: 1500,
             callback: async () => {
               await onOrderIsCompleted(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
+          break;
+        case "payment_is_capturing":
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onPaymentIsCapturing?.(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
+          break;
+        case "payment_capture_retrying":
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onPaymentCaptureRetrying?.(
+                orderState,
+                paymentState,
+                processing,
+                reasonCode,
+                reasonMessage
+              );
+            }
+          });
+          break;
+        case "payment_capture_unconfirmed":
+          queueProcessor.queueStateChange({
+            minDelayInMs: 1500,
+            callback: async () => {
+              await onPaymentCaptureUnconfirmed?.(
                 orderState,
                 paymentState,
                 processing,

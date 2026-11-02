@@ -15,6 +15,15 @@ RSpec.describe Vpago::PaywayV2::PreAuthCompleter do
     allow(subject).to receive(:merchant_auth_encryption).and_return(mocked_merchant_auth_encryption) 
   end
 
+  describe '#connection' do
+    it 'times out instead of holding the worker for the Net::HTTP defaults' do
+      options = subject.connection.options
+
+      expect(options.open_timeout).to eq Vpago::HttpTimeouts::OPEN_TIMEOUT
+      expect(options.timeout).to eq Vpago::HttpTimeouts::TIMEOUT
+    end
+  end
+
   describe '#call' do 
     it 'successfully collect the amount' do 
       expect(subject).to receive(:pre_auth_response).and_call_original
@@ -51,6 +60,31 @@ RSpec.describe Vpago::PaywayV2::PreAuthCompleter do
 
       expect(subject.success?).to eq false 
       expect(response['status']['message']).to eq 'Unable to complete or cancel Pre Auth' 
+    end
+
+    context 'when the gateway returns a non-JSON body' do
+      before do
+        allow(subject).to receive(:pre_auth_response).and_return(instance_double(Faraday::Response, body: '<html>502 Bad Gateway</html>', status: 502))
+      end
+
+      it 'is a failure instead of raising, and keeps the raw body for the log' do
+        subject.call
+
+        expect(subject.success?).to eq false
+        expect(subject.json_response).to eq('raw_body' => '<html>502 Bad Gateway</html>', 'http_status' => 502)
+      end
+    end
+
+    context 'when the gateway returns JSON without a status object' do
+      before do
+        allow(subject).to receive(:pre_auth_response).and_return(instance_double(Faraday::Response, body: '{"status":"error"}', status: 500))
+      end
+
+      it 'is a failure instead of raising' do
+        subject.call
+
+        expect(subject.success?).to eq false
+      end
     end
 
     context 'when payout is enabled' do

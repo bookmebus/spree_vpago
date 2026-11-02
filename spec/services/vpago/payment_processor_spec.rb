@@ -222,6 +222,42 @@ RSpec.describe Vpago::PaymentProcessor do
     end
   end
 
+  context 'with a pre-auth payment' do
+    let(:payment_method) { create(:payway_v2_gateway, enable_pre_auth: true, preferred_public_key: 'public-key') }
+    let(:payment) { create(:payway_v2_payment, number: 'PJ0MYD2Y', order: order, payment_method: payment_method, state: 'pending') }
+
+    before { order.update_columns(state: 'complete', completed_at: Time.current) }
+
+    describe '#handle_order_process_completed' do
+      it 'keeps the page on verifying, and notifies before enqueueing the capture' do
+        expect(user_informer).to receive(:payment_is_capturing).with(processing: true).ordered
+        expect(subject).to receive(:enqueue_capture_payment_if_available!).ordered
+        expect(user_informer).not_to receive(:order_is_completed)
+
+        subject.send(:handle_order_process_completed)
+      end
+
+      it 'reports completion when the capture already landed' do
+        payment.update_columns(state: 'completed')
+
+        expect(user_informer).to receive(:order_is_completed).with(processing: false)
+        expect(user_informer).not_to receive(:payment_is_capturing)
+
+        subject.send(:handle_order_process_completed)
+      end
+    end
+
+    describe '#process_order! re-run for an already completed order' do
+      it 'does not send order_is_processing, which would carry order_state=complete to the page' do
+        allow(subject).to receive(:handle_order_process_completed)
+
+        expect(user_informer).not_to receive(:order_is_processing)
+
+        subject.send(:process_order!)
+      end
+    end
+  end
+
   describe '#handle_order_process_failure' do
     it 'informs user of failure, enqueues cancel/release, and marks as failure' do
       expect(user_informer).to receive(:order_process_failed).with(

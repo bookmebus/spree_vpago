@@ -2,6 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, onSnapshot, setDoc } from "firebase/firestore";
 import QueueProcessor from "../../../queue_processor.js";
 
+const CAPTURE_PENDING_CODES = [
+  "payment_is_capturing",
+  "payment_capture_retrying",
+  "payment_capture_unconfirmed",
+];
+
 async function listenToProcessingState({
   firebaseConfigs,
   documentReferencePath,
@@ -9,6 +15,9 @@ async function listenToProcessingState({
   onPaymentIsRetrying,
   onOrderIsProcessing,
   onOrderIsCompleted,
+  onPaymentIsCapturing,
+  onPaymentCaptureRetrying,
+  onPaymentCaptureUnconfirmed,
   onOrderProcessFailed,
   onPaymentProcessFailed,
   onCompleted,
@@ -35,7 +44,10 @@ async function listenToProcessingState({
       window.parent.postMessage(messageCode, "*");
     }
 
-    let orderCompleted = orderState === "complete";
+    // A pre-auth order completes on the hold, before the money is captured, so it isn't a success yet:
+    // the server sends these capture codes until PaymentCapturerJob reports order_is_completed.
+    let orderCompleted =
+      orderState === "complete" && !CAPTURE_PENDING_CODES.includes(messageCode);
     if (orderCompleted) {
       queueProcessor.queueStateChange({
         minDelayInMs: 1500,
@@ -99,6 +111,49 @@ async function listenToProcessingState({
           minDelayInMs: 1500,
           callback: async () => {
             await onOrderIsCompleted(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage,
+            );
+          },
+        });
+        break;
+      case "payment_is_capturing":
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            // Optional: pages built before this message existed don't pass it.
+            await onPaymentIsCapturing?.(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage,
+            );
+          },
+        });
+        break;
+      case "payment_capture_retrying":
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onPaymentCaptureRetrying?.(
+              orderState,
+              paymentState,
+              processing,
+              reasonCode,
+              reasonMessage,
+            );
+          },
+        });
+        break;
+      case "payment_capture_unconfirmed":
+        queueProcessor.queueStateChange({
+          minDelayInMs: 1500,
+          callback: async () => {
+            await onPaymentCaptureUnconfirmed?.(
               orderState,
               paymentState,
               processing,

@@ -109,6 +109,30 @@ RSpec.describe Spree::VpagoPaymentsController, type: :request do
       expect(response).to have_http_status(:redirect)
       expect(response.headers['X-Frame-Options']).to be_nil
     end
+
+    context 'when the payment is a pre-auth hold that is not captured yet' do
+      before do
+        payment.payment_method.update!(enable_pre_auth: true, preferred_public_key: 'public-key')
+        payment.update_columns(state: 'pending')
+        # The page renders the Firestore path to listen on, which needs Firebase credentials.
+        allow_any_instance_of(Vpago::UserInformers::Firebase).to receive(:document_reference_path).and_return('/statuses/cart/2026-10-30/R131576461')
+      end
+
+      it 'stays on the processing page instead of redirecting to success' do
+        get '/vpago_payments/processing', params: params
+
+        expect(response).to have_http_status(:ok)
+        expect(response).to render_template('spree/vpago_shared/processing')
+      end
+
+      it 'redirects to success once captured' do
+        payment.update_columns(state: 'completed')
+
+        get '/vpago_payments/processing', params: params
+
+        expect(response).to redirect_to(payment.success_url)
+      end
+    end
   end
 
   describe 'GET #success' do
