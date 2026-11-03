@@ -36,8 +36,10 @@
     const deeplinkUrl = "<%= raw checkout.deeplink_url %>";
     const redirectTo = (url) => { if (url) window.location.href = url; };
 
-
-    redirectTo(deeplinkUrl);   
+    // Navigating mid-parse aborts the document, so the transaction checker rendered after this
+    // partial would never run -- and it's the only way off this page once the app hands the
+    // deeplink to the bank app and cancels the WebView navigation. Wait for load so polling has started.
+    window.addEventListener('load', () => redirectTo(deeplinkUrl));
     showRedirectContainer("Open ACLEDA", () => redirectTo(deeplinkUrl));
 
   </script>
