@@ -10,7 +10,7 @@ RSpec.describe Spree::VpagoPaymentSource, type: :model do
     let(:payment_source) { build(:payway_payment_source) }
 
     it 'returns available actions' do
-      expect(payment_source.actions).to eq(%w[open_checkout process capture void cancel])
+      expect(payment_source.actions).to eq(%w[open_checkout process capture sync_capture void cancel])
     end
   end
 
@@ -127,6 +127,47 @@ RSpec.describe Spree::VpagoPaymentSource, type: :model do
       it 'returns false' do
         expect(payment_source.can_capture?(payment)).to be false
       end
+    end
+  end
+
+  describe '#can_sync_capture?' do
+    let(:order) { create(:order_with_line_items, state: 'complete', completed_at: Time.current) }
+    let(:payment_method) { create(:payway_v2_gateway, enable_pre_auth: true, preferred_public_key: 'public-key') }
+    let(:payment) { create(:payway_v2_payment, order: order, payment_method: payment_method, state: 'pending') }
+    let(:payment_source) { payment.source }
+
+    it 'is true for a pending pre-auth payment on a completed order' do
+      expect(payment_source.can_sync_capture?(payment)).to be true
+    end
+
+    it 'is true for one left in processing' do
+      payment.update_columns(state: 'processing')
+
+      expect(payment_source.can_sync_capture?(payment)).to be true
+    end
+
+    it 'is true for one left failed by an earlier capture' do
+      payment.update_columns(state: 'failed')
+
+      expect(payment_source.can_sync_capture?(payment)).to be true
+    end
+
+    it 'is false once completed' do
+      payment.update_columns(state: 'completed')
+
+      expect(payment_source.can_sync_capture?(payment)).to be false
+    end
+
+    it 'is false while the order is not completed' do
+      order.update_columns(state: 'payment', completed_at: nil)
+
+      expect(payment_source.can_sync_capture?(payment)).to be false
+    end
+
+    it 'is false without pre-auth' do
+      payment_method.update!(enable_pre_auth: false)
+
+      expect(payment_source.can_sync_capture?(payment)).to be false
     end
   end
 

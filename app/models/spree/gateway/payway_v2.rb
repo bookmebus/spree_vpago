@@ -155,6 +155,27 @@ module Spree
       ActiveMerchant::Billing::Response.new(true, 'Payway Gateway: Payment has been canceled.')
     end
 
+    # Payment#sync_capture!: completes the payment only when ABA reports it captured for the full amount. Always the v2
+    # checker, unlike #check_transaction: v1's status 0 covers both held and captured.
+    def sync_capture(payment)
+      checker = Vpago::PaywayV2::TransactionStatusV2.new(payment).tap(&:call)
+      params = { check_transaction: checker.json_response }
+
+      unless checker.captured_in_full?
+        reported = [checker.payment_status || checker.error_message, checker.total_amount].compact.join(' ')
+        return ActiveMerchant::Billing::Response.new(false, "Payway Gateway: Not Captured in Full at ABA (#{reported}, expected #{checker.amount})", params)
+      end
+
+      success = true
+      success, params[:payout] = confirm_payouts(payment) if payout_total_from_response(payment).present?
+
+      if success
+        ActiveMerchant::Billing::Response.new(true, 'Payway Gateway: Captured at ABA', params)
+      else
+        ActiveMerchant::Billing::Response.new(false, 'Payway Gateway: Capture Failed', params)
+      end
+    end
+
     def check_transaction(payment)
       # ABA requires the use of the v2 API, but it does not yet support payout responses.
       # Until v2 fully supports payouts, we fall back to v1 when payouts are enabled.

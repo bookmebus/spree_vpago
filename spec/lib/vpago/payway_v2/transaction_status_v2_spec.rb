@@ -74,6 +74,38 @@ RSpec.describe Vpago::PaywayV2::TransactionStatusV2 do
     end
   end
 
+  describe '#captured_in_full?' do
+    def stub_data(data)
+      allow(subject).to receive(:json_response).and_return({ 'status' => { 'code' => '00' }, 'data' => data })
+    end
+
+    before { allow(subject).to receive(:amount).and_return('4.00') }
+
+    it 'is true when APPROVED for the amount completion captures' do
+      stub_data('payment_status' => 'APPROVED', 'total_amount' => 4.0)
+
+      expect(subject.captured_in_full?).to be true
+    end
+
+    it 'is false when APPROVED for a different amount, e.g. a partial capture in the ABA portal' do
+      stub_data('payment_status' => 'APPROVED', 'total_amount' => 3.0)
+
+      expect(subject.captured_in_full?).to be false
+    end
+
+    it 'is false while the pre-auth is only held' do
+      stub_data('payment_status' => 'PRE-AUTH', 'total_amount' => 4.0)
+
+      expect(subject.captured_in_full?).to be false
+    end
+
+    it 'is false when the response has no data, e.g. transaction not found' do
+      allow(subject).to receive(:json_response).and_return({ 'status' => { 'code' => '6' } })
+
+      expect(subject.captured_in_full?).to be false
+    end
+  end
+
   describe '#error_message' do
     it 'return error message when status code is 5, 6, or 8' do
       VCR.use_cassette('payway_v2_check_transaction_status_v2_invalid_hash') { subject.call }

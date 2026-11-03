@@ -10,6 +10,7 @@ en:
     insufficient_payment_amount_to_cover_the_total: "Payment amount is insufficient to cover the total"
     qr_code: "QR code"
     open_checkout: "Open Checkout"
+    sync_capture: "Sync capture from ABA"
     admin:
       orders:
         suspicious_orders: "Suspicious Orders"
