@@ -26,7 +26,7 @@ class Spree::VpagoPaymentSource < Spree::Base
   #
   # override
   def actions
-    %w[open_checkout process capture void cancel]
+    %w[open_checkout process capture sync_capture void cancel]
   end
 
   def can_open_checkout?(payment)
@@ -49,6 +49,16 @@ class Spree::VpagoPaymentSource < Spree::Base
     return false if payment.completed?
 
     payment.pending?
+  end
+
+  # The flow is as follows: our capture failed -> ops captured the pre-auth in the ABA portal -> sync capture -> end.
+  # Capture would call ABA's completion again and fail on the already-captured hold; this only reads ABA's status.
+  # `failed` too: a pre-auth whose capture failed before captures stopped failing the payment is left there, and
+  # only this action can still complete it, since it completes nothing unless ABA confirms the full capture.
+  def can_sync_capture?(payment)
+    return false unless payment.order.completed? && payment.payment_method.enable_pre_auth?
+
+    payment.pending? || payment.processing? || payment.failed?
   end
 
   # Spree has different refund logic, called credit. We use cancel as refund for now, but only for Vattanac/True Money.
