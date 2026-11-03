@@ -39,6 +39,17 @@ module Vpago
         %w[APPROVED PRE-AUTH].include?(payment_status)
       end
 
+      # A captured pre-auth reads APPROVED (PRE-AUTH while only held). The amount must be what completion
+      # captures, so a partial capture made in the ABA portal is never taken for the full payment.
+      def captured_in_full?
+        payment_status == 'APPROVED' && total_amount.present? && BigDecimal(total_amount.to_s) == BigDecimal(amount)
+      end
+
+      def total_amount
+        data = json_response['data']
+        data['total_amount'] if data.is_a?(Hash)
+      end
+
       # request failed does not mean payment failed.
       # but it failed when status is failed.
       def pending?

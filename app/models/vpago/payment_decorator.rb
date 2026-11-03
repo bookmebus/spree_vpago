@@ -15,7 +15,7 @@
 #
 # Pre-auth capture! is the exception: it never leaves `pending` on failure, see #pre_auth_capture!.
 module Vpago
-  module PaymentDecorator
+  module PaymentDecorator # rubocop:disable Metrics/ModuleLength
     def self.prepended(base)
       base.has_many :payouts, class_name: 'Spree::Payout', inverse_of: :payment
       base.after_create -> { Vpago::PayoutsGenerator.new(self).call }, if: :should_generate_payouts?
@@ -62,6 +62,25 @@ module Vpago
       reset_for_retry! if failed?
 
       super
+    end
+
+    # Admin action (Spree::VpagoPaymentSource#can_sync_capture?) for a pre-auth captured outside our capture call,
+    # e.g. by ops in the ABA portal: reads ABA's status instead of capturing again.
+    def sync_capture!
+      return true if completed?
+
+      response = begin
+        payment_method.sync_capture(self)
+      rescue Faraday::Error => e
+        gateway_error(ActiveMerchant::ConnectionError.new(e.message, e))
+      end
+
+      record_response(response)
+      gateway_error(response) unless response.success?
+
+      capture_events.create!(amount: amount)
+      reset_for_retry! if failed? # Spree has no failed -> completed transition
+      complete!
     end
 
     # override:

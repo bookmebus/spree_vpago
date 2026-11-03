@@ -253,6 +253,55 @@ RSpec.describe Spree::Gateway::PaywayV2, type: :model do
     end
   end
 
+  describe '#sync_capture' do
+    let(:checker) { Vpago::PaywayV2::TransactionStatusV2.new(payment) }
+
+    before do
+      allow(Vpago::PaywayV2::TransactionStatusV2).to receive(:new).with(payment).and_return(checker)
+      allow(checker).to receive(:call)
+      allow(checker).to receive(:amount).and_return('4.00')
+    end
+
+    def stub_aba(payment_status, total_amount)
+      allow(checker).to receive(:json_response)
+        .and_return({ 'status' => { 'code' => '00' }, 'data' => { 'payment_status' => payment_status, 'total_amount' => total_amount } })
+    end
+
+    it 'succeeds with ABA\'s response when captured in full, without calling completion' do
+      stub_aba('APPROVED', 4.0)
+      expect(Vpago::PaywayV2::PreAuthCompleter).not_to receive(:new)
+
+      response = payment_method.sync_capture(payment)
+
+      expect(response.success?).to be true
+      expect(response.message).to eq 'Payway Gateway: Captured at ABA'
+      expect(response.params['check_transaction']['data']['payment_status']).to eq 'APPROVED'
+    end
+
+    it 'fails with what ABA reported while the pre-auth is only held' do
+      stub_aba('PRE-AUTH', 4.0)
+
+      response = payment_method.sync_capture(payment)
+
+      expect(response.success?).to be false
+      expect(response.message).to eq 'Payway Gateway: Not Captured in Full at ABA (PRE-AUTH 4.0, expected 4.00)'
+    end
+
+    it 'fails for a partial capture' do
+      stub_aba('APPROVED', 3.0)
+
+      expect(payment_method.sync_capture(payment).success?).to be false
+    end
+
+    it 'confirms payouts like capture does' do
+      stub_aba('APPROVED', 4.0)
+      allow(payment_method).to receive(:payout_total_from_response).and_return(10)
+      expect(payment_method).to receive(:confirm_payouts).with(payment).and_return([true, {}])
+
+      expect(payment_method.sync_capture(payment).success?).to be true
+    end
+  end
+
   describe '#void' do
     context 'when pre-auth is enabled' do
       context 'when pre-auth canceler response success' do

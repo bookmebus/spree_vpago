@@ -6,6 +6,7 @@ spree:
   insufficient_payment_amount_to_cover_the_total: "ចំនួនទឹកប្រាក់នៃការទូទាត់គឺមិនគ្រប់គ្រាន់"
   qr_code: "QR code"
   open_checkout: "Open Checkout"
+  sync_capture: "Sync capture from ABA"
   admin:
     orders:
       suspicious_orders: "ការបង់ប្រាក់គួរឱ្យសង្ស័យ"
