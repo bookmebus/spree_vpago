@@ -1,10 +1,15 @@
+<%# Rendered before the gateway form and started right away, not on DOMContentLoaded: the mobile
+    app cancels a bank deeplink's WebView navigation, so polling is this page's only way to
+    /processing, and a deeplink fired mid-parse or before DOMContentLoaded (PayWay's lands when its
+    checkout fetch resolves) would otherwise stop it from ever starting. Relies on the layout loading
+    checkTransactionPeriodically with a blocking <head> script. %>
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
+  (function() {
     var processingUrl = "<%= raw @payment.processing_url %>";
     window.checkTransactionPeriodically({
       checkTransactionUrl: "<%= raw @payment.check_transaction_url %>",
       onFailure: () => window.location.replace(processingUrl),
       onSuccess: () =>  window.location.replace(processingUrl),
     });
-  });
+  })();
 </script>
