@@ -14,7 +14,9 @@ module Spree
       # neither has an authenticated session for a CSRF token to protect.
       skip_before_action :verify_authenticity_token, only: %i[create callback]
 
-      def show; end
+      def show
+        render html: '', layout: true
+      end
 
       def create
         result = ::Vpago::WingMiniApp::Session::Create.call(
