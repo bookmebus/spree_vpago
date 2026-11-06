@@ -20,7 +20,7 @@ module Vpago
         key = [hash].pack('H*')
         iv  = 0.chr * 16
         encrypted = Base64.decode64(@wing_response)
-    
+
         cipher = OpenSSL::Cipher.new('AES-256-CBC')
         cipher.decrypt
         cipher.key = key

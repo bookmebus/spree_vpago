@@ -4,11 +4,11 @@ module Vpago
       attr_accessor :payment, :error_message
 
       # :status, :description, :updated_by_user_id, updated_reason
-      def initialize(payment, options={})
+      def initialize(payment, options = {})
         @payment = payment
         @options = options
 
-        @options[:status] =  @options[:status] || false
+        @options[:status] = @options[:status] || false
       end
 
       def call
@@ -17,7 +17,7 @@ module Vpago
           update_payment_and_order
         end
       end
-  
+
       private
 
       def update_payment_source
@@ -25,17 +25,17 @@ module Vpago
 
         payment_status = @options[:status] ? 'success' : 'failed'
         source.payment_status = payment_status
-        source.payment_description =  @options[:description]
+        source.payment_description = @options[:description]
 
         if @options[:status]
           source.updated_by_user_id = @options[:updated_by_user_id]
           source.updated_reason = @options[:updated_reason]
           source.updated_by_user_at = Time.zone.now
         end
-        
-        if(!source.save)
-          @error_message = source.errors.full_messages.join('\n')
-        end
+
+        return if source.save
+
+        @error_message = source.errors.full_messages.join('\n')
       end
 
       def update_payment_and_order
@@ -44,7 +44,7 @@ module Vpago
         else
           transition_to_failed!
         end
-        
+
         order_updater
       end
 
@@ -54,9 +54,9 @@ module Vpago
       end
 
       def transition_to_failed!
-        @payment.failure! if !@payment.failed?
+        @payment.failure! unless @payment.failed?
         @payment.order.update(state: 'payment')
-        
+
         notify_failed_payment
       end
 
@@ -65,11 +65,12 @@ module Vpago
       end
 
       def complete_payment!
-        @payment.complete! if !@payment.completed?
+        @payment.complete! unless @payment.completed?
       end
 
       def complete_order!
         return if @payment.order.completed?
+
         order = @payment.order
         order.finalize!
         order.update(state: 'complete', completed_at: Time.zone.now)

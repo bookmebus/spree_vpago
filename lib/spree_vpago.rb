@@ -1,4 +1,5 @@
 require 'spree_core'
+require 'spree_multi_vendor'
 require 'spree_extension'
 require 'spree_vpago/engine'
 require 'spree_vpago/version'

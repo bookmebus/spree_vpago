@@ -19,19 +19,14 @@
         </td>
       </tr>
 
-      <% if !payment.order.completed? %>
         <tr>
           <th><%= Spree.t('vpago.payments.query_status') %></th>
           <td><%= link_to Spree.t('vpago.payments.query_status'), admin_payment_payway_querier_path(payment) %></td>
         </tr>
-      <% end %>
-
-      <% if !payment.order.completed? %>
         <tr>
           <th><%= Spree.t('vpago.payments.check_and_heal') %></th>
           <td><%= link_to Spree.t('vpago.payments.check_and_heal'), admin_payment_payway_checker_path(payment), method: :put %></td>
         </tr>
-      <% end %>
 
       <tr>
         <th><%= Spree.t('vpago.payments.updated_by_user') %></th>

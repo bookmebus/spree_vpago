@@ -1,0 +1,15 @@
+<script>
+  // Wing settles only on its webhook — #purchase reads nothing but the
+  // transaction_response PaymentFinder stores on callback, and there is no status
+  // API to ask instead. Processing before it lands paints "Payment process failed"
+  // over a payment already debited, so skip it; the webhook enqueues
+  // PaymentProcessorJob itself.
+  //
+  // The replacement holds because the real definition is a classic script in the
+  // layout's head while vpago_payment_controller only connects at domReady, leaving
+  // this inline script in between. Load either of those differently and it stops —
+  // the log is how you would notice.
+  window.requestProcessPayment = function () {
+    return Promise.resolve();
+  };
+</script>

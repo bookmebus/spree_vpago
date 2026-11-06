@@ -1,0 +1,50 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction-2
+    body:
+      encoding: UTF-8
+      string: hash=DDs4OP%2BioHBhkNXQzaRxb1DjGYpiR%2FiCi6u8oLzHNGeOLvryUu%2Fy6ERWbQpLgS2W8NYN2VZC2c%2F6tROYA9IQ%2Fw%3D%3D&merchant_id=contigoasia&req_time=20260320103220&tran_id=PYQPE8T8
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Content-Type:
+      - application/x-www-form-urlencoded
+  response:
+    status:
+      code: 403
+      message: Forbidden
+    headers:
+      date:
+      - Fri, 20 Mar 2026 10:32:21 GMT
+      content-type:
+      - application/json; charset=utf-8
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      content-encoding:
+      - gzip
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload, max-age=31536000; includeSubDomains;
+        preload
+      x-xss-protection:
+      - 1; mode=block
+      x-content-type-options:
+      - nosniff
+      cf-cache-status:
+      - DYNAMIC
+      set-cookie:
+      - __cf_bm=1oTr5AyQ6cKRRr.g8HK0EyPgcDviqB3eD.Mdy2wzaIk-1774002741-1.0.1.1-gngmPIGnjsSDePCEmbAMv10epHgnGfWYeSavsYqwN49ZzdrJpmRfGpWIgHKh4T1JjKttZoGJ5YxhmY_lkqXM4Jsq6h0RC.zZ5sSJFAop6zo;
+        path=/; expires=Fri, 20-Mar-26 11:02:21 GMT; domain=.payway.com.kh; HttpOnly;
+        Secure; SameSite=None
+      server:
+      - cloudflare
+      cf-ray:
+      - 9df40d6d1b0862f7-SIN
+    body:
+      encoding: UTF-8
+      string: '{"status":{"code":5,"message":"wrong hash","tran_id":"PYQPE8T8"}}'
+  recorded_at: Fri, 20 Mar 2026 10:32:21 GMT
+recorded_with: VCR 6.2.0

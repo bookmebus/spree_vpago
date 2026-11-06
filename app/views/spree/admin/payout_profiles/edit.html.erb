@@ -1,0 +1,33 @@
+<% content_for :page_title do %>
+  <%= link_to Spree.t(:payout_profiles), spree.admin_payout_profiles_path %> /
+  <%= @payout_profile.name %>
+<% end %>
+
+<%= render partial: 'spree/admin/shared/error_messages', locals: { target: @payout_profile } %>
+
+<div class="card card-body mb-3">
+  <%= form_tag verify_with_bank_admin_payout_profile_path(@payout_profile), method: :post do %>
+    <div data-hook="active" class="form-group">
+      <strong><%= Spree.t(:verified) %></strong>
+      <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" data-placement="bottom" title="Response Data" 
+      data-content="<%= @payout_profile.response_data %>">
+        <%= active_badge(@payout_profile.verified?) %>
+      </a>
+    </div>
+
+    <% if @payout_profile.verified_at.present? %>
+      <div data-hook="verified-at" class="form-group">
+        <p><%= Spree.t(:verified_at) %>: <%= pretty_time(@payout_profile.verified_at) %></p>
+      </div>
+    <% end %>
+
+    <%= button Spree.t('verify_with_bank'), 'send.svg', 'submit', { class: 'btn-outline-primary', data: { disable_with: "#{ Spree.t(:saving) }..." } } if @payout_profile.allow_to_verify_with_bank? %>
+  <% end %>
+</div>
+
+<%= form_for @payout_profile, url: admin_payout_profile_path(@payout_profile) do |f| %>
+  <fieldset>
+    <%= render partial: 'form', locals: { f: f } %>
+    <%= render partial: 'spree/admin/shared/edit_resource_links' %>
+  </fieldset>
+<% end %>

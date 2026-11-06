@@ -13,11 +13,11 @@ module Vpago
       end
 
       def acleda_app_store
-        "https://apps.apple.com/us/app/acleda-unity-toanchet/id1196285236"
+        'https://apps.apple.com/us/app/acleda-unity-toanchet/id1196285236'
       end
 
       def acleda_play_store
-        "market://details?id=com.domain.acledabankqr"
+        'market://details?id=com.domain.acledabankqr'
       end
 
       def acleda_ios_deeplink
@@ -30,7 +30,7 @@ module Vpago
 
       def hmac_payment_data
         message = payment_data.to_json
-        key = self.encryption_key
+        key = encryption_key
 
         hmac_hash(key, message)
       end
@@ -40,9 +40,9 @@ module Vpago
       end
 
       def aes_encrypted_payment_data
-        data = payment_data.to_json + "~" + hmac_payment_data
-        key = self.encryption_key
-        iv = [key].pack("H*") ##hex2bin
+        data = "#{payment_data.to_json}~#{hmac_payment_data}"
+        key = encryption_key
+        iv = [key].pack('H*') # #hex2bin
         cipher = OpenSSL::Cipher.new('AES-256-CBC')
         cipher.encrypt
 
@@ -51,7 +51,7 @@ module Vpago
 
         crypt = cipher.update(data) + cipher.final
         encrypted_result = Base64.encode64(crypt).delete("\n")
-        encrypted_result.gsub("/", "acledabankSecurityTC") ##follow acleda encrypting guide
+        encrypted_result.gsub('/', 'acledabankSecurityTC') # #follow acleda encrypting guide
       end
 
       def payment_data
@@ -70,8 +70,8 @@ module Vpago
         salt = pass
         iter = 100
         key_len = 32
-        key = OpenSSL::KDF.pbkdf2_hmac(pass, salt: salt, iterations: iter, length: key_len, hash: "sha1")
-        key
+
+        OpenSSL::KDF.pbkdf2_hmac(pass, salt: salt, iterations: iter, length: key_len, hash: 'sha1')
       end
     end
   end

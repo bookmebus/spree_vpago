@@ -1,0 +1,12 @@
+<form method="post" action="<%= action_url %>" id="acleda_v2_checkout_form" style="display:none;">
+  <% gateway_params.each do |name, value| %>
+    <input type="hidden" name="<%= name %>" value="<%= value %>">
+  <% end %>
+</form>
+
+<script>
+  (function () {
+    var form = document.getElementById("acleda_v2_checkout_form");
+    if (form) form.submit();
+  })();
+</script>
