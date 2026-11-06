@@ -7,34 +7,15 @@
 (function () {
   'use strict';
 
-  function showStatus(message) {
-    var status = document.getElementById('wing-mini-app-status');
-    if (status) {
-      status.textContent = message;
-    }
-  }
-
-  // Any status shown via this path is a failure to sign in — stop the spinner
-  // (nothing left to wait for) and mark the text as an error rather than
-  // routine progress.
-  function showError(message) {
-    var spinner = document.getElementById('wing-mini-app-spinner');
-    if (spinner) {
-      spinner.style.display = 'none';
-    }
-
-    var status = document.getElementById('wing-mini-app-status');
-    if (status) {
-      status.classList.add('wing-mini-app-error');
-    }
-
-    showStatus(message);
+  // The page renders nothing, so failures only go to the console for debugging.
+  function logError(message) {
+    console.error('[Wing Mini App] ' + message);
   }
 
   var bridge = window.WebJSBridge && window.WebJSBridge.$bridge;
 
   if (!bridge || !bridge.isAvailable()) {
-    showError('This page only works inside the Wing app.');
+    logError('This page only works inside the Wing app.');
     return;
   }
 
@@ -56,7 +37,7 @@
     })
     .then(function (result) {
       if (!result.ok) {
-        showError(result.data.error || 'Login failed.');
+        logError(result.data.error || 'Login failed.');
         return;
       }
 
@@ -64,12 +45,12 @@
       // Universal Links / Android App Links and handed to the native BookMe+ app
       // instead of continuing inside Wing's WebView.
       //
-      // replace, not href: this splash has nothing to come back to, and assigning href
+      // replace, not href: this page has nothing to come back to, and assigning href
       // leaves it in the back stack — the customer pressing back on the home page lands
-      // on "Signing you in..." and has to press back twice to leave the mini app.
+      // on this blank page and has to press back twice to leave the mini app.
       window.top.location.replace(result.data.miniAppUrl);
     })
     .catch(function (error) {
-      showError('Error: ' + error.message);
+      logError('Error: ' + error.message);
     });
 })();
