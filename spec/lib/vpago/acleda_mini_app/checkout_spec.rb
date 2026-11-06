@@ -44,4 +44,34 @@ RSpec.describe Vpago::AcledaMiniApp::Checkout do
       expect(payment.source.reload.transaction_id).to eq('tok-abc')
     end
   end
+
+  describe '#acleda_android_app_link' do
+    def stub_deeplink(url)
+      allow(checkout).to receive(:acleda_deeplink).and_return(url)
+    end
+
+    it 'builds the app address the deeplink landing page opens, carrying its query' do
+      stub_deeplink('https://epayment.acledabank.com.kh/acleda?paymenttokenid=tok-abc&sessionid=s1')
+
+      expect(checkout.acleda_android_app_link).to eq('https://com.domain.acledabankqr/app?paymenttokenid=tok-abc&sessionid=s1')
+    end
+
+    it 're-encodes the query the way the landing page does' do
+      stub_deeplink('https://epayment.acledabank.com.kh/acleda?data=a%2Fb%3D%3D&name=a b')
+
+      expect(checkout.acleda_android_app_link).to eq('https://com.domain.acledabankqr/app?data=a%2Fb%3D%3D&name=a+b')
+    end
+
+    it 'omits the query when the deeplink has none' do
+      stub_deeplink('https://epayment.acledabank.com.kh/acleda')
+
+      expect(checkout.acleda_android_app_link).to eq('https://com.domain.acledabankqr/app')
+    end
+
+    it 'is nil without a deeplink' do
+      stub_deeplink(nil)
+
+      expect(checkout.acleda_android_app_link).to be_nil
+    end
+  end
 end
