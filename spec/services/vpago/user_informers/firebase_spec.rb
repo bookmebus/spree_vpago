@@ -12,6 +12,55 @@ RSpec.describe Vpago::UserInformers::Firebase do
     end
   end
 
+  describe '#notify_step' do
+    let(:order) { create(:order_with_line_items) }
+    let(:firestore_reference) { double(:firestore_reference) }
+    let(:steps_ref) { double(:steps_ref) }
+    let(:step_doc_ref) { double(:step_doc_ref) }
+    let(:now) { Time.current }
+
+    subject { described_class.new(order) }
+
+    before { allow(Time).to receive(:current).and_return(now) }
+
+    it "writes the step's own document, leaving the order's document alone" do
+      allow(subject).to receive(:firestore_reference).and_return(firestore_reference)
+      expect(firestore_reference).to receive(:col).with('steps').and_return(steps_ref)
+      expect(steps_ref).to receive(:doc).with('seats_assigning').and_return(step_doc_ref)
+      expect(step_doc_ref).to receive(:set).with({ status: :done, updated_at: now })
+      expect(firestore_reference).not_to receive(:set)
+
+      subject.notify_step(:seats_assigning, status: :done)
+    end
+  end
+
+  describe '#notify expected_steps' do
+    let(:order) { create(:order_with_line_items) }
+    let(:firestore_reference) { double(:firestore_reference, set: nil) }
+
+    subject { described_class.new(order) }
+
+    before do
+      allow(subject).to receive(:firestore_reference).and_return(firestore_reference)
+      allow(firestore_reference).to receive(:col).and_return(double(doc: double(set: nil)))
+      allow(order).to receive(:pending_completion_steps).and_return([:seats_assigning])
+    end
+
+    it 'tells the page which completion steps to wait for once the order is complete' do
+      order.update_columns(state: 'complete', completed_at: Time.current)
+
+      subject.order_is_completed(processing: false)
+
+      expect(firestore_reference).to have_received(:set).with(hash_including(expected_steps: [:seats_assigning]), merge: true)
+    end
+
+    it 'leaves them out before completion' do
+      subject.order_is_processing(processing: true)
+
+      expect(firestore_reference).to have_received(:set).with(hash_excluding(:expected_steps), merge: true)
+    end
+  end
+
   describe '#notify' do
     let(:order) { create(:order_with_line_items, state: :payment, payment_state: 'paid') }
     let(:now) { Time.current }

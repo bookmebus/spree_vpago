@@ -53,6 +53,12 @@
         document.getElementById("processing").innerText = processing ? "Processing..." : "No more process.";
         document.getElementById("reason_message").innerText = reasonMessage;
       },
+      onCompletionStepsPending: function (pendingSteps) {
+        document.getElementById("status").innerText = "Order is finalizing";
+        document.getElementById("reason_code").innerText = pendingSteps.join(", ");
+        document.getElementById("processing").innerText = "Processing...";
+        document.getElementById("reason_message").innerText = "";
+      },
       onOrderProcessFailed: function (orderState, paymentState, processing, reasonCode, reasonMessage) {
         document.getElementById("status").innerText = "Order process failed";
         document.getElementById("reason_code").innerText = reasonCode;
