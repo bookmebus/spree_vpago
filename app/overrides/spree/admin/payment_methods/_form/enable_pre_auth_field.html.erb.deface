@@ -1,0 +1,17 @@
+<!-- insert_after "[data-hook='active']" -->
+
+<% if @payment_method.support_pre_auth? %>
+  <div class="form-group">
+    <strong><%= Spree.t(:enable_pre_auth) %></strong>
+    
+    <div class="form-check my-2">
+      <%= radio_button :payment_method, :enable_pre_auth, true, id: 'payment_method_enable_pre_auth_true', class: 'form-check-input' %>
+      <%= label_tag 'payment_method_enable_pre_auth_true', Spree.t(:say_yes), class: 'form-check-label' %>
+    </div>
+
+    <div class="form-check my-2">
+      <%= radio_button :payment_method, :enable_pre_auth, false, id: 'payment_method_enable_pre_auth_false', class: 'form-check-input' %>
+      <%= label_tag 'payment_method_enable_pre_auth_false', Spree.t(:say_no), class: 'form-check-label' %>
+    </div>
+  </div>
+<% end %>

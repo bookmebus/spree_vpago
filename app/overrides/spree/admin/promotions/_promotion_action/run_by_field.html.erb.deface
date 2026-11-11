@@ -1,0 +1,13 @@
+<!-- insert_after "erb[loud]:contains('hidden_field_tag')" -->
+
+<div class="form-group card-body mb-0 pb-0">
+  <% field_name = "#{param_prefix}[run_by]" %>
+  <%= label_tag field_name do %>
+    <span class="mr-1" type="button" data-toggle="popover" data-trigger="hover" data-placement="left" data-content="This promotion is covered by <%= promotion_action.run_by %>. This information is crucial for the financial report.">
+      <%= svg_icon name: "info-circle-fill.svg", width: '12', height: '12' %>
+    </span>
+    <%= Spree.t(:run_by) %>
+  <% end %>
+  <%= select_tag field_name, options_from_collection_for_select(Spree::PromotionAction.run_bies.keys, :to_s, :capitalize, promotion_action.run_by),
+        class: 'type-select select2' %>
+</div>

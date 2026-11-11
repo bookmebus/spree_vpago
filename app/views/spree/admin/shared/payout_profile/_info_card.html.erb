@@ -1,0 +1,24 @@
+<ul class="list-group mb-3">
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    <%= Spree.t(:bank_account_number) %>
+    <strong>
+      <%= button_link_to payout_profile&.bank_account_number, edit_admin_payout_profile_path(payout_profile), icon: 'edit.svg' %>
+    </strong>
+  </li>
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    <%= Spree.t(:bank) %>
+    <span><%= payout_profile&.bank_name %></span>
+  </li>
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    <%= Spree.t(:active) %>
+    <span><%= active_badge(payout_profile&.active) %></span>
+  </li>
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    <%= Spree.t(:verified_at) %>
+    <% if payout_profile&.verified? %>
+      <span><%= pretty_time(payout_profile&.verified_at) %></span>
+    <% else %>
+      <span><%= active_badge(false) %></span>
+    <% end %>
+  </li>
+</ul>

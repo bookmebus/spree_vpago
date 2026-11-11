@@ -1,30 +1,52 @@
 # SpreeVpago
 
-Introduction goes here.
+![Spree Vpago](https://github.com/bookmebus/spree_vpago/actions/workflows/test_and_publish_gem.yml/badge.svg?branch= "Build status")
 
 ## Installation
 
 1. Add this extension to your Gemfile with this line:
 
-    ```ruby
-    gem 'spree_vpago', github: '[your-github-handle]/spree_vpago'
-    ```
+   ```ruby
+   gem 'spree_vpago', github: '[your-github-handle]/spree_vpago'
+   ```
 
 2. Install the gem using Bundler
 
-    ```ruby
-    bundle install
-    ```
+   ```ruby
+   bundle install
+   ```
 
 3. Copy & run migrations
 
-    ```ruby
-    bundle exec rails g spree_vpago:install
-    ```
+   ```ruby
+   bundle exec rails g spree_vpago:install
+   ```
 
 4. Restart your server
 
-  If your server was running, restart it so that it can find the assets properly.
+   If your server was running, restart it so that it can find the assets properly.
+
+## Releasing
+
+To release the gem:
+
+1. Bump new version in the file: lib/spree_vpago/version.rb, for example
+
+   ```ruby
+   VERSION = '1.8.0-beta1'.freeze
+   ```
+
+   to release `1.8.0-beta1`
+
+2. Tag a repo with the same version, for example
+
+   ```sh
+   git tag 1.8.0-beta1
+   ```
+
+3. Push the tag to the repo and github action will build and push the gem to rubygem.org
+
+4. Get the gem version to the project in cm-market-server.
 
 ## Testing
 
@@ -43,38 +65,41 @@ require 'spree_vpago/factories'
 ```
 
 Run test
-```
+
+```sh
 rspec spec/
 ```
+
 ## Required Variables
 
 ### Acleda
+
 For mobile
-    ```ruby
+`ruby
     ENV['ACLEDA_MOBILE_SECRET_HASH_KEY']
-    ```
+    `
 For desktop
-    ```ruby
+`ruby
     ENV['ACLEDA_CHECK_STATUS_PATH']
     ENV['ACLEDA_CREATE_SESSION_PATH']
-    ```
+    `
 Payment method configuration:
 
-```
+```env
 Icon Name: acleda
 ```
+
 ### Payway
 
 ENV configuration:
+
 ```ruby
-ENV['PAYWAY_CHECKOUT_PATH']
-ENV['PAYWAY_CHECK_TRANSACTION_PATH']
-ENV['PAYWAY_RETURN_CALLBACK_URL']
-ENV['PAYWAY_CONTINUE_SUCCESS_CALLBACK_URL']
+ENV['PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE'] # html, json
 ```
 
 Payment method configuration:
-```
+
+```env
 HOST: https://checkout-sandbox.payway.com.kh
 Payment Option: one of the [abapay, cards]
 Merchant: vtenh
@@ -82,11 +107,32 @@ Api Key: xxxxx
 Icon Name: one of the [payway_abapay, payway_cards]
 ```
 
+#### Push Back Setting
+
+PayWay will call POST request to return_url when transaction is completed in either form-data or json. By default, its will request with json. If you prefer to use html or form-data format, asks ABA integration team to set the following settings AKA Pushback:
+
+```s
+# push back settings
+Format: html
+```
+
+Make sure to set to env as well to let our system know how to handle when ABA push back.
+
+```s
+PAYWAY_MERCHANT_PROFILE_CONTENT_TYPE="html"
+```
+
 ### Note
+
 > Most payment gateways are written in php, you might compare ruby with its php counterpart by running code in the .php file.
 
 ## Handle missing info
+
 > Some payment gateway require email for payment info. So we use enviroment variable "DEFAULT_EMAIL_FOR_PAYMENT" as default email when there is no email provided.
+
+## Support Documents
+
+- [Setup ACLEDA payment methods](docs/acleda.md)
 
 ## Contributing
 

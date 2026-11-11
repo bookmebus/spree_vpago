@@ -17,7 +17,7 @@ module Vpago
       end
 
       def secret_key
-        ENV['ACLEDA_MOBILE_SECRET_HASH_KEY']
+        ENV.fetch('ACLEDA_MOBILE_SECRET_HASH_KEY', nil)
       end
 
       def valid?
@@ -30,7 +30,7 @@ module Vpago
         key = secret_key
 
         message = "#{@options[:TransactionId]} #{@options[:PaymentTokenId]} #{@options[:TxnAmount]}"
-  
+
         OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha256'), key, message)
       end
     end

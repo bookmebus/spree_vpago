@@ -1,0 +1,12 @@
+<!-- insert_before "[data-hook='admin_shipping_method_form_display_field']" -->
+
+<div data-hook="admin_shipping_method_form_handle_by_field" class="col-12 col-lg-6">
+  <%= f.field_container :handle_by do %>
+    <%= f.label :handle_by, raw(Spree.t(:handle_by) + required_span_tag) %>
+    <%= f.select :handle_by, Spree::ShippingMethod.handle_bies.keys.map {|item| [item.capitalize, item]}, {}, :class => "fullwidth select2" %>
+    <%= f.error_message_on :handle_by %>
+    <small class="form-text text-muted">
+      This information is crucial for the financial report.
+    </small>
+  <% end %>
+</div>

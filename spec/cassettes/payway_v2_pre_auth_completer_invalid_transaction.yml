@@ -1,0 +1,57 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://checkout-sandbox.payway.com.kh/api/merchant-portal/merchant-access/online-transaction/pre-auth-completion
+    body:
+      encoding: UTF-8
+      string: hash=E8G%2FmXh1DiPjQeY%2BL6Pv3XhTIB15rn4GihOIy1BzwRoftzVXP4XfZXYuLJDGTQKlYxBZk%2FoCLiBlspxscL2Akg%3D%3D&merchant_auth=fm6sC6MCyR8eThNqIEsfIEEtF2p5cpBHHJXoXBs2W8i7n45mPQgfyUFE33Z1GtFmjcxbzVakogi5xuwsmcKT1pw7EbVqJt7%2FWcaiCx8lqL%2Bg0OALbQg0PHIte47DXOqR0d89UnNzhu2KYXjFxarvLqMsxSPYtSTYmfCLlIklNy8%3D&merchant_id=contigoasia&request_time=20241028084649
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Content-Type:
+      - application/x-www-form-urlencoded
+  response:
+    status:
+      code: 403
+      message: Forbidden
+    headers:
+      date:
+      - Mon, 28 Oct 2024 08:46:51 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      cache-control:
+      - private, must-revalidate
+      pragma:
+      - no-cache
+      expires:
+      - "-1"
+      x-ratelimit-limit:
+      - '100000'
+      x-ratelimit-remaining:
+      - '99516'
+      access-control-allow-origin:
+      - "*"
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-xss-protection:
+      - 1; mode=block
+      x-content-type-options:
+      - nosniff
+      cf-cache-status:
+      - DYNAMIC
+      server:
+      - cloudflare
+      cf-ray:
+      - 8d99a8593a7be2fe-HKG
+      content-encoding:
+      - gzip
+    body:
+      encoding: ASCII-8BIT
+      string: '{"status":{"code":"PTL36","message":"Invalid Transaction","tran_id":"1730105209900875"}}'
+  recorded_at: Mon, 28 Oct 2024 08:46:50 GMT
+recorded_with: VCR 6.2.0

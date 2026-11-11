@@ -1,0 +1,58 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://checkout-sandbox.payway.com.kh/api/merchant-portal/merchant-access/online-transaction/pre-auth-cancellation
+    body:
+      encoding: UTF-8
+      string: hash=jGn%2BfGZ28IWwX7SHSIU%2B5DtIDs2xGGHfj%2F%2BVAkwn5RCurWtnBCIM1p9IAV4EJ%2BZSraCyx9yyKz2%2FYtW5Ju2XGw%3D%3D&merchant_auth=EVTEp%2FBBPNBndLybtW9C27lUdCCzz9iWlclfxcKGiT5y0dDjCD8V3xWjDhatNGl8ySQ5XJMJHFOiT0IMQSFArK704%2FvFMaem7YqkNViS00kZbmUZkJeHzTeZ5QMWFzUGOKAgEQr5tzwLFDaHv9hbGP3MgW5%2BUAWRGjDF0ZqqGmw%3D&merchant_id=contigoasia&request_time=20241028094615
+    headers:
+      User-Agent:
+      - Faraday v2.7.4
+      Content-Type:
+      - application/x-www-form-urlencoded
+  response:
+    status:
+      code: 403
+      message: Forbidden
+    headers:
+      date:
+      - Mon, 28 Oct 2024 09:46:18 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      cache-control:
+      - private, must-revalidate
+      pragma:
+      - no-cache
+      expires:
+      - "-1"
+      x-ratelimit-limit:
+      - '100000'
+      x-ratelimit-remaining:
+      - '99716'
+      access-control-allow-origin:
+      - "*"
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-xss-protection:
+      - 1; mode=block
+      x-content-type-options:
+      - nosniff
+      cf-cache-status:
+      - DYNAMIC
+      server:
+      - cloudflare
+      cf-ray:
+      - 8d99ff6abc7bdd62-HKG
+      content-encoding:
+      - gzip
+    body:
+      encoding: ASCII-8BIT
+      string: '{"status":{"code":"PTL59","message":"Unable to complete or cancel Pre
+        Auth","tran_id":"PID657AX"}}'
+  recorded_at: Mon, 28 Oct 2024 09:46:18 GMT
+recorded_with: VCR 6.2.0

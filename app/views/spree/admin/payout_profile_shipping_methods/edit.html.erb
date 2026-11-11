@@ -1,0 +1,22 @@
+<%= render partial: 'spree/admin/shared/shipping_method_tabs', locals: { current: :payout_profile_shipping_methods } %>
+<%= render partial: 'spree/admin/shared/error_messages', locals: { target: @payout_profile_shipping_method } %>
+<%= render partial: 'spree/admin/shared/payout_profile/status', locals: { payout_profile: @payout_profile_shipping_method.payout_profile } if @payout_profile_shipping_method.payout_profile.present? %>
+
+<% content_for :page_title do %>
+  <%= link_to Spree.t(:shipping_methods), spree.admin_shipping_methods_url %> /
+  <%= @shipping_method.name %>
+<% end %>
+
+<% content_for :page_actions do %>
+  <%= button_link_to Spree.t(:add_profiles), admin_payout_profiles_url(q: { vendor_id_eq: @shipping_method.vendor_id }), icon: 'arrow-right-circle.svg' %>
+<% end %>
+
+<%= form_for @payout_profile_shipping_method, url: object_url do |f| %>
+  <fieldset>
+    <%= render partial: 'form', locals: { f: f } %>
+    <div class="form-actions" data-hook="buttons">
+      <%= button Spree.t('actions.update'), 'save.svg', 'submit', { class: 'btn-success', data: { disable_with: "#{ Spree.t(:saving) }..." } } %>
+      <%= link_to_with_icon 'delete.svg', Spree.t(:delete), object_url(@payout_profile_shipping_method), { class: 'btn btn-danger float-right', data: { confirm: Spree.t(:are_you_sure), method: :delete } } %>
+    </div>
+  </fieldset>
+<% end %>

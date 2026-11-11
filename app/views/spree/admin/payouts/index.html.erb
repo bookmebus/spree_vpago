@@ -1,0 +1,46 @@
+<%= render partial: 'spree/admin/shared/order_tabs', locals: { current: :payouts } %>
+
+<div class="table-responsive border rounded bg-white mb-3">
+  <table class="table border rounded" id='payments' data-order-id='<%= @order.number %>'>
+    <thead class="text-muted">
+      <tr data-hook="payouts_header">
+        <th><%= Spree.t(:payout_profile) %></th>
+        <th><%= Spree.t(:state) %></th>
+        <th width="300"><%= Spree.t(:payoutable) %></th>
+        <th width="100"><%= Spree.t(:amount) %></th>
+        <th><%= Spree.t(:sent_amount) %></th>
+        <th><%= Spree.t(:outstanding_amount) %></th>
+        <th><%= Spree.t(:payment_number) %></th>
+        <th><%= Spree.t(:created_at) %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @payouts.each do |payout| %>
+        <tr id="<%= dom_id(payout) %>" data-hook="payout_row">
+          <td>
+            <%= link_to payout.payout_profile&.display_name, edit_admin_payout_profile_path(payout.payout_profile) if payout.payout_profile&.present? %>
+            <% if payout.default? %>
+              <div class="badge badge-pill badge-info"><%= Spree.t(:default) %></div>
+            <% end %>
+          </td>
+          <td>
+            <div class="state badge badge-<%= payout.confirmed? ? 'success' : 'secondary' %> badge-pill text-capitalize"><%= payout.state %></div>
+          </td>
+          <td><%= payout.payoutable&.try(:name) || payout.payoutable&.class&.name&.demodulize %></td>
+          <td>
+            <% if payout.payoutable.is_a?(Spree::LineItem) %>
+              <%= payout.display_amount_owed_to_vendor %>
+              <%= render partial: 'line_item_info_with_popover', locals: { payout: payout, line_item: payout.payoutable } if payout.private_metadata.present? %>
+            <% elsif payout.payoutable.is_a?(Spree::Shipment) %>
+              <%= payout.display_amount_owed_to_vendor %>
+            <% end %>
+          </td>
+          <td class="amount"><%= payout.display_amount %></td>
+          <td class="amount"><%= payout.display_outstanding_amount %></td>
+          <td><%= link_to payout.payment.number, admin_order_payment_path(order_id: payout.payment.order.number, id: payout.payment.number) %></td>
+          <td><%= pretty_time(payout.created_at) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
