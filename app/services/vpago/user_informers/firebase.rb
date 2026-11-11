@@ -19,6 +19,13 @@ module Vpago
       def order_process_failed(processing:, reason_code:, reason_message: nil) = notify(:order_process_failed, processing, reason_code, reason_message)
       def payment_process_failed(processing:, reason_code:, reason_message: nil) = notify(:payment_process_failed, processing, reason_code, reason_message)
 
+      # Reports a completion step's result (Order#pending_completion_steps) in its own document under
+      # steps/, written only by the job that runs the step. Kept off the order's document so parallel
+      # jobs never write to the same document, and adding a step never touches the others.
+      def notify_step(key, status:)
+        firestore_reference.col('steps').doc(key.to_s).set({ status: status, updated_at: Time.current })
+      end
+
       def notify(message_code, processing, reason_code = nil, reason_message = nil)
         order.reload
 
@@ -29,6 +36,9 @@ module Vpago
           reason_message: reason_message,
           order_state: order.state,
           payment_state: order.payment_state,
+          # The steps the page waits for after completion. Re-read on every write, so it can only lag
+          # behind a step that already finished — whose own document under steps/ says so.
+          expected_steps: (order.pending_completion_steps if order.complete?),
           updated_at: Time.current
         }.compact
 

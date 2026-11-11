@@ -12278,6 +12278,9 @@ This typically indicates that your device does not have a healthy Internet conne
   function __PRIVATE_validateDocumentPath(e) {
     if (!DocumentKey.isDocumentKey(e)) throw new FirestoreError(C.INVALID_ARGUMENT, `Invalid document reference. Document references must have an even number of segments, but ${e} has ${e.length}.`);
   }
+  function __PRIVATE_validateCollectionPath(e) {
+    if (DocumentKey.isDocumentKey(e)) throw new FirestoreError(C.INVALID_ARGUMENT, `Invalid collection reference. Collection references must have an odd number of segments, but ${e} has ${e.length}.`);
+  }
   function __PRIVATE_valueDescription(e) {
     if (void 0 === e) return "undefined";
     if (null === e) return "null";
@@ -12512,6 +12515,27 @@ This typically indicates that your device does not have a healthy Internet conne
       return new _CollectionReference(this.firestore, e, this._path);
     }
   };
+  function collection(e, t, ...n) {
+    if (e = getModularInstance(e), __PRIVATE_validateNonEmptyArgument("collection", "path", t), e instanceof Firestore$1) {
+      const r = ResourcePath.fromString(t, ...n);
+      return __PRIVATE_validateCollectionPath(r), new CollectionReference(
+        e,
+        /* converter= */
+        null,
+        r
+      );
+    }
+    {
+      if (!(e instanceof DocumentReference || e instanceof CollectionReference)) throw new FirestoreError(C.INVALID_ARGUMENT, "Expected first argument to collection() to be a CollectionReference, a DocumentReference or FirebaseFirestore");
+      const r = e._path.child(ResourcePath.fromString(t, ...n));
+      return __PRIVATE_validateCollectionPath(r), new CollectionReference(
+        e.firestore,
+        /* converter= */
+        null,
+        r
+      );
+    }
+  }
   function doc(e, t, ...n) {
     if (e = getModularInstance(e), // We allow omission of 'pathString' but explicitly prohibit passing in both
     // 'undefined' and 'null'.
@@ -13694,6 +13718,8 @@ This typically indicates that your device does not have a healthy Internet conne
     "payment_capture_retrying",
     "payment_capture_unconfirmed"
   ];
+  var STEP_FINISHED_STATUSES = ["done", "failed"];
+  var COMPLETION_STEPS_TIMEOUT_MS = 2e4;
   async function listenToProcessingState({
     firebaseConfigs,
     documentReferencePath,
@@ -13704,6 +13730,7 @@ This typically indicates that your device does not have a healthy Internet conne
     onPaymentIsCapturing,
     onPaymentCaptureRetrying,
     onPaymentCaptureUnconfirmed,
+    onCompletionStepsPending,
     onOrderProcessFailed,
     onPaymentProcessFailed,
     onCompleted
@@ -13713,31 +13740,61 @@ This typically indicates that your device does not have a healthy Internet conne
     const documentRef = doc(db, documentReferencePath);
     await setDoc(documentRef, { listening: true }, { merge: true });
     const queueProcessor = new QueueProcessor();
+    let orderData = null;
+    let steps = {};
+    let stepsTimer = null;
+    let completed = false;
+    const complete = () => {
+      if (completed) return;
+      completed = true;
+      if (window.parent !== window) {
+        window.parent.postMessage("order_is_completed", "*");
+      }
+      queueProcessor.queueStateChange({
+        minDelayInMs: 1500,
+        callback: async () => {
+          await onCompleted(
+            orderData["order_state"],
+            orderData["payment_state"],
+            orderData["reason_code"],
+            orderData["reason_message"]
+          );
+        }
+      });
+    };
+    const completeWhenReady = () => {
+      if (completed || !isOrderCompleted(orderData)) return;
+      let pendingSteps = (orderData["expected_steps"] ?? []).filter(
+        (key) => !STEP_FINISHED_STATUSES.includes(steps[key]?.status)
+      );
+      if (pendingSteps.length === 0) return complete();
+      queueProcessor.queueStateChange({
+        minDelayInMs: 1500,
+        callback: async () => {
+          await onCompletionStepsPending?.(pendingSteps);
+        }
+      });
+      stepsTimer ??= setTimeout(complete, COMPLETION_STEPS_TIMEOUT_MS);
+    };
+    onSnapshot(collection(documentRef, "steps"), (snapshot) => {
+      steps = Object.fromEntries(snapshot.docs.map((d) => [d.id, d.data()]));
+      completeWhenReady();
+    });
     onSnapshot(documentRef, (doc2) => {
       let documentData = doc2.data();
+      orderData = documentData;
       let messageCode = documentData["message_code"];
       let orderState = documentData["order_state"];
       let paymentState = documentData["payment_state"];
       let processing = documentData["processing"] === true;
       let reasonCode = documentData["reason_code"];
       let reasonMessage = documentData["reason_message"];
+      if (isOrderCompleted(documentData)) {
+        completeWhenReady();
+        return;
+      }
       if (window.parent !== window) {
         window.parent.postMessage(messageCode, "*");
-      }
-      let orderCompleted = orderState === "complete" && !CAPTURE_PENDING_CODES.includes(messageCode);
-      if (orderCompleted) {
-        queueProcessor.queueStateChange({
-          minDelayInMs: 1500,
-          callback: async () => {
-            await onCompleted(
-              orderState,
-              paymentState,
-              reasonCode,
-              reasonMessage
-            );
-          }
-        });
-        return;
       }
       switch (messageCode) {
         case "payment_is_processing":
@@ -13870,6 +13927,9 @@ This typically indicates that your device does not have a healthy Internet conne
           break;
       }
     });
+  }
+  function isOrderCompleted(data) {
+    return data?.["order_state"] === "complete" && !CAPTURE_PENDING_CODES.includes(data["message_code"]);
   }
   window.listenToProcessingState = listenToProcessingState;
 })();

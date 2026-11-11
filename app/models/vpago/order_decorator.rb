@@ -27,6 +27,14 @@ module Vpago
       @order_url_constructor ||= Vpago::OrderUrlConstructor.new(self)
     end
 
+    # Extension hook: work a host app still runs in the background after the order completed, which the
+    # processing page waits for before redirecting to success. Returns the keys of the steps still
+    # pending, in the order the page shows them; extensions append with `super + [...]`. Each step's
+    # job reports its own result with UserInformers::Firebase#notify_step.
+    def pending_completion_steps
+      []
+    end
+
     # override
     def process_payments!
       super
