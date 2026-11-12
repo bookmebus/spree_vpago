@@ -1,6 +1,20 @@
 require 'spec_helper'
 
 RSpec.describe Vpago::UserInformers::Firebase do
+  describe '#firestore' do
+    let(:service_account) { { project_id: 'default-project' } }
+
+    before do
+      allow(Rails.application.credentials).to receive(:cloud_firestore_service_account).and_return(service_account)
+      allow(Google::Cloud::Firestore).to receive(:new) { instance_double(Google::Cloud::Firestore::Client) }
+    end
+
+    it 'shares one client across informers instead of building one per order' do
+      expect(described_class.new(nil).firestore).to be(described_class.new(nil).firestore)
+      expect(Google::Cloud::Firestore).to have_received(:new).once
+    end
+  end
+
   describe '#document_reference_path' do
     let(:firestore_reference) { double(:firestore_reference, path: 'projects/central-market-internal/databases/(default)/documents/statuses/cart/2025-02-26/R851105933') }
 
